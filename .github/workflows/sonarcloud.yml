@@ -8,7 +8,13 @@ on:
     types: [opened, synchronize, reopened]
 
 jobs:
+  assignee-check:
+    if: github.event_name == 'pull_request'
+    uses: ./.github/workflows/pr-assignee-check.yml
+
   sonarcloud:
+    needs: assignee-check
+    if: github.event_name != 'pull_request' || needs.assignee-check.result == 'success'
     name: SonarCloud Scan
     runs-on: ubuntu-latest
 

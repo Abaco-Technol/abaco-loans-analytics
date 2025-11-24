@@ -6,7 +6,13 @@ on:
       - "apps/analytics/**"
 
 jobs:
+  assignee-check:
+    if: github.event_name == 'pull_request'
+    uses: ./.github/workflows/pr-assignee-check.yml
+
   analytics:
+    needs: assignee-check
+    if: github.event_name != 'pull_request' || needs.assignee-check.result == 'success'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
