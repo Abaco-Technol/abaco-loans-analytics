@@ -27,3 +27,4 @@ paths:
     - "**/artifacts/**"
     - "**/.github/**"
     - "**/*.md"
+    - "**/data_samples/**"
