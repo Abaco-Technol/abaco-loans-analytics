@@ -43,15 +43,16 @@ export default function Home() {
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
   const [result, setResult] = useState<string>('Ready to orchestrate Keploy and accelerate QA coverage.')
 
-  const previewBody = useMemo(() => {
+  const { previewBody, previewBodyError } = useMemo(() => {
     if (bodyMode === 'json') {
       try {
-        return jsonBody.trim() ? JSON.parse(jsonBody) : {}
+        return { previewBody: jsonBody.trim() ? JSON.parse(jsonBody) : {} }
       } catch {
-        return 'Invalid JSON: Fix the body to preview the exact request.'
+        return { previewBody: null, previewBodyError: 'Invalid JSON: Fix the body to preview the exact request.' }
       }
     }
-    return buildKeyValueMap(formBody)
+
+    return { previewBody: buildKeyValueMap(formBody) }
   }, [bodyMode, formBody, jsonBody])
 
   const buildPayload = useCallback(
@@ -75,7 +76,10 @@ export default function Home() {
     [apiKeyName, apiKeyValue, apiUrl, authMode, bodyMode, headers, method, params]
   )
 
-  const payloadPreview = useMemo(() => buildPayload(previewBody), [buildPayload, previewBody])
+  const payloadPreview = useMemo(
+    () => (previewBodyError ? null : buildPayload(previewBody)),
+    [buildPayload, previewBody, previewBodyError]
+  )
 
   const handleKeyValueChange = (
     list: KeyValue[],
@@ -128,18 +132,26 @@ export default function Home() {
     }
 
     const contentType = response.headers.get('content-type') || ''
-    let text: string
+    const rawBody = await response.text()
+    let text = rawBody
 
     if (contentType.includes('application/json')) {
       try {
-        text = JSON.stringify(await response.json(), null, 2)
+        text = JSON.stringify(JSON.parse(rawBody), null, 2)
       } catch {
         setStatus('error')
-        setResult('Keploy responded with non-parseable JSON. Inspect the service or try again.')
+
+        const preview =
+          rawBody.length > 1000 ? `${rawBody.slice(0, 1000)}\n\n[truncated]` : rawBody || '<empty response body>'
+
+        setResult(
+          `Keploy responded with non-parseable JSON (status ${response.status}). ` +
+            'Inspect the service or try again.\n\n' +
+            'Raw response body (may be truncated):\n\n' +
+            preview,
+        )
         return
       }
-    } else {
-      text = await response.text()
     }
 
     if (!response.ok) {
@@ -380,7 +392,11 @@ export default function Home() {
             <div className={styles.actions}>
               <div>
                 <p className={styles.eyebrow}>Preview payload</p>
-                <pre className={styles.preview}>{JSON.stringify(payloadPreview, null, 2)}</pre>
+                <pre className={styles.preview}>
+                  {previewBodyError
+                    ? previewBodyError
+                    : JSON.stringify(payloadPreview, null, 2)}
+                </pre>
               </div>
               <button className={styles.cta} type="submit" disabled={status === 'loading'}>
                 {status === 'loading' ? 'Generating with Keploy...' : 'Generate API Test Scenarios'}
