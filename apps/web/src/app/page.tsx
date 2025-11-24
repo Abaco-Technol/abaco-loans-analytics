@@ -1,6 +1,7 @@
 'use client'
 
-import { useCallback, useMemo, useState, type FormEvent } from 'react'
+import { useCallback, useMemo, useState } from 'react'
+import type { FormEvent } from 'react'
 import styles from './page.module.css'
 
 type KeyValue = { id: number; key: string; value: string }
