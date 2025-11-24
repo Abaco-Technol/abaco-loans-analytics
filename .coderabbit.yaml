@@ -1,7 +1,7 @@
 version: 1
 
 # Set the review language to English
-language: "es-419"
+language: "en"
 
 reviews:
   # Profile can be: chill, balanced, strict
