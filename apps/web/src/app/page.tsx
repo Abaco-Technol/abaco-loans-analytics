@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useCallback, useMemo, useState, type FormEvent } from 'react'
 import styles from './page.module.css'
 
 type KeyValue = { id: number; key: string; value: string }
@@ -11,9 +11,10 @@ const methodOptions = ['POST', 'GET', 'PUT', 'PATCH', 'DELETE'] as const
 
 const buildKeyValueMap = (items: KeyValue[]) =>
   items
-    .filter(({ key, value }) => key.trim() || value.trim())
+    .map(({ key, value }) => ({ key: key.trim(), value: value.trim() }))
+    .filter(({ key }) => key.length > 0)
     .reduce<Record<string, string>>((acc, { key, value }) => {
-      acc[key.trim()] = value.trim()
+      acc[key] = value
       return acc
     }, {})
 
@@ -42,10 +43,54 @@ export default function Home() {
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
   const [result, setResult] = useState<string>('Ready to orchestrate Keploy and accelerate QA coverage.')
 
-  const requestBody = useMemo(() => {
-    if (bodyMode === 'json') return jsonBody
-    return JSON.stringify(buildKeyValueMap(formBody), null, 2)
-  }, [bodyMode, formBody, jsonBody])
+  const cleanKeyValue = useCallback((values: KeyValue[]) => buildKeyValueMap(values), [])
+
+  const parseBody = useCallback(() => {
+    if (bodyMode === 'json') {
+      if (!jsonBody.trim()) return { body: {}, error: null }
+      try {
+        return { body: JSON.parse(jsonBody), error: null }
+      } catch {
+        return { body: null, error: 'Body must be valid JSON to reach Keploy securely.' }
+      }
+    }
+
+    return { body: cleanKeyValue(formBody), error: null }
+  }, [bodyMode, cleanKeyValue, formBody, jsonBody])
+
+  const payloadPreview = useMemo(() => {
+    const { body, error } = parseBody()
+    if (error) return { payload: null, error }
+
+    const sanitizedHeaders = cleanKeyValue(headers)
+    const requestHeaders = {
+      ...sanitizedHeaders,
+      ...(authMode === 'apiKey' && apiKeyName.trim()
+        ? { [apiKeyName.trim()]: apiKeyValue.trim() }
+        : {}),
+    }
+
+    return {
+      payload: {
+        method,
+        url: apiUrl,
+        params: cleanKeyValue(params),
+        headers: requestHeaders,
+        body,
+        bodyType: bodyMode,
+        auth: authMode === 'apiKey'
+          ? { type: 'apiKey', key: apiKeyName, value: apiKeyValue }
+          : { type: 'none' },
+      },
+      error: null,
+    }
+  }, [apiKeyName, apiKeyValue, apiUrl, authMode, bodyMode, cleanKeyValue, headers, method, params, parseBody])
+
+  const previewText = payloadPreview.error
+    ? payloadPreview.error
+    : payloadPreview.payload
+      ? JSON.stringify(payloadPreview.payload, null, 2)
+      : ''
 
   const handleKeyValueChange = (
     list: KeyValue[],
@@ -62,23 +107,16 @@ export default function Home() {
     setList([...list, { id: nextId, key: '', value: '' }])
   }
 
-  const cleanKeyValue = (values: KeyValue[]) => buildKeyValueMap(values)
-
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     setStatus('loading')
     setResult('Connecting to Keploy...')
 
-    let parsedBody: unknown = undefined
-    try {
-      if (bodyMode === 'json') {
-        parsedBody = jsonBody.trim() ? JSON.parse(jsonBody) : {}
-      } else if (bodyMode === 'form-data' || bodyMode === 'x-www-form-urlencoded') {
-        parsedBody = cleanKeyValue(bodyMode === 'form-data' ? formBody : formBody)
-      }
-    } catch {
+    const { body: parsedBody, error } = parseBody()
+
+    if (error) {
       setStatus('error')
-      setResult('Body must be valid JSON to reach Keploy securely.')
+      setResult(error)
       return
     }
 
@@ -102,28 +140,43 @@ export default function Home() {
         : { type: 'none' },
     }
 
+    let response: Response
     try {
-      const response = await fetch('https://app.keploy.io/api-testing/generate', {
+      response = await fetch('https://app.keploy.io/api-testing/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       })
-
-      const contentType = response.headers.get('content-type') || ''
-      const text = contentType.includes('application/json') ? JSON.stringify(await response.json(), null, 2) : await response.text()
-
-      if (!response.ok) {
-        setStatus('error')
-        setResult(`Keploy responded with ${response.status}: ${text}`)
-        return
-      }
-
-      setStatus('success')
-      setResult(text || 'Keploy returned an empty response. Validate your request details and retry.')
     } catch {
       setStatus('error')
       setResult('Unable to reach Keploy. Check connectivity or proxy settings and try again.')
+      return
     }
+
+    const contentType = response.headers.get('content-type') || ''
+    let text: string
+
+    if (contentType.includes('application/json')) {
+      try {
+        text = JSON.stringify(await response.json(), null, 2)
+      } catch {
+        const fallbackText = await response.text()
+        setStatus('error')
+        setResult(`Keploy returned an unreadable JSON response. Raw response: ${fallbackText || 'Empty body.'}`)
+        return
+      }
+    } else {
+      text = await response.text()
+    }
+
+    if (!response.ok) {
+      setStatus('error')
+      setResult(`Keploy responded with ${response.status}: ${text}`)
+      return
+    }
+
+    setStatus('success')
+    setResult(text || 'Keploy returned an empty response. Validate your request details and retry.')
   }
 
   return (
@@ -188,6 +241,7 @@ export default function Home() {
                   <button
                     type="button"
                     key={option}
+                    aria-pressed={method === option}
                     className={`${styles.methodButton} ${method === option ? styles.methodActive : ''}`}
                     onClick={() => setMethod(option)}
                   >
@@ -270,6 +324,7 @@ export default function Home() {
                       <button
                         type="button"
                         key={mode}
+                        aria-pressed={bodyMode === mode}
                         className={`${styles.tag} ${bodyMode === mode ? styles.tagActive : ''}`}
                         onClick={() => setBodyMode(mode)}
                       >
@@ -320,6 +375,7 @@ export default function Home() {
                       <button
                         type="button"
                         key={mode}
+                        aria-pressed={authMode === mode}
                         className={`${styles.tag} ${authMode === mode ? styles.tagActive : ''}`}
                         onClick={() => setAuthMode(mode)}
                       >
@@ -344,14 +400,17 @@ export default function Home() {
                     />
                   </div>
                 )}
-                <p className={styles.helper}>Keploy supports key-based auth for internal and partner APIs. Secrets stay client-side.</p>
+                <p className={styles.helper}>
+                  Keploy supports key-based auth for internal and partner APIs. Keys are only used for this request and sent
+                  directly to Keploy without being stored.
+                </p>
               </div>
             </div>
 
             <div className={styles.actions}>
               <div>
                 <p className={styles.eyebrow}>Preview payload</p>
-                <pre className={styles.preview}>{requestBody}</pre>
+                <pre className={styles.preview}>{previewText}</pre>
               </div>
               <button className={styles.cta} type="submit" disabled={status === 'loading'}>
                 {status === 'loading' ? 'Generating with Keploy...' : 'Generate API Test Scenarios'}
