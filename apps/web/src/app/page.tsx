@@ -8,6 +8,7 @@ type BodyMode = 'json' | 'form-data' | 'x-www-form-urlencoded'
 type AuthMode = 'none' | 'apiKey'
 
 const methodOptions = ['POST', 'GET', 'PUT', 'PATCH', 'DELETE'] as const
+const RAW_BODY_PREVIEW_LIMIT = 1000
 
 const buildKeyValueMap = (items: KeyValue[]) =>
   items
@@ -142,7 +143,9 @@ export default function Home() {
         setStatus('error')
 
         const preview =
-          rawBody.length > 1000 ? `${rawBody.slice(0, 1000)}\n\n[truncated]` : rawBody || '<empty response body>'
+          rawBody.length > RAW_BODY_PREVIEW_LIMIT
+            ? `${rawBody.slice(0, RAW_BODY_PREVIEW_LIMIT)}\n\n[truncated]`
+            : rawBody || '<empty response body>'
 
         setResult(
           `Keploy responded with non-parseable JSON (status ${response.status}). ` +
