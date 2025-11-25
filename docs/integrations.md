@@ -1,40 +1,43 @@
-# Design & Productivity Integrations
+# Integraciones de diseño y productividad
 
-This guide documents the supported SDKs for Figma, Notion, and Slack, with Node.js/TypeScript and Python examples. Ensure `.env` remains uncommitted and includes the required tokens.
+Esta guía documenta los SDK compatibles para Figma, Notion y Slack, con ejemplos en Node.js/TypeScript y Python. Asegúrate de que el archivo `.env` no se suba al repositorio y contenga los tokens necesarios.
 
-## Environment Variables
+## Variables de entorno
 
 ```bash
-FIGMA_TOKEN=...   # Personal access token from Figma
-NOTION_TOKEN=...  # Notion integration secret
-SLACK_TOKEN=...   # Slack bot token
+FIGMA_TOKEN=...   # Personal access token de Figma
+NOTION_TOKEN=...  # Secreto de integración de Notion
+SLACK_TOKEN=...   # Token de bot de Slack
 ```
 
 ## Node.js / TypeScript
 
-Install the official or community SDKs via npm:
+Instala los SDK oficiales o de la comunidad con npm:
 
 ```bash
-# Figma REST API client (community SDK)
-npm install figma-js                # OR: npm install @figma-js/sdk
-
-# Notion API client (official)
+# Cliente REST de Figma (SDK de la comunidad)
+npm install figma-js                # O bien: npm install @figma-js/sdk
+# Cliente de la API de Notion (oficial)
 npm install @notionhq/client
 
-# Slack Web API client (official)
+# Cliente de la Web API de Slack (oficial)
 npm install @slack/web-api
 
-# If you want to generate types or interact with Figma design tokens
+# Si quieres generar tipos o interactuar con design tokens de Figma
 npm install --save-dev figma-export
 ```
 
-Example usage:
+Ejemplos de uso:
 
 ```ts
 // figma.ts
 import { Client as FigmaClient } from 'figma-js';
 
 export const figma = FigmaClient({ personalAccessToken: process.env.FIGMA_TOKEN });
+
+// Alternativa con el paquete @figma-js/sdk
+// import { Figma } from '@figma-js/sdk';
+// export const figma = new Figma({ personalAccessToken: process.env.FIGMA_TOKEN });
 
 // notion.ts
 import { Client as NotionClient } from '@notionhq/client';
@@ -47,7 +50,7 @@ import { WebClient } from '@slack/web-api';
 export const slack = new WebClient(process.env.SLACK_TOKEN);
 ```
 
-For Figma tokens export via CLI:
+Para exportar tokens de Figma vía CLI:
 
 ```bash
 # Install globally
@@ -59,23 +62,23 @@ npx figma-export tokens --file-id <your-file-id> --token <your-figma-token>
 
 ## Python
 
-Install the corresponding packages with pip:
+Instala los paquetes correspondientes con pip:
 
 ```bash
-# Figma API (community library)
+# Figma API (librería de la comunidad)
 pip install figma-python
 
-# Notion SDK (official)
+# Notion SDK (oficial)
 pip install notion-client
 
-# Slack SDK (official)
+# Slack SDK (oficial)
 pip install slack-sdk
 
-# If you need Google credentials for Sheets or others:
+# Si necesitas credenciales de Google para Sheets u otros servicios:
 pip install google-auth-httplib2 google-auth-oauthlib
 ```
 
-Example usage:
+Ejemplo de uso:
 
 ```python
 import os
@@ -87,11 +90,11 @@ figma_client = Figma(access_token=os.getenv("FIGMA_TOKEN"))
 notion_client = NotionClient(auth=os.getenv("NOTION_TOKEN"))
 slack_client = WebClient(token=os.getenv("SLACK_TOKEN"))
 
-# Example: fetch a Figma file
+# Ejemplo: obtener un archivo de Figma
 # file = figma_client.file("FIGMA_FILE_KEY")
 ```
 
-Export environment variables for local sessions:
+Exporta las variables de entorno para sesiones locales:
 
 ```bash
 export FIGMA_TOKEN=<your-figma-token>
