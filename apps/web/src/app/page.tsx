@@ -1,5 +1,12 @@
+import type { Metadata } from 'next'
+
 import styles from './page.module.css'
 import { alerts, funding, kpis, liquidityTracks, pipeline } from './dashboardData'
+
+export const metadata: Metadata = {
+  title: 'Abaco Loans Analytics Dashboard',
+  description: 'Financial intelligence dashboard highlighting revenue, risk, liquidity, and compliance insights.',
+}
 
 export default function Home() {
   return (

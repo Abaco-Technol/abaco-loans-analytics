@@ -117,6 +117,10 @@
   color: #2848a0;
 }
 
+.negative .kpiValue {
+  color: #b42318;
+}
+
 .split {
   grid-template-columns: 1.25fr 1fr;
 }
@@ -348,6 +352,10 @@
 
   .kpiValue {
     color: #e8eefc;
+  }
+
+  .negative .kpiValue {
+    color: #f97066;
   }
 
   .barTrack,
