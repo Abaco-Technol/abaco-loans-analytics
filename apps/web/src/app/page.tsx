@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import styles from './page.module.css';
-import { metrics, products, controls, steps } from './data';
+import { metrics, products, controls, steps } from '../../data';
 
 export default function Home() {
   return (
@@ -30,7 +30,7 @@ export default function Home() {
         </div>
       </header>
 
-      <section id="products" className={styles.section}>
+      <section id="products" className={styles.section} aria-labelledby="products-heading">
         <div className={styles.sectionHeader}>
           <p className={styles.eyebrow}>Customer-centric growth</p>
           <h2>Build, fund, and protect every loan strategy</h2>
@@ -49,7 +49,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section className={styles.section}>
+      <section className={styles.section} aria-labelledby="excellence-heading">
         <div className={styles.sectionHeader}>
           <p className={styles.eyebrow}>Operational excellence</p>
           <h2>Compliance-first, automation-ready</h2>
@@ -81,7 +81,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section id="demo" className={styles.section}>
+      <section id="demo" className={styles.section} aria-labelledby="playbook-heading">
         <div className={styles.sectionHeader}>
           <p className={styles.eyebrow}>Delivery playbook</p>
           <h2>From data to decisions in weeks</h2>
