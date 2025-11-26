@@ -1,8 +1,24 @@
+export type Metric = {
+  label: string
+  value: string
+}
+
+export type Product = {
+  title: string
+  detail: string
+}
+
+export type Step = {
+  label: string
+  title: string
+  copy: string
+}
+
 export const metrics = [
   { label: 'Approval uplift with governed risk', value: '+18%' },
   { label: 'Reduction in manual reviews', value: '42%' },
   { label: 'Portfolio coverage with audit trails', value: '100%' },
-];
+] as const satisfies readonly Metric[]
 
 export const products = [
   {
@@ -20,13 +36,13 @@ export const products = [
     detail:
       'Pre-approved journeys, partner-ready APIs, and data rooms that accelerate funding decisions.',
   },
-];
+] as const satisfies readonly Product[]
 
 export const controls = [
   'Segregated roles, approvals, and immutable audit logs for every change.',
   'Real-time monitoring of SLAs, risk thresholds, and operational KPIs.',
   'Encryption by default with least-privilege access across environments.',
-];
+] as const satisfies readonly string[]
 
 export const steps = [
   {
@@ -44,4 +60,18 @@ export const steps = [
     title: 'Measure & learn',
     copy: 'Track outcomes against revenue and risk KPIs, iterating with governed experiment loops.',
   },
-];
+] as const satisfies readonly Step[]
+
+export type MarketingContent = {
+  readonly metrics: readonly Metric[]
+  readonly products: readonly Product[]
+  readonly controls: readonly string[]
+  readonly steps: readonly Step[]
+}
+
+export const marketingContent: MarketingContent = {
+  metrics,
+  products,
+  controls,
+  steps,
+}
