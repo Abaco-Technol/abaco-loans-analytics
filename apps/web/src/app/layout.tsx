@@ -1,10 +1,8 @@
-import type { Metadata } from 'next'
 import './globals.css'
 
-export const metadata: Metadata = {
-  title: 'Abaco Loans Analytics',
-  description: 'Customer-centric lending intelligence with governed growth for Abaco clients.',
-}
+import { siteMetadata } from './seo'
+
+export const metadata = siteMetadata
 
 export default function RootLayout({
   children,
@@ -13,7 +11,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        <a className="skipLink" href="#main-content">
+          Skip to main content
+        </a>
+        {children}
+      </body>
     </html>
   )
 }
