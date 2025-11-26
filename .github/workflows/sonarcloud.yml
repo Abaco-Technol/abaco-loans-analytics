@@ -10,6 +10,8 @@ on:
 jobs:
   sonarcloud:
     name: SonarCloud Scan
+    permissions:
+      contents: read
     runs-on: ubuntu-latest
 
     steps:
