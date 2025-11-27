@@ -86,9 +86,11 @@ class FeatureEngineer:
 
         enriched = df.copy()
         if {"balance", "limit"}.issubset(enriched.columns):
-            enriched["utilization"] = enriched.apply(
-                lambda row: cls.calculate_utilization(row.get("balance", 0), row.get("limit", 0)), axis=1
-            )
+            # Vectorized utilization computation for performance on large datasets.
+            balances = enriched["balance"].fillna(0)
+            # Treat zero limits as missing to avoid division-by-zero; will be filled back to 0 utilization.
+            limits = enriched["limit"].replace({0: pd.NA})
+            enriched["utilization"] = balances.div(limits).fillna(0)
 
         if "dpd" in enriched.columns:
             enriched["dpd_bucket"] = enriched["dpd"].apply(cls.bucket_dpd)
