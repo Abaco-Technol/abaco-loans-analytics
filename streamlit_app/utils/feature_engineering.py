@@ -74,3 +74,28 @@ class FeatureEngineer:
             std = z_scored[metric].std() or 1
             z_scored[f"{metric}_zscore"] = (z_scored[metric] - mean) / std
         return z_scored
+
+    @classmethod
+    def enrich_portfolio(cls, df: pd.DataFrame) -> pd.DataFrame:
+        """Derive portfolio features for downstream analytics dashboards.
+
+        The enrichment adds utilization, DPD bucket, and revenue-based
+        segmentation to support metrics, tables, and data quality checks
+        without mutating the original dataset.
+        """
+
+        enriched = df.copy()
+        if {"balance", "limit"}.issubset(enriched.columns):
+            # Vectorized utilization computation for performance on large datasets.
+            balances = enriched["balance"].fillna(0)
+            # Treat zero limits as missing to avoid division-by-zero; will be filled back to 0 utilization.
+            limits = enriched["limit"].replace({0: pd.NA})
+            enriched["utilization"] = balances.div(limits).fillna(0)
+
+        if "dpd" in enriched.columns:
+            enriched["dpd_bucket"] = enriched["dpd"].apply(cls.bucket_dpd)
+
+        enriched["segment"] = enriched.apply(
+            lambda row: cls.calculate_segmentation({"revenue": row.get("revenue", 0)}), axis=1
+        )
+        return enriched
