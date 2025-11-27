@@ -43,17 +43,27 @@ class LoanAnalyticsEngine:
             raise ValueError(f"Missing required columns: {', '.join(sorted(missing))}")
 
         frame["origination_date"] = pd.to_datetime(frame["origination_date"], errors="coerce")
-        numeric_cols: Iterable[str] = [
+
+        # Coerce numeric columns but handle non-additive vs additive fields differently:
+        # - Keep NaNs for non-additive / descriptive fields to surface data quality issues.
+        # - Use fillna(0) only for additive measures where treating missing as zero is appropriate.
+        non_additive_numeric_cols: Iterable[str] = [
             "principal",
             "interest_rate",
             "term_months",
-            "outstanding_principal",
             "days_in_arrears",
+        ]
+        additive_numeric_cols: Iterable[str] = [
+            "outstanding_principal",
             "charge_off_amount",
             "recoveries",
             "paid_principal",
         ]
-        for col in numeric_cols:
+
+        for col in non_additive_numeric_cols:
+            frame[col] = pd.to_numeric(frame[col], errors="coerce")
+
+        for col in additive_numeric_cols:
             frame[col] = pd.to_numeric(frame[col], errors="coerce").fillna(0)
 
         frame["arrears_flag"] = (
