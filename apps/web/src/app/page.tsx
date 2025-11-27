@@ -162,8 +162,8 @@ const collections: CollectionsTrack[] = [
 
 const deltaClass = (tone?: 'positive' | 'neutral' | 'negative') => {
   if (tone === 'negative') return styles.deltaNegative
-  if (tone === 'neutral') return styles.deltaNeutral
-  return styles.deltaPositive
+  if (tone === 'positive') return styles.deltaPositive
+  return styles.deltaNeutral
 }
 
 export default function Home() {
