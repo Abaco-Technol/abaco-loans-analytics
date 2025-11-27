@@ -132,8 +132,7 @@ class LoanAnalyticsEngine:
     def segment_kpis(self, segment_by: List[str]) -> pd.DataFrame:
         if not segment_by:
             raise ValueError("segment_by must contain at least one column")
-        missing = [col for col in segment_by if col not in self.data.columns]
-        if missing:
+        if missing := [col for col in segment_by if col not in self.data.columns]:
             raise ValueError(f"Segment columns not found: {', '.join(missing)}")
 
         grouped = self.data.groupby(segment_by)
