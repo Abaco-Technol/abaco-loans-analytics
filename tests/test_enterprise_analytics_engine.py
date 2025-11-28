@@ -70,7 +70,7 @@ def test_prepare_data_handles_missing_status_with_arrears_flag():
     base.loc[1, "days_in_arrears"] = 200
 
     engine = LoanAnalyticsEngine(base)
-    assert bool(engine.data.loc[1, "arrears_flag"]) is True
+    assert bool(engine.data.loc[1, "arrears_flag"])
 
 
 def test_segment_kpis_respects_groupings():
