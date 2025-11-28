@@ -9,30 +9,30 @@ This guide captures the operational steps to onboard the team to GitHub Copilot,
 - **Team Leads**: approve pull requests, monitor KPIs, and triage security/code scanning alerts.
 
 ## Invite the team to GitHub Copilot
-1. In the GitHub Enterprise or org **Settings → Copilot → Policies**, toggle **Copilot for Enterprise** and choose **Allow for all members** (or selected teams if you want staged rollout).
-2. Assign seats via **Billing → Copilot** or through **Enterprise → Policies → Seat management**. Export a CSV of GitHub usernames to bulk-assign.
-3. Add users to GitHub teams that map to ContosoTeamStats (e.g., `api-engineering`, `sre-observability`); Copilot and repository access inherit from team membership.
-4. Publish an onboarding checklist in the repo’s Discussions or Wiki that links IDE setup (VS/VS Code, JetBrains), the security policy, and the PR review flow.
+1. In **Enterprise/Org Settings → Copilot → Policies**, enable **Copilot for Enterprise** and set the scope to **Allow for all members** or a pilot team.
+2. Assign seats via **Billing → Copilot → Seat management → Add members** (supports CSV upload of GitHub usernames). Keep a shared roster in `docs/access-matrix.md` for audits.
+3. Map users to GitHub teams (`api-engineering`, `sre-observability`, `analytics`) and grant repo access through teams only. Verify via `Settings → Collaborators and teams` that there are no direct invites.
+4. Post an onboarding checklist in Discussions/Wiki with links to IDE setup (VS/VS Code/JetBrains), security policy, and PR flow. Include a **welcome issue template** that asks new members to confirm SSO + MFA and run `npm test` locally.
 
 ## Configure SAML SSO (with SCIM if available)
-1. As an Enterprise Owner, go to **Enterprise Settings → Authentication security → SAML single sign-on**.
-2. Choose your IdP (e.g., Entra ID/Azure AD) and **Upload/enter IdP metadata**. Note the **Entity ID** and **Assertion Consumer Service (ACS) URL** GitHub provides.
-3. In the IdP, configure the app with **NameID = user.email** and map attributes: `userName`, `displayName`, `email`, `department`.
-4. Enable **Just-in-Time (JIT) provisioning** and, if licensed, **SCIM** for automatic deprovisioning. Test with a pilot user before enforcing.
-5. Back in GitHub, **Enforce SAML SSO** for the Enterprise and org, then **Require SSO for PATs and SSH keys**. Validate with `ssh -T git@github.com` using an SSO-authorized key.
+1. As an Enterprise Owner, open **Enterprise Settings → Authentication security → SAML single sign-on → Configure SAML**.
+2. Choose your IdP (e.g., Entra ID/Azure AD) → **Upload XML metadata** or paste the IdP URL. Capture the GitHub **Entity ID** and **ACS URL** to paste back into the IdP.
+3. In Entra ID: **Enterprise applications → New application → Create your own → Non-gallery** → add Reply URL = ACS, Identifier = Entity ID. Map claims: `user.mail` → NameID, `user.userprincipalname` → `userName`, `user.displayname` → `displayName`, `user.mail` → `email`, `user.department` → `department`.
+4. Enable **Assignment required** and add the ContosoTeamStats groups. Turn on **JIT provisioning**; if SCIM licensed, set **Provisioning → Automatic** with the GitHub SCIM URL + token.
+5. Back in GitHub, click **Test SAML configuration**, then **Enforce SAML SSO** and **Require SSO for PATs/SSH**. Validate: `ssh -T git@github.com` should prompt SSO, and `gh auth status` should show the SSO session.
 
 ## Enterprise guardrails to enable
-- **Identity & access**: enforce SSO, require security keys/Passkeys or WebAuthn for MFA, disable outside collaborators unless approved, and set **default repository visibility to private**.
-- **Repo protections**: branch protection (require PR reviews, status checks, signed commits), **CODEOWNERS** for ContosoTeamStats API paths, and **required workflows** for CodeQL/CI.
-- **Secrets**: enable **Secret scanning (with push protection)** and **Token Leakage Prevention** at the org; block pushes containing high-confidence secrets.
-- **Auditability**: stream audit logs to SIEM (Blob/Log Analytics/Splunk) and enable **security overview** for governance.
-- **Policy controls**: enable **content attachment restrictions**, limit GitHub Apps to approved vendors, and require **Dependabot auto-triage rules** for production branches.
+- **Identity & access**: enforce SSO; require Passkeys/WebAuthn for MFA; disable outside collaborators; set **default repo visibility = private**.
+- **Repo protections**: branch protections with 2 reviewers, required checks (`ci-web`, `codeql`, `sonarcloud`), signed commits, linear history, and **CODEOWNERS** for API/service paths. Mark CodeQL and CI as **required workflows** on `main`.
+- **Secrets**: enable **Secret scanning + Push Protection + Token Leakage Prevention**; add custom patterns for internal tokens. Enable `actions: read` default permission and **environment secrets** for deployments.
+- **Auditability**: stream **audit logs** to Log Analytics/SIEM, enable **security overview**; ship webhook events for secret scanning to the SIEM to alert.
+- **Policy controls**: enable **content attachment restrictions**, restrict GitHub Apps to an allowlist, require **Dependabot auto-triage rules** and auto-merge for patch updates after checks pass.
 
 ## Code security scans for this repo
-- **CodeQL code scanning**: enable via GitHub UI (**Security → Code scanning alerts → Set up → Default**), or use the provided workflow `.github/workflows/codeql.yml`. The workflow runs on pull requests to `main` and the weekly schedule, analyzing JavaScript/TypeScript and Python (extend to C# once the .NET API code is added).
-- **Secret scanning**: ensure org-level Secret scanning + Push Protection is on. Add custom patterns for internal API keys. Configure **Security → Secret scanning → Enable for private repos** at org level; repo inherits.
-- **Dependabot**: the repo ships `.github/dependabot.yml` to monitor npm, pip, and GitHub Actions weekly. Approve auto-PRs with required reviewers and status checks.
-- **Sonar/SAST**: keep `sonarcloud.yml` active and gate merges on quality gate where applicable.
+- **CodeQL code scanning**: enable via **Security → Code scanning alerts → Set up → Default** or keep `.github/workflows/codeql.yml`. The workflow scans **JavaScript/TypeScript, Python, and C#** on PRs to `main` and weekly. For local verification: `gh codeql database analyze --language=javascript,python,csharp` (requires GHAS CLI and token).
+- **Secret scanning**: confirm org-level Secret scanning + Push Protection. Add custom patterns for internal API keys. Verify with **Security → Secret scanning → Enable for private repos** and test by pushing a fake secret (should be blocked).
+- **Dependabot**: `.github/dependabot.yml` now covers **npm, pip, NuGet, and GitHub Actions** weekly. Use branch protections to require reviewers/status checks and enable auto-merge for patch groups.
+- **Sonar/SAST**: keep `sonarcloud.yml` active; gate merges on the quality gate; notify `#sre` on failures via webhook.
 
 ## CI/CD to Azure (ACR + App Service)
 1. **OIDC to Azure**: in Azure, create a Federated Credential on the SP used for deployment (scope: `api://AzureADTokenExchange`, subject: `repo:<org>/<repo>:environment:<env>`). Store `AZURE_CLIENT_ID`, `AZURE_TENANT_ID`, `AZURE_SUBSCRIPTION_ID`, and `AZURE_RESOURCE_GROUP` as GitHub Environment secrets.
@@ -42,13 +42,13 @@ This guide captures the operational steps to onboard the team to GitHub Copilot,
 5. **Infra-as-Code**: place ARM/Bicep/Terraform in `infra/azure` with review requirements. Run `terraform plan` in PRs and `terraform apply` on protected branches.
 
 ## Observability, KPIs, and alerting (free tier friendly)
-- **Delivery KPIs**: lead time for changes, deployment frequency, MTTR, change failure rate, percentage of PRs passing required checks, Dependabot PR time-to-merge.
-- **Security KPIs**: open CodeQL/secret scanning alerts over time, mean time to remediate vuln/secret, Dependabot exposure window, signed-commit coverage, and SSO enforcement compliance.
-- **Runtime KPIs**: App Service availability (5xx rate), p95 latency, error budget burn, container restart count, ACR pull errors, build success rate.
-- **Alerts/Dashboards**: GitHub Security Overview for org posture, GitHub Actions workflow success trend, Azure Monitor dashboards (App Service HTTP errors/latency, ACR pull errors, CPU/memory), and SIEM alerts from audit logs and secret scanning webhook events.
+- **Delivery KPIs**: lead time for changes (<24h target), deployment frequency (>= 2/day to non-prod), MTTR (<4h), change failure rate (<15%), % PRs passing required checks (>95%), Dependabot PR time-to-merge (<48h for patch).
+- **Security KPIs**: open CodeQL/secret alerts trend (no >7d open), mean time to remediate vuln/secret (<72h), Dependabot exposure window (<48h for critical/high), signed-commit coverage (>90%), SSO compliance = 100%.
+- **Runtime KPIs**: App Service availability (>99.9%), p95 latency (<300ms for API), error budget burn rate (<1 over 6h), container restart count (0 for last 24h), ACR pull errors (0), build success rate (>95%).
+- **Alerts/Dashboards**: GitHub **Security Overview**, GitHub Actions workflow success trend, Azure Monitor dashboards (HTTP 5xx/latency, CPU/memory, ACR pull errors), SIEM alerts for audit log anomalies and secret scanning webhooks, PagerDuty/Teams hooks for CodeQL critical alerts and failed deployments.
 
 ## Quick commands and links
-- **CodeQL local prep**: `gh codeql database analyze --language=javascript,python` (requires GHAS CLI and auth).
+- **CodeQL local prep**: `gh codeql database analyze --language=javascript,python,csharp` (requires GHAS CLI and auth).
 - **Dependabot status**: `gh api repos/:owner/:repo/dependabot/alerts --paginate | jq length` to count open alerts.
 - **Secret scanning test**: commit a fake secret pattern, expect push rejection with push protection enabled.
 - **Docs**: GitHub Enterprise Cloud → Security → [Advanced Security](https://docs.github.com/enterprise-cloud@latest/code-security) and [Copilot](https://docs.github.com/enterprise-cloud@latest/copilot/overview-of-github-copilot).
