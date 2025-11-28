@@ -1,3 +1,4 @@
+import hashlib
 import os
 import re
 
@@ -166,7 +167,8 @@ if validation_toggle and uploaded is not None:
 def get_upload_signature(uploaded_file) -> str | None:
     if uploaded_file is None:
         return None
-    return f"{uploaded_file.name}:{uploaded_file.size}"
+    content_hash = hashlib.md5(uploaded_file.getvalue()).hexdigest()
+    return f"{uploaded_file.name}:{uploaded_file.size}:{content_hash}"
 
 
 if "loan_data" not in st.session_state:
@@ -179,7 +181,13 @@ if "last_upload_signature" not in st.session_state:
     st.session_state["last_upload_signature"] = None
 
 
+def should_ingest(signature: str | None) -> bool:
+    return signature is not None and signature != st.session_state.get("last_upload_signature")
+
+
 def ingest(current_upload, signature: str | None):
+    if hasattr(current_upload, "seek"):
+        current_upload.seek(0)
     raw = parse_uploaded_file(current_upload)
     normalized = normalize_columns(raw)
     numeric_columns = normalized.select_dtypes(include=["object"]).columns
@@ -193,11 +201,11 @@ def ingest(current_upload, signature: str | None):
 
 
 current_signature = get_upload_signature(uploaded)
-if uploaded is not None and current_signature != st.session_state.get("last_upload_signature"):
+if should_ingest(current_signature):
     ingest(uploaded, current_signature)
 
 if st.sidebar.button("Refresh ingestion", use_container_width=True):
-    if uploaded is not None and current_signature != st.session_state.get("last_upload_signature"):
+    if should_ingest(current_signature):
         ingest(uploaded, current_signature)
         st.sidebar.success("Ingestion refreshed.")
     else:
