@@ -61,3 +61,17 @@ export const steps = [
     copy: 'Track outcomes against revenue and risk KPIs, iterating with governed experiment loops.',
   },
 ] as const satisfies readonly Step[]
+
+export type MarketingContent = Readonly<{
+  metrics: readonly Metric[]
+  products: readonly Product[]
+  controls: readonly string[]
+  steps: readonly Step[]
+}>
+
+export const marketingContent = {
+  metrics,
+  products,
+  controls,
+  steps,
+} as const satisfies MarketingContent

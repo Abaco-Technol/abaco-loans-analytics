@@ -1,8 +1,10 @@
 import Link from 'next/link'
-import { controls, metrics, products, steps } from './data'
+import { marketingContent } from './data'
 import styles from './page.module.css'
 
 export default function Home() {
+  const { metrics, products, controls, steps } = marketingContent
+
   return (
     <div className={styles.page}>
       <header className={styles.hero}>
