@@ -119,12 +119,21 @@ def select_payer_column(df: pd.DataFrame) -> str | None:
         "debtor",
         "customer_name",
     ]
+    # First try exact matches against our preferred set of column names
     for col in df.columns:
         if col in preferred:
             return col
+
+    # Fallback: use a safer, word-boundary-based regex on a normalized version
+    # of the column name to reduce false positives (e.g. "repayment_period").
+    pattern = r"\b(payer|payor|pagador|offtaker|buyer|debtor)\b"
     for col in df.columns:
-        if re.search(r"payer|payor|pagador|offtaker|buyer|debtor", col, re.IGNORECASE):
+        # Normalize: lowercase and replace non-alphanumerics with spaces so
+        # that tokens are clearly separated for word-boundary matching.
+        normalized_col = re.sub(r"[^0-9a-zA-Z]+", " ", col).lower()
+        if re.search(pattern, normalized_col, re.IGNORECASE):
             return col
+
     return None
 
 
