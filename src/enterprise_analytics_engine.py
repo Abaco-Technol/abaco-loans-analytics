@@ -127,6 +127,22 @@ class LoanAnalyticsEngine:
             return float("nan")
         return portfolio["paid_principal"].sum() / scheduled_total
 
+    def _portfolio_kpis_from_frame(self, frame: pd.DataFrame) -> dict:
+        """
+        Compute portfolio KPIs for a pre-prepared frame without re-running _prepare_data.
+
+        This temporarily swaps out self.data so that we can reuse the logic inside
+        portfolio_kpis without constructing a new LoanAnalyticsEngine per segment.
+        """
+        original_data = self.data
+        try:
+            # frame is a subset of self.data, which is already prepared, so we can
+            # safely reuse the existing KPI logic without re-preparing.
+            self.data = frame
+            return self.portfolio_kpis()
+        finally:
+            self.data = original_data
+
     def segment_kpis(self, segment_by: List[str]) -> pd.DataFrame:
         if not segment_by:
             raise ValueError("segment_by must contain at least one column")
@@ -137,8 +153,7 @@ class LoanAnalyticsEngine:
         grouped = self.data.groupby(segment_by)
         rows = []
         for keys, frame in grouped:
-            engine = LoanAnalyticsEngine(frame.reset_index(drop=True), config=self.config)
-            metrics = engine.portfolio_kpis()
+            metrics = self._portfolio_kpis_from_frame(frame.reset_index(drop=True))
             if not isinstance(keys, tuple):
                 keys = (keys,)
             rows.append({**dict(zip(segment_by, keys)), **metrics})
