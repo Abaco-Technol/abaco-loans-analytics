@@ -1,6 +1,6 @@
 import pandas as pd
 import numpy as np
-from typing import Dict
+from typing import Dict, Optional
 
 from apps.analytics.src.azure_blob_exporter import AzureBlobKPIExporter
 
@@ -86,7 +86,7 @@ class LoanAnalyticsEngine:
         }
 
     def export_kpis_to_blob(
-        self, exporter: AzureBlobKPIExporter, blob_name: str | None = None
+        self, exporter: AzureBlobKPIExporter, blob_name: Optional[str] = None
     ) -> str:
         kpis = self.run_full_analysis()
         return exporter.upload_metrics(kpis, blob_name=blob_name)
