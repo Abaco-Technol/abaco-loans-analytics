@@ -2,6 +2,8 @@ import pandas as pd
 import numpy as np
 from typing import Dict
 
+from apps.analytics.src.azure_blob_exporter import AzureBlobKPIExporter
+
 class LoanAnalyticsEngine:
     """
     A robust engine for computing critical KPIs for a loan portfolio.
@@ -23,6 +25,10 @@ class LoanAnalyticsEngine:
 
         self.loan_data = loan_data.copy()
         self._validate_columns()
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, list]) -> "LoanAnalyticsEngine":
+        return cls(pd.DataFrame(data))
 
     def _validate_columns(self):
         """Ensures the DataFrame contains the necessary columns for KPI computation."""
@@ -78,6 +84,12 @@ class LoanAnalyticsEngine:
             "average_ltv_ratio_percent": self.loan_data['ltv_ratio'].mean(),
             "average_dti_ratio_percent": self.loan_data['dti_ratio'].mean(),
         }
+
+    def export_kpis_to_blob(
+        self, exporter: AzureBlobKPIExporter, blob_name: str | None = None
+    ) -> str:
+        kpis = self.run_full_analysis()
+        return exporter.upload_metrics(kpis, blob_name=blob_name)
 
 if __name__ == '__main__':
     # Example usage demonstrating the engine's capabilities

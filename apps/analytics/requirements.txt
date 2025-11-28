@@ -1,2 +1,5 @@
 pandas
 numpy
+azure-storage-blob
+azure-identity
+pytest
