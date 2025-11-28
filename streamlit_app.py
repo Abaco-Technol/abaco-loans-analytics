@@ -1,3 +1,4 @@
+import hashlib
 import os
 import re
 
@@ -163,16 +164,32 @@ if validation_toggle and uploaded is not None:
     if missing:
         st.sidebar.error(f"Missing required columns: {', '.join(sorted(set(missing)))}")
 
+def get_upload_signature(uploaded_file) -> str | None:
+    if uploaded_file is None:
+        return None
+    content_hash = hashlib.md5(uploaded_file.getvalue()).hexdigest()
+    return f"{uploaded_file.name}:{uploaded_file.size}:{content_hash}"
+
+
 if "loan_data" not in st.session_state:
     st.session_state["loan_data"] = pd.DataFrame()
 if "ingestion_state" not in st.session_state:
     st.session_state["ingestion_state"] = {}
 if "last_upload" not in st.session_state:
     st.session_state["last_upload"] = None
+if "last_upload_signature" not in st.session_state:
+    st.session_state["last_upload_signature"] = None
 
 
-def ingest():
-    raw = parse_uploaded_file(uploaded)
+def should_ingest(signature: str | None) -> bool:
+    return signature is not None and signature != st.session_state.get("last_upload_signature")
+
+
+def ingest(current_upload):
+    signature = get_upload_signature(current_upload)
+    if hasattr(current_upload, "seek"):
+        current_upload.seek(0)
+    raw = parse_uploaded_file(current_upload)
     normalized = normalize_columns(raw)
     numeric_columns = normalized.select_dtypes(include=["object"]).columns
     numeric_payload = normalized.copy()
@@ -181,14 +198,16 @@ def ingest():
     st.session_state["loan_data"] = numeric_payload
     st.session_state["ingestion_state"] = define_ingestion_state(numeric_payload)
     st.session_state["last_upload"] = pd.Timestamp.now()
+    st.session_state["last_upload_signature"] = signature
 
 
-if uploaded is not None:
-    ingest()
+current_signature = get_upload_signature(uploaded)
+if should_ingest(current_signature):
+    ingest(uploaded)
 
 if st.sidebar.button("Refresh ingestion", use_container_width=True):
-    if uploaded is not None and pd.Timestamp.now() != st.session_state.get("last_upload"):
-        ingest()
+    if should_ingest(current_signature):
+        ingest(uploaded)
         st.sidebar.success("Ingestion refreshed.")
     else:
         st.sidebar.warning("Upload a new file before refreshing.")
