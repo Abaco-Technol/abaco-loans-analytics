@@ -1,5 +1,6 @@
 import os
 import re
+import unicodedata
 
 import numpy as np
 import pandas as pd
@@ -98,6 +99,35 @@ def define_ingestion_state(df: pd.DataFrame) -> pd.Series:
     )
 
 
+def normalize_text(value: str) -> str:
+    if not isinstance(value, str):
+        return ""
+    normalized = unicodedata.normalize("NFKD", value)
+    stripped = "".join(ch for ch in normalized if not unicodedata.combining(ch))
+    cleaned = re.sub(r"[^a-z0-9]+", " ", stripped.lower()).strip()
+    return re.sub(r"\s+", " ", cleaned)
+
+
+def select_payer_column(df: pd.DataFrame) -> str | None:
+    preferred = [
+        "payer",
+        "payer_name",
+        "payor",
+        "pagador",
+        "offtaker",
+        "buyer",
+        "debtor",
+        "customer_name",
+    ]
+    for col in df.columns:
+        if col in preferred:
+            return col
+    for col in df.columns:
+        if re.search(r"payer|payor|pagador|offtaker|buyer|debtor", col, re.IGNORECASE):
+            return col
+    return None
+
+
 @st.cache_data(show_spinner=False)
 def parse_uploaded_file(uploaded) -> pd.DataFrame:
     if uploaded is None:
@@ -177,7 +207,9 @@ def ingest():
     numeric_columns = normalized.select_dtypes(include=["object"]).columns
     numeric_payload = normalized.copy()
     for col in numeric_columns:
-        numeric_payload[col] = safe_numeric(numeric_payload[col])
+        converted = safe_numeric(numeric_payload[col])
+        if converted.notna().sum() > 0:
+            numeric_payload[col] = converted
     st.session_state["loan_data"] = numeric_payload
     st.session_state["ingestion_state"] = define_ingestion_state(numeric_payload)
     st.session_state["last_upload"] = pd.Timestamp.now()
@@ -212,6 +244,40 @@ else:
 quality_score = max(0, min(100, quality_score))
 st.progress(quality_score / 100)
 st.markdown("Critical tables scored, missing columns handled, and zeros penalized before KPI synthesis.")
+
+st.markdown("## Payer Coverage Scan")
+payer_column = select_payer_column(loan_df)
+if payer_column:
+    normalized_col = f"{payer_column}_normalized"
+    loan_df[normalized_col] = loan_df[payer_column].apply(normalize_text)
+    target_aliases = {
+        "Vicepresidencia de la Republica": [r"vice\s*presidencia", r"vicepresidencia de la republica"],
+        "Bimbo": [r"bimbo", r"grupo\s*bimbo", r"marinela"],
+        "EPA": [r"\bepa\b", r"almacenes\s*epa", r"ferreteria\s*epa"],
+        "Walmart": [r"walmart", r"walmart de mexico y centroamerica", r"walmart centroamerica"],
+        "Pricesmart": [r"prices?mart"],
+        "Nestle": [r"nestl[eé]", r"nestle el salvador"],
+        "Coca Cola": [r"coca\s*cola", r"femsa"],
+    }
+    coverage_rows = []
+    for target, patterns in target_aliases.items():
+        pattern = "|".join(patterns)
+        mask = loan_df[normalized_col].str.contains(pattern, regex=True, na=False)
+        exposure = loan_df.loc[mask, "principal_balance"].sum() if "principal_balance" in loan_df.columns else np.nan
+        coverage_rows.append(
+            {
+                "Target": target,
+                "Matches": int(mask.sum()),
+                "Outstanding Exposure": exposure,
+            }
+        )
+    coverage_df = pd.DataFrame(coverage_rows)
+    st.dataframe(coverage_df, hide_index=True)
+    missing = coverage_df.loc[coverage_df["Matches"] == 0, "Target"].tolist()
+    if missing:
+        st.info(f"No matches detected for: {', '.join(missing)}. Use normalized payer names to confirm coverage gaps.")
+else:
+    st.info("Add a payer/offtaker column (payer, payor, pagador, buyer, or debtor) to measure international coverage.")
 
 st.markdown("## KPI Calculations")
 loan_df["ltv_ratio"] = (loan_df["loan_amount"] / loan_df["appraised_value"]) * 100
