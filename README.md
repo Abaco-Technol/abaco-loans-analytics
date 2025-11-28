@@ -16,6 +16,8 @@ Integraciones disponibles:
 - SonarCloud
 - GitHub Actions
 
+Consulta `docs/integration-readiness.md` para verificar el estado de cada integración y las comprobaciones previas que debes ejecutar antes de usarlas.
+
 ## ContosoTeamStats
 
 This repository contains ContosoTeamStats, a .NET 6 Web API for managing sports teams that ships with Docker, Azure deployment scripts, SendGrid/Twilio integrations, and SQL Server migrations. Follow docs/ContosoTeamStats-setup.md for local setup, secrets, database provisioning, and container validation.
@@ -33,6 +35,10 @@ Use `docs/Copilot-Team-Workflow.md` when inviting your team to Copilot, document
 ## Fitten Code AI 编程助手
 
 Para integrar Fitten Code AI en este monorepo (local y GitHub), consulta `docs/Fitten-Code-AI-Manual.md`, que cubre la introducción al producto, instalación, integración, preguntas frecuentes y pruebas de inferencia local.
+
+## MCP configuration
+
+Use `docs/MCP_CONFIGURATION.md` to add MCP servers via the Codex CLI or by editing `config.toml`, including examples for Context7, Figma, Chrome DevTools, and how to run Codex itself as an MCP server.
 
 ## Deno helper
 
