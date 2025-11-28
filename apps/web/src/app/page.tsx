@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-return */
 import type { PostgrestSingleResponse } from '@supabase/supabase-js'
 import Link from 'next/link'
 import {
@@ -12,6 +11,15 @@ import { supabase } from '../lib/supabaseClient'
 import type { LandingPageData } from '../types/landingPage'
 
 async function getData(): Promise<LandingPageData> {
+  if (!supabase) {
+    return {
+      metrics: [...fallbackMetrics],
+      products: [...fallbackProducts],
+      controls: [...fallbackControls],
+      steps: [...fallbackSteps],
+    }
+  }
+
   const { data, error }: PostgrestSingleResponse<LandingPageData> = await supabase
     .from('landing_page_data')
     .select()
