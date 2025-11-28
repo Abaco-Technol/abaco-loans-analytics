@@ -39,6 +39,16 @@ ABACO_THEME = {
     },
 }
 
+REQUIRED_COLUMNS = [
+    "loan_amount",
+    "appraised_value",
+    "borrower_income",
+    "monthly_debt",
+    "loan_status",
+    "interest_rate",
+    "principal_balance",
+]
+
 
 def apply_theme(fig: px.Figure) -> px.Figure:
     fig.update_layout(
@@ -149,17 +159,8 @@ uploaded = st.sidebar.file_uploader("Upload the core loan dataset (CSV)", type=[
 validation_toggle = st.sidebar.checkbox("Validate upload schema", value=True)
 st.sidebar.caption("Use this area to trigger ingestion, refresh safely, and capture metadata.")
 if validation_toggle and uploaded is not None:
-    required = [
-        'loan_amount',
-        'appraised_value',
-        'borrower_income',
-        'monthly_debt',
-        'loan_status',
-        'interest_rate',
-        'principal_balance',
-    ]
     columns = normalize_columns(parse_uploaded_file(uploaded)).columns
-    missing = [col for col in required if col not in columns]
+    missing = [col for col in REQUIRED_COLUMNS if col not in columns]
     if missing:
         st.sidebar.error(f"Missing required columns: {', '.join(sorted(set(missing)))}")
 
@@ -202,6 +203,14 @@ loan_df = st.session_state["loan_data"]
 ing_state = st.session_state["ingestion_state"]
 st.markdown(f"- Rows: {ing_state['rows']}, Columns: {ing_state['columns']}")
 st.markdown(f"- Loan base validated: {ing_state['has_loan_base']}")
+
+missing_required_columns = [col for col in REQUIRED_COLUMNS if col not in loan_df.columns]
+if missing_required_columns:
+    st.error(
+        "Cannot compute KPIs until the dataset includes the following columns: "
+        + ", ".join(sorted(missing_required_columns))
+    )
+    st.stop()
 
 st.markdown("## Data Quality Audit")
 quality_score = 100
