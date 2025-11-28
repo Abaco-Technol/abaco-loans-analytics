@@ -21,3 +21,4 @@ Open the HTML files in a browser (or embed them into Figma) and use the Markdown
 
 - Pair these exports with the real dataset download from `streamlit_app.py` so the slides always map to up-to-date metrics.
 - You can add the script to GitHub Actions or a Copilot workflow to regenerate every time data changes before deployment.
+- Run `scripts/export_copilot_slide_payload.py` to emit a JSON payload Copilot or another agent can ingest; it captures the ABACO colors/fonts plus structured slide copy so automation can reuse the same tokens for new decks.
