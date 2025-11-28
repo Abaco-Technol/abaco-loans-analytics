@@ -12,6 +12,12 @@ Alinear a toda la organización en torno a una métrica única que capture la cr
 
 Esta métrica mide el volumen total procesado por clientes que repiten, reflejando retención, expansión y salud de cartera. Es accionable semanalmente y está directamente conectada con ingresos, riesgo y gobernanza.
 
+**Cómo se conecta con la ejecución:**
+
+- Ancla el funnel de originación → cashflow (pancake/replines) al medir solo clientes que repiten y generan recuperaciones.
+- Usa los guardrails ya definidos (rotación ≥4.5×, default/NPL <4%, concentración Top-10 ≤30%, single-obligor ≤4%).
+- Alimenta el seguimiento semanal/mensual del board pack y el dashboard operativo (alertas de concentración, DPD/NPL, caída de TPV por bucket o canal).
+
 ## 2. Contexto y tesis estratégicas
 
 1. **Mercado objetivo:** PYME formales que utilizan sus cuentas por cobrar para liquidez. La adopción de facturación electrónica facilita originación y monitoreo.
