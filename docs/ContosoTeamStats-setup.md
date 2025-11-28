@@ -98,3 +98,50 @@ Swagger will be available at `https://localhost:<port>/swagger`, which you can u
 2. Run the application and call a few endpoints via Swagger or Postman.
 3. Ensure test objects land in SQL Server and that SendGrid/Twilio/Storage calls succeed (use sandbox test accounts if available).
 4. Once everything looks good, expand OU filtering and sync in the Azure AD Connect scenario described earlier before scaling up the sync scope.
+
+## Reproducible validation steps (copy/paste ready)
+
+Run these commands sequentially to confirm the documentation works:
+
+```bash
+# Ensure env vars are loaded (adjust for your shell if not bash/zsh)
+set -a && . .env && set +a
+
+# Confirm Entity Framework migrations apply cleanly
+dotnet ef database update
+
+# Start the API as described earlier
+dotnet run
+
+# While the API runs, hit a Swagger endpoint (substitute the port from the console)
+curl -k https://localhost:5001/swagger/index.html
+```
+
+Leave `dotnet run` running while you manually explore the Swagger UI or Postman to confirm SQL Server, SendGrid, Twilio, and Storage interactions behave as expected.
+
+## Container diligence and GitHub Actions verification
+
+Use the commands below to build the Docker image, push it to Azure Container Registry, and run the GitHub workflow tied to that image. Replace placeholders with your actual ACR name and workflow branch.
+
+```bash
+# Build locally
+docker build -t contoso-team-stats:local .
+
+# Tag for ACR (replace <acr-name> with your registry)
+docker tag contoso-team-stats:local <acr-name>.azurecr.io/contoso-team-stats:latest
+
+# Login and push
+az acr login --name <acr-name>
+docker push <acr-name>.azurecr.io/contoso-team-stats:latest
+
+# Push docs/changes to trigger workflow
+git checkout -b validation/contoso-team-stats
+git add docs/ContosoTeamStats-setup.md README.md
+git commit -m "docs: document ContosoTeamStats validation"
+git push -u origin validation/contoso-team-stats
+
+# Trigger GitHub Actions workflow (GH CLI or portal)
+gh workflow run main --ref validation/contoso-team-stats
+```
+
+After the workflow finishes, review the GitHub run summary plus Azure portal logs to confirm the image landed in ACR and the App Service deployment succeeded under the selected Azure subscription (`a362d5ca-a738-456c-82b9-b38d3f0529d0`).
