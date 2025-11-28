@@ -12,6 +12,9 @@ jobs:
     name: SonarCloud Scan
     permissions:
       contents: read
+      pull-requests: read
+      checks: write
+      statuses: write
     runs-on: ubuntu-latest
 
     steps:
