@@ -14,13 +14,13 @@ export type Step = {
   copy: string
 }
 
-export const metrics: Metric[] = [
+export const metrics: readonly Metric[] = [
   { label: 'Approval uplift with governed risk', value: '+18%' },
   { label: 'Reduction in manual reviews', value: '42%' },
   { label: 'Portfolio coverage with audit trails', value: '100%' },
 ]
 
-export const products: Product[] = [
+export const products: readonly Product[] = [
   {
     title: 'Portfolio Intelligence',
     detail:
@@ -38,13 +38,13 @@ export const products: Product[] = [
   },
 ]
 
-export const controls: string[] = [
+export const controls: readonly string[] = [
   'Segregated roles, approvals, and immutable audit logs for every change.',
   'Real-time monitoring of SLAs, risk thresholds, and operational KPIs.',
   'Encryption by default with least-privilege access across environments.',
 ]
 
-export const steps: Step[] = [
+export const steps: readonly Step[] = [
   {
     label: '01',
     title: 'Unify data signals',
