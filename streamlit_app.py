@@ -6,6 +6,13 @@ import pandas as pd
 import plotly.express as px
 import streamlit as st
 
+from src.analytics_metrics import (
+    calculate_quality_score,
+    portfolio_kpis,
+    project_growth,
+    standardize_numeric,
+)
+
 ABACO_THEME = {
     "colors": {
         "primary_purple": "#C1A6FF",
@@ -63,16 +70,6 @@ def normalize_columns(df: pd.DataFrame) -> pd.DataFrame:
         .pipe(lambda d: d.loc[:, ~d.columns.duplicated()])
     )
     return clean
-
-
-def safe_numeric(series: pd.Series) -> pd.Series:
-    cleaned = (
-        series.astype(str)
-        .str.replace(r"[₡$€,,%]", "", regex=True)
-        .str.replace(",", "", regex=False)
-        .replace("", np.nan)
-    )
-    return pd.to_numeric(cleaned, errors="coerce")
 
 
 def compute_roll_rates(df: pd.DataFrame) -> pd.DataFrame:
@@ -177,7 +174,7 @@ def ingest():
     numeric_columns = normalized.select_dtypes(include=["object"]).columns
     numeric_payload = normalized.copy()
     for col in numeric_columns:
-        numeric_payload[col] = safe_numeric(numeric_payload[col])
+        numeric_payload[col] = standardize_numeric(numeric_payload[col])
     st.session_state["loan_data"] = numeric_payload
     st.session_state["ingestion_state"] = define_ingestion_state(numeric_payload)
     st.session_state["last_upload"] = pd.Timestamp.now()
@@ -204,36 +201,19 @@ st.markdown(f"- Rows: {ing_state['rows']}, Columns: {ing_state['columns']}")
 st.markdown(f"- Loan base validated: {ing_state['has_loan_base']}")
 
 st.markdown("## Data Quality Audit")
-quality_score = 100
-if ing_state["rows"] == 0 or ing_state["columns"] == 0:
-    quality_score = 0
-else:
-    quality_score -= loan_df.isna().mean().sum() * 10
-quality_score = max(0, min(100, quality_score))
+quality_score = calculate_quality_score(loan_df)
 st.progress(quality_score / 100)
 st.markdown("Critical tables scored, missing columns handled, and zeros penalized before KPI synthesis.")
 
 st.markdown("## KPI Calculations")
-loan_df["ltv_ratio"] = (loan_df["loan_amount"] / loan_df["appraised_value"]) * 100
-monthly_income = loan_df["borrower_income"] / 12
-loan_df["dti_ratio"] = np.where(
-    monthly_income > 0,
-    (loan_df["monthly_debt"] / monthly_income) * 100,
-    np.nan,
-)
-delinquent_statuses = ["30-59 days past due", "60-89 days past due", "90+ days past due"]
-delinquent_count = loan_df["loan_status"].isin(delinquent_statuses).sum()
-total_loans = len(loan_df)
-delinquency_rate = (delinquent_count / total_loans) * 100 if total_loans > 0 else 0
-total_principal = loan_df["principal_balance"].sum()
-weighted_interest = (loan_df["interest_rate"] * loan_df["principal_balance"]).sum()
-portfolio_yield = (weighted_interest / total_principal) * 100 if total_principal else 0
-loan_df["delinquency_rate"] = delinquency_rate
-st.markdown(f"- **Delinquency rate:** {delinquency_rate:.2f}%")
-st.markdown(f"- **Portfolio yield:** {portfolio_yield:.2f}%")
-st.markdown(f"- **Average LTV:** {loan_df['ltv_ratio'].mean():.1f}%")
-st.markdown(f"- **Average DTI:** {loan_df['dti_ratio'].mean():.1f}%")
-alerts = loan_df[loan_df["ltv_ratio"] > 90].assign(
+metrics, enriched_df = portfolio_kpis(loan_df)
+enriched_df["delinquency_rate"] = metrics["delinquency_rate"]
+loan_df = enriched_df
+st.markdown(f"- **Delinquency rate:** {metrics['delinquency_rate']:.2f}%")
+st.markdown(f"- **Portfolio yield:** {metrics['portfolio_yield']:.2f}%")
+st.markdown(f"- **Average LTV:** {metrics['average_ltv']:.1f}%")
+st.markdown(f"- **Average DTI:** {metrics['average_dti']:.1f}%")
+alerts = enriched_df[enriched_df["ltv_ratio"] > 90].assign(
     alert_type="High LTV",
     probability=lambda d: np.clip((d["ltv_ratio"] - 90) / 20, 0, 1),
 )
@@ -244,22 +224,19 @@ targets = {}
 targets["target_monthly_yield"] = st.number_input("Target monthly yield (%)", value=1.5)
 targets["target_active_loans"] = st.number_input("Target active loans", value=150)
 current_metrics = {
-    "current_yield": portfolio_yield,
-    "active_loans": total_loans,
+    "current_yield": metrics["portfolio_yield"],
+    "active_loans": len(enriched_df),
 }
 gap_yield = targets["target_monthly_yield"] - current_metrics["current_yield"]
 gap_loans = targets["target_active_loans"] - current_metrics["active_loans"]
 st.metric("Yield gap", f"{gap_yield:.2f}%")
 st.metric("Loan gap", f"{gap_loans:.0f}")
-monthly_projection = (
-    pd.DataFrame(
-        {
-            "month": pd.date_range(start=pd.Timestamp.now(), periods=6, freq="MS"),
-            "yield": np.linspace(current_metrics["current_yield"], targets["target_monthly_yield"], 6),
-            "loan_volume": np.linspace(current_metrics["active_loans"], targets["target_active_loans"], 6),
-        }
-    )
-    .assign(month=lambda d: d["month"].dt.strftime("%b %Y"))
+monthly_projection = project_growth(
+    current_yield=current_metrics["current_yield"],
+    target_yield=targets["target_monthly_yield"],
+    current_loans=current_metrics["active_loans"],
+    target_loans=targets["target_active_loans"],
+    periods=6,
 )
 fig_growth = px.line(
     monthly_projection,
