@@ -1,0 +1,12 @@
+plugins {
+    id 'java'
+}
+
+repositories {
+    mavenCentral()
+}
+
+
+dependencies {
+    // No dependencies yet; add Java libraries if needed in future.
+}
