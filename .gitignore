@@ -5,9 +5,5 @@ gemini-cli/
 apps/.DS_Store
 node_modules/
 .next/
-.next/
 *.vsix
-*.vsix
-*.vsix
-*.vsix
-*.vsix
+*.log
