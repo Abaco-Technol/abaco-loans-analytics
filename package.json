@@ -1,9 +1,14 @@
 {
   "dependencies": {
+<<<<<<< HEAD
     "@google/generative-ai": "^0.24.1",
     "@supabase/supabase-js": "^2.86.0",
     "dotenv": "^17.2.3",
     "openai": "^6.9.1",
+=======
+    "@supabase/supabase-js": "^2.85.0",
+    "dotenv": "^17.2.3",
+>>>>>>> c109122b (chore: Update package dependencies)
     "zencoder": "^2.0.1"
   }
 }
