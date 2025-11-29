@@ -1,7 +1,9 @@
 {
   "dependencies": {
-    "@supabase/supabase-js": "^2.85.0",
+    "@google/generative-ai": "^0.24.1",
+    "@supabase/supabase-js": "^2.86.0",
     "dotenv": "^17.2.3",
+    "openai": "^6.9.1",
     "zencoder": "^2.0.1"
   }
 }
