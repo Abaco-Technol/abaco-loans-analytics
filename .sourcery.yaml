@@ -1,0 +1,14 @@
+version: "1"
+rule_settings:
+  enable:
+    - default
+    - no-long-functions # Force modularity and readability
+    - avoid-global-variables # Prevent state leakage
+  disable: []
+  rule_types:
+    - refactoring # Auto-fix where possible
+    - error # Fail the build on violation, don't just warn
+ignore:
+  - "build/**"
+  - "gradle/**"
+  - "**/generated/**"

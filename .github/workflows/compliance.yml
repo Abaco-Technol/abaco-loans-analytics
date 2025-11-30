@@ -1,0 +1,31 @@
+name: Compliance Audit Trail
+
+on:
+  workflow_dispatch:
+    inputs:
+      start_date:
+        description: 'Start date (YYYY-MM-DD)'
+        required: true
+      end_date:
+        description: 'End date (YYYY-MM-DD)'
+        required: true
+
+jobs:
+  generate-audit-report:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Fetch all history for the log
+
+      - name: Generate and Verify Audit Log
+        run: |
+          chmod +x ./scripts/generate_audit_log.sh
+          ./scripts/generate_audit_log.sh "${{ github.event.inputs.start_date }}" "${{ github.event.inputs.end_date }}"
+
+      - name: Upload Audit Log Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: audit-log-${{ github.event.inputs.start_date }}-${{ github.event.inputs.end_date }}
+          path: audit_log_*.csv

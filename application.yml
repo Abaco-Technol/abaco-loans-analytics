@@ -1,0 +1,19 @@
+spring:
+  security:
+    oauth2:
+      client:
+        registration:
+          # This is a provider name, e.g., "auth0", "okta", "google"
+          cascadedebt-provider:
+            provider: auth0 # Example provider type
+            client-id: ${AUTH_CLIENT_ID:demo-client} # Securely provided by environment variable
+            client-secret: ${AUTH_CLIENT_SECRET:demo-secret} # Securely provided by environment variable
+            scope: openid, profile, email
+            authorization-grant-type: authorization_code
+            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+        provider:
+          auth0: # Must match the provider name above
+            authorization-uri: https://your-auth-provider.com/oauth2/authorize
+            token-uri: https://your-auth-provider.com/oauth2/token
+            user-info-uri: https://your-auth-provider.com/userinfo
+            jwk-set-uri: https://your-auth-provider.com/.well-known/jwks.json
