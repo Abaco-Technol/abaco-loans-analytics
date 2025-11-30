@@ -10,7 +10,7 @@ Align the organization around a single metric that captures value creation and s
 
 > **Weekly/Monthly Recurrent TPV from Active Clients**
 
-This measures the total processed volume from clients who repeat, reflecting retention, expansion, and portfolio health. It is actionable weekly and directly connected to revenue, risk, and governance.
+This measures the total processed volume from clients who repeat, reflecting retention, expansion, and portfolio health. It is actionable every week and directly connected to revenue, risk, and governance.
 
 **How it connects to execution:**
 
@@ -73,7 +73,7 @@ This measures the total processed volume from clients who repeat, reflecting ret
 | Risk | Mitigation |
 | --- | --- |
 | Recurrence drop in smaller buckets (G–H) | Adjust pricing/score, reinforce onboarding and reminders; prioritize prime debtors |
-| Concentration in a few debtors | Deudor limits, automated alerts, and origination rebalance |
+| Concentration in a few debtors | Debtor limits, automated alerts, and origination rebalance |
 | Misalignment between origination and cashflow | Replines and cash-weighted rotation as guardrails; compare plan vs actual weekly |
 | Data quality on invoices/collateral | DTE integration, automated validations, 100% assignment audit |
 
