@@ -4,13 +4,13 @@ This one-pager helps executives, admins, and delivery leads quickly capture valu
 
 ## Executive and admin briefings
 - **Executive-level information**: Summaries and controls for leaders and administrators to evaluate security, compliance, and operational alignment.
-- **Quarterly product roadmap webinar**: Register for the latest roadmap sessions to stay ahead of upcoming platform capabilities and plan change management.
-- **Forrester Wave™ recognition**: Review why GitHub is a leader in the Forrester Wave™ for DevOps platforms to benchmark against peer solutions.
+- **Quarterly product roadmap webinar**: Register for the latest roadmap sessions to stay ahead of upcoming platform capabilities and plan change management. Navigate via the Roadmap webinars section on GitHub Resources.
+- **Forrester Wave™ recognition**: Review why GitHub is a leader in the Forrester Wave™ for DevOps platforms to benchmark against peer solutions (available on GitHub Resources > Analyst reports).
 
 ## Adoption and structure
 - **Adoption guidance**: Follow proven deployment playbooks to accelerate onboarding, enforce policies, and land productivity wins within the trial window.
 - **GitHub structure overview**: Map your enterprise org, teams, and repositories, including access models and governance patterns that scale.
-- **Documentation deep dive**: Analyze GitHub Enterprise Cloud documentation to validate features, security controls, and operational runbooks.
+- **Documentation deep dive**: Analyze GitHub Enterprise Cloud documentation to validate features, security controls, and operational runbooks (start from docs.github.com/enterprise-cloud@latest and use the search bar for specific capabilities).
 
 ## Business impact and ROI
 - **Total Economic Impact™ study**: Use the Forrester® TEI study to estimate cost savings, productivity gains, and risk reduction for your business case.
@@ -24,13 +24,13 @@ This one-pager helps executives, admins, and delivery leads quickly capture valu
 4. **Week 4** – Collect executive-ready outcomes: productivity deltas, security findings resolved, and adoption feedback to inform purchase.
 
 ## Quick links
-- Make the most of GitHub Enterprise (guides and onboarding)
-- Executive information for leaders and administrators
-- Quarterly product roadmap webinar registration
-- Proven adoption guidance and implementation kits
-- GitHub organization and team structure recommendations
-- Forrester® Total Economic Impact™ study
-- Forrester Wave™: DevOps platforms leader report
-- GitHub Enterprise Cloud documentation hub
+- [Make the most of GitHub Enterprise](https://resources.github.com/enterprise/) – guides and onboarding hub for Enterprise Cloud.
+- [Executive information for leaders and administrators](https://docs.github.com/enterprise-cloud@latest/admin) – governance, security, and administration docs.
+- [Quarterly product roadmap webinar registration](https://resources.github.com/webcasts/) – upcoming roadmap sessions.
+- [Adoption guidance and implementation kits](https://resources.github.com/guides) – proven rollout playbooks.
+- [GitHub organization and team structure recommendations](https://docs.github.com/enterprise-cloud@latest/organizations) – org, team, and repository patterns.
+- [Forrester® Total Economic Impact™ study](https://resources.github.com/whitepapers/forrester-tei-github-enterprise-cloud/) – ROI model and savings estimates.
+- [Forrester Wave™ DevOps Platforms report](https://resources.github.com/whitepapers/forrester-wave-devops-platforms/) – analyst evaluation.
+- [GitHub Enterprise Cloud documentation hub](https://docs.github.com/enterprise-cloud@latest) – full feature and security documentation.
 
 Use this playbook to coordinate stakeholders, align trial goals, and ensure the 30-day evaluation produces measurable security, productivity, and cost outcomes.
