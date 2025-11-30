@@ -289,7 +289,9 @@ export function IntegrationSettings() {
         {logEntries.length === 0 ? (
           <p>No events yet.</p>
         ) : (
-          logEntries.map((entry) => <div key={entry}>{entry}</div>)
+          logEntries.map((entry, index) => (
+            <div key={`${index}-${entry}`}>{entry}</div>
+          ))
         )}
       </div>
 
