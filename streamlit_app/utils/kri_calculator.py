@@ -20,7 +20,7 @@ class KRIMetrics:
     average_utilization: Optional[float]
     high_utilization_share: Optional[float]
 
-    def as_dict(self) -> Dict[str, float]:
+    def as_dict(self) -> Dict[str, Optional[float]]:
         return {
             "portfolio_exposure": self.portfolio_exposure,
             "delinquency_30_plus_rate": self.delinquency_30_plus_rate,
@@ -44,7 +44,9 @@ class KRICalculator:
         """
 
         exposure_col = _first_present_column(df, ["outstanding_loan_value", "balance"])
-        portfolio_exposure = df[exposure_col].sum() if exposure_col else np.nan
+        portfolio_exposure = (
+            df[exposure_col].sum(min_count=1) if exposure_col else np.nan
+        )
 
         if "dpd" in df.columns:
             dpd_series = df["dpd"].clip(lower=0)
@@ -56,8 +58,7 @@ class KRICalculator:
             delinquency_90_plus_rate = np.nan
             average_dpd = np.nan
 
-        utilization_col = _first_present_column(df, ["utilization"])
-        if utilization_col:
+        if utilization_col := _first_present_column(df, ["utilization"]):
             utilization_series = df[utilization_col].clip(lower=0)
             average_utilization = utilization_series.mean()
             high_utilization_share = (utilization_series >= 0.8).mean()
@@ -81,18 +82,14 @@ class KRICalculator:
         if "segment" not in df.columns or "dpd_bucket" not in df.columns:
             return None
 
-        mix = (
+        return (
             df.groupby(["segment", "dpd_bucket"]).size()
             .groupby(level=0)
             .apply(lambda s: s / s.sum())
             .unstack(fill_value=0)
             .sort_index()
         )
-        return mix
 
 
 def _first_present_column(df: pd.DataFrame, candidates: list[str]) -> Optional[str]:
-    for col in candidates:
-        if col in df.columns:
-            return col
-    return None
+    return next((col for col in candidates if col in df.columns), None)
