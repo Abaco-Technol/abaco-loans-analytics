@@ -1,6 +1,6 @@
 'use client'
 
-import { processedAnalyticsToCSV, processedAnalyticsToJSON } from '@/lib/exportHelpers'
+import { processedAnalyticsToCSV, processedAnalyticsToJSON, processedAnalyticsToMarkdown } from '@/lib/exportHelpers'
 import styles from './analytics.module.css'
 import type { ProcessedAnalytics } from '@/types/analytics'
 
@@ -18,6 +18,8 @@ function download(name: string, data: string, mime: string) {
 }
 
 export function ExportControls({ analytics }: Props) {
+  const hasLoans = analytics.loans.length > 0
+
   return (
     <section className={styles.section}>
       <div className={styles.sectionHeader}>
@@ -29,6 +31,7 @@ export function ExportControls({ analytics }: Props) {
           className={styles.primaryButton}
           type="button"
           onClick={() => download('analytics.csv', processedAnalyticsToCSV(analytics), 'text/csv')}
+          disabled={!hasLoans}
         >
           Download CSV
         </button>
@@ -36,8 +39,17 @@ export function ExportControls({ analytics }: Props) {
           className={styles.secondaryButton}
           type="button"
           onClick={() => download('analytics.json', processedAnalyticsToJSON(analytics), 'application/json')}
+          disabled={!hasLoans}
         >
           Download JSON
+        </button>
+        <button
+          className={styles.secondaryButton}
+          type="button"
+          onClick={() => download('analytics.md', processedAnalyticsToMarkdown(analytics), 'text/markdown')}
+          disabled={!hasLoans}
+        >
+          Download Markdown
         </button>
       </div>
     </section>
