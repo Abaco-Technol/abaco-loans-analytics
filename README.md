@@ -40,7 +40,7 @@ Use `docs/MCP_CONFIGURATION.md` to add MCP servers via the Codex CLI or by editi
 
 The repository exposes a tiny Deno helper at `main.ts` that verifies the expected directories before you execute tooling such as Fitten or analytics scripts. Run it with:
 
-```
+```sh
 deno run --allow-all main.ts
 ```
 
