@@ -2,10 +2,16 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import { BulkTokenInput } from './BulkTokenInput'
-import { projectId, publicAnonKey, supabaseConfigAvailable } from '@/utils/supabase/info'
+import {
+  IntegrationPlatform,
+  integrationEndpoints,
+  integrationHeaders,
+  parseErrorMessage,
+} from '@/utils/integrations/api'
+import { supabaseConfigAvailable } from '@/utils/supabase/info'
 
 interface TokenStatus {
-  platform: 'meta' | 'linkedin' | 'custom'
+  platform: IntegrationPlatform
   connected: boolean
   lastSync?: string
   expiresIn?: string
@@ -45,38 +51,38 @@ const Icon = {
   ),
 }
 
-const defaultTokens: Record<'meta' | 'linkedin' | 'custom', TokenStatus> = {
+const defaultTokens: Record<IntegrationPlatform, TokenStatus> = {
   meta: { platform: 'meta', connected: false },
   linkedin: { platform: 'linkedin', connected: false },
   custom: { platform: 'custom', connected: false },
 }
 
+const defaultTokenInputs: Record<IntegrationPlatform, { token: string; accountId?: string }> = {
+  meta: { token: '', accountId: '' },
+  linkedin: { token: '' },
+  custom: { token: '' },
+}
+
 export function IntegrationSettings() {
-  const [tokens, setTokens] =
-    useState<Record<'meta' | 'linkedin' | 'custom', TokenStatus>>(defaultTokens)
-  const [showTokenInput, setShowTokenInput] = useState<string | null>(null)
-  const [tokenValue, setTokenValue] = useState('')
-  const [accountId, setAccountId] = useState('')
+  const [tokens, setTokens] = useState<Record<IntegrationPlatform, TokenStatus>>(defaultTokens)
+  const [tokenInputs, setTokenInputs] =
+    useState<Record<IntegrationPlatform, { token: string; accountId?: string }>>(defaultTokenInputs)
+  const [showTokenInput, setShowTokenInput] = useState<IntegrationPlatform | null>(null)
   const [loading, setLoading] = useState(false)
-  const [syncing, setSyncing] = useState<string | null>(null)
+  const [syncing, setSyncing] = useState<IntegrationPlatform | null>(null)
   const [showBulkInput, setShowBulkInput] = useState(false)
   const [alert, setAlert] = useState<Alert | null>(null)
 
   const loadTokenStatus = useCallback(async () => {
     if (!supabaseConfigAvailable) return
     try {
-      const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-a7c39296/integrations/status`,
-        {
-          headers: {
-            Authorization: `Bearer ${publicAnonKey}`,
-          },
-        }
-      )
+      const response = await fetch(integrationEndpoints.status, {
+        headers: integrationHeaders,
+      })
 
       if (response.ok) {
         const data = (await response.json()) as {
-          tokens?: Record<'meta' | 'linkedin' | 'custom', TokenStatus>
+          tokens?: Record<IntegrationPlatform, TokenStatus>
         }
         setTokens(data.tokens ?? defaultTokens)
       }
@@ -89,8 +95,10 @@ export function IntegrationSettings() {
     void loadTokenStatus()
   }, [loadTokenStatus])
 
-  const saveToken = async (platform: 'meta' | 'linkedin' | 'custom') => {
-    if (!tokenValue.trim()) {
+  const saveToken = async (platform: IntegrationPlatform) => {
+    const { token, accountId } = tokenInputs[platform]
+
+    if (!token.trim()) {
       setAlert({ tone: 'error', text: 'Please enter a valid token' })
       return
     }
@@ -101,21 +109,15 @@ export function IntegrationSettings() {
 
     setLoading(true)
     try {
-      const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-a7c39296/integrations/connect`,
-        {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${publicAnonKey}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            platform,
-            token: tokenValue,
-            accountId: accountId || undefined,
-          }),
-        }
-      )
+      const response = await fetch(integrationEndpoints.connect, {
+        method: 'POST',
+        headers: integrationHeaders,
+        body: JSON.stringify({
+          platform,
+          token,
+          accountId: accountId || undefined,
+        }),
+      })
 
       if (response.ok) {
         const data = (await response.json()) as { accountName?: string }
@@ -130,11 +132,13 @@ export function IntegrationSettings() {
           },
         }))
         setShowTokenInput(null)
-        setTokenValue('')
-        setAccountId('')
+        setTokenInputs((prev) => ({
+          ...prev,
+          [platform]: { token: '', accountId: platform === 'meta' ? '' : undefined },
+        }))
       } else {
-        const error = (await response.json()) as { message?: string }
-        setAlert({ tone: 'error', text: error.message || 'Failed to connect' })
+        const errorMessage = await parseErrorMessage(response, 'Failed to connect')
+        setAlert({ tone: 'error', text: errorMessage })
       }
     } catch (error) {
       console.error('Error saving token:', error)
@@ -144,7 +148,7 @@ export function IntegrationSettings() {
     }
   }
 
-  const disconnectToken = async (platform: 'meta' | 'linkedin' | 'custom') => {
+  const disconnectToken = async (platform: IntegrationPlatform) => {
     if (!supabaseConfigAvailable) {
       setAlert({ tone: 'error', text: 'Supabase environment variables are missing.' })
       return
@@ -152,17 +156,11 @@ export function IntegrationSettings() {
 
     setLoading(true)
     try {
-      const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-a7c39296/integrations/disconnect`,
-        {
-          method: 'DELETE',
-          headers: {
-            Authorization: `Bearer ${publicAnonKey}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ platform }),
-        }
-      )
+      const response = await fetch(integrationEndpoints.disconnect, {
+        method: 'DELETE',
+        headers: integrationHeaders,
+        body: JSON.stringify({ platform }),
+      })
 
       if (response.ok) {
         setAlert({ tone: 'success', text: `${platform.toUpperCase()} disconnected.` })
@@ -176,7 +174,8 @@ export function IntegrationSettings() {
           },
         }))
       } else {
-        setAlert({ tone: 'error', text: 'Failed to disconnect' })
+        const errorMessage = await parseErrorMessage(response, 'Failed to disconnect')
+        setAlert({ tone: 'error', text: errorMessage })
       }
     } catch (error) {
       console.error('Error disconnecting:', error)
@@ -186,7 +185,7 @@ export function IntegrationSettings() {
     }
   }
 
-  const syncData = async (platform: 'meta' | 'linkedin' | 'custom') => {
+  const syncData = async (platform: IntegrationPlatform) => {
     if (!supabaseConfigAvailable) {
       setAlert({ tone: 'error', text: 'Supabase environment variables are missing.' })
       return
@@ -194,17 +193,11 @@ export function IntegrationSettings() {
 
     setSyncing(platform)
     try {
-      const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-a7c39296/integrations/sync`,
-        {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${publicAnonKey}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ platform }),
-        }
-      )
+      const response = await fetch(integrationEndpoints.sync, {
+        method: 'POST',
+        headers: integrationHeaders,
+        body: JSON.stringify({ platform }),
+      })
 
       if (response.ok) {
         const data = (await response.json()) as { recordsUpdated?: number }
@@ -220,7 +213,8 @@ export function IntegrationSettings() {
           },
         }))
       } else {
-        setAlert({ tone: 'error', text: 'Sync failed' })
+        const errorMessage = await parseErrorMessage(response, 'Sync failed')
+        setAlert({ tone: 'error', text: errorMessage })
       }
     } catch (error) {
       console.error('Sync error:', error)
@@ -382,8 +376,13 @@ export function IntegrationSettings() {
                       <input
                         id="metaAccessToken"
                         type="password"
-                        value={tokenValue}
-                        onChange={(e) => setTokenValue(e.target.value)}
+                        value={tokenInputs.meta.token}
+                        onChange={(e) =>
+                          setTokenInputs((prev) => ({
+                            ...prev,
+                            meta: { ...prev.meta, token: e.target.value },
+                          }))
+                        }
                         placeholder="Paste your Meta access token"
                         className="w-full rounded-lg border border-[#6D7D8E]/30 bg-[#0C2742]/60 px-4 py-2 text-white placeholder-[#6D7D8E] focus:border-[#C1A6FF]/50 focus:outline-none"
                       />
@@ -398,8 +397,13 @@ export function IntegrationSettings() {
                       <input
                         id="metaInstagramAccount"
                         type="text"
-                        value={accountId}
-                        onChange={(e) => setAccountId(e.target.value)}
+                        value={tokenInputs.meta.accountId}
+                        onChange={(e) =>
+                          setTokenInputs((prev) => ({
+                            ...prev,
+                            meta: { ...prev.meta, accountId: e.target.value },
+                          }))
+                        }
                         placeholder="1234567890"
                         className="w-full rounded-lg border border-[#6D7D8E]/30 bg-[#0C2742]/60 px-4 py-2 text-white placeholder-[#6D7D8E] focus:border-[#C1A6FF]/50 focus:outline-none"
                       />
@@ -418,8 +422,10 @@ export function IntegrationSettings() {
                       <button
                         onClick={() => {
                           setShowTokenInput(null)
-                          setTokenValue('')
-                          setAccountId('')
+                          setTokenInputs((prev) => ({
+                            ...prev,
+                            meta: { token: '', accountId: '' },
+                          }))
                         }}
                         className="rounded-lg border border-[#6D7D8E]/30 bg-[#0C2742]/60 px-4 py-2 text-[#9EA9B3] transition-all hover:bg-[#0C2742]/80"
                       >

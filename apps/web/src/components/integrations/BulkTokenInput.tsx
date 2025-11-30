@@ -1,7 +1,12 @@
 'use client'
 
 import { useState } from 'react'
-import { projectId, publicAnonKey, supabaseConfigAvailable } from '@/utils/supabase/info'
+import {
+  IntegrationPlatform,
+  integrationEndpoints,
+  integrationHeaders,
+} from '@/utils/integrations/api'
+import { supabaseConfigAvailable } from '@/utils/supabase/info'
 
 interface TokenInputs {
   metaToken: string
@@ -46,29 +51,29 @@ export function BulkTokenInput({ onComplete }: { onComplete: () => void }) {
 
   const hasTokens = tokens.metaToken || tokens.linkedinToken || tokens.customToken
 
-  const connectPlatform = async (platform: 'meta' | 'linkedin' | 'custom') => {
+  const connectPlatform = async (platform: IntegrationPlatform) => {
     const tokenKey = `${platform}Token` as const
     const token = tokens[tokenKey]
     if (!token) return false
 
     setProgress((prev) => [...prev, `Connecting ${platform}...`])
-    const response = await fetch(
-      `https://${projectId}.supabase.co/functions/v1/make-server-a7c39296/integrations/connect`,
-      {
+    try {
+      const response = await fetch(integrationEndpoints.connect, {
         method: 'POST',
-        headers: {
-          Authorization: `Bearer ${publicAnonKey}`,
-          'Content-Type': 'application/json',
-        },
+        headers: integrationHeaders,
         body: JSON.stringify({
           platform,
           token,
           accountId: platform === 'meta' ? tokens.metaAccountId || undefined : undefined,
         }),
-      }
-    )
+      })
 
-    if (!response.ok) {
+      if (!response.ok) {
+        setProgress((prev) => [...prev, `❌ ${platform} connection failed`])
+        return false
+      }
+    } catch (error) {
+      console.error(`${platform} connect error:`, error)
       setProgress((prev) => [...prev, `❌ ${platform} connection failed`])
       return false
     }
@@ -77,24 +82,25 @@ export function BulkTokenInput({ onComplete }: { onComplete: () => void }) {
 
     if (platform === 'meta' || platform === 'linkedin') {
       setProgress((prev) => [...prev, `Syncing ${platform} data...`])
-      const syncResponse = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-a7c39296/integrations/sync`,
-        {
+      try {
+        const syncResponse = await fetch(integrationEndpoints.sync, {
           method: 'POST',
-          headers: {
-            Authorization: `Bearer ${publicAnonKey}`,
-            'Content-Type': 'application/json',
-          },
+          headers: integrationHeaders,
           body: JSON.stringify({ platform }),
-        }
-      )
+        })
 
-      if (syncResponse.ok) {
-        const syncData = (await syncResponse.json()) as { recordsUpdated?: number }
-        setProgress((prev) => [
-          ...prev,
-          `✅ Synced ${syncData.recordsUpdated || 0} ${platform === 'meta' ? 'Meta' : 'LinkedIn'} records`,
-        ])
+        if (syncResponse.ok) {
+          const syncData = (await syncResponse.json()) as { recordsUpdated?: number }
+          setProgress((prev) => [
+            ...prev,
+            `✅ Synced ${syncData.recordsUpdated || 0} ${platform === 'meta' ? 'Meta' : 'LinkedIn'} records`,
+          ])
+        } else {
+          setProgress((prev) => [...prev, `❌ ${platform} sync failed`])
+        }
+      } catch (error) {
+        console.error(`${platform} sync error:`, error)
+        setProgress((prev) => [...prev, `❌ ${platform} sync failed`])
       }
     }
 
@@ -114,7 +120,7 @@ export function BulkTokenInput({ onComplete }: { onComplete: () => void }) {
     setProgress([])
     setStatus(null)
 
-    const attempted: Array<'meta' | 'linkedin' | 'custom'> = []
+    const attempted: IntegrationPlatform[] = []
 
     if (tokens.metaToken) attempted.push('meta')
     if (tokens.linkedinToken) attempted.push('linkedin')
@@ -131,14 +137,13 @@ export function BulkTokenInput({ onComplete }: { onComplete: () => void }) {
       setStatus({ tone: 'warning', text: 'Enter at least one token to continue.' })
     } else if (successes === attempted.length) {
       setStatus({ tone: 'success', text: `All ${successes} integrations connected successfully.` })
+      setTimeout(() => onComplete(), 1200)
     } else {
       setStatus({
         tone: 'warning',
         text: `${successes}/${attempted.length} integrations connected. Check details below.`,
       })
     }
-
-    setTimeout(() => onComplete(), 1200)
     setLoading(false)
   }
 
