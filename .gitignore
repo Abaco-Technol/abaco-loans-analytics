@@ -1,9 +1,84 @@
 gemini-cli/
 .DS_Store
 .venv/
-.vscode/
 apps/.DS_Store
 node_modules/
 .next/
 *.vsix
 *.log
+
+# Generated files from terminal output - should never be committed
+Auto-updating
+Could
+Failed
+Fetching
+Get
+Installing
+Learn
+Pouring
+Run
+Running
+
+# Environment variables (NEVER commit secrets)
+.env
+.env.local
+.env.*.local
+.env.production.local
+.env.development.local
+.env.test.local
+
+# IDE
+.idea/
+*.swp
+*.swo
+*~
+.vscode/
+*.iml
+
+# OS
+thumbs.db
+Thumbs.db
+
+# Build outputs
+dist/
+build/
+.turbo/
+.gradle/
+.next/
+out/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+pip-log.txt
+pip-delete-this-directory.txt
+.tox/
+.coverage
+.coverage.*
+.cache
+.pytest_cache/
+.eggs/
+*.egg
+*.egg-info/
+dist/
+build/
+
+# Jupyter Notebooks
+.ipynb_checkpoints/
+*.ipynb
+
+# Credentials (absolutely critical)
+*.pem
+*.key
+*.crt
+*.pfx
+service-account-key.json
+credentials.json
+secrets.yaml
+config/secrets*

@@ -1,24 +1,24 @@
 export type Metric = Readonly<{
-  label: string
-  value: string
-}>
+  label: string;
+  value: string;
+}>;
 
 export type Product = Readonly<{
-  title: string
-  detail: string
-}>
+  title: string;
+  detail: string;
+}>;
 
 export type Step = Readonly<{
-  label: string
-  title: string
-  copy: string
-}>
+  label: string;
+  title: string;
+  copy: string;
+}>;
 
 export const metrics: ReadonlyArray<Metric> = [
   { label: 'Approval uplift with governed risk', value: '+18%' },
   { label: 'Reduction in manual reviews', value: '42%' },
   { label: 'Portfolio coverage with audit trails', value: '100%' },
-]
+];
 
 export const products: ReadonlyArray<Product> = [
   {
@@ -36,13 +36,13 @@ export const products: ReadonlyArray<Product> = [
     detail:
       'Pre-approved journeys, partner-ready APIs, and data rooms that accelerate funding decisions.',
   },
-]
+];
 
 export const controls: ReadonlyArray<string> = [
   'Segregated roles, approvals, and immutable audit logs for every change.',
   'Real-time monitoring of SLAs, risk thresholds, and operational KPIs.',
   'Encryption by default with least-privilege access across environments.',
-]
+];
 
 export const steps: ReadonlyArray<Step> = [
   {
@@ -60,4 +60,4 @@ export const steps: ReadonlyArray<Step> = [
     title: 'Measure & learn',
     copy: 'Track outcomes against revenue and risk KPIs, iterating with governed experiment loops.',
   },
-]
+];

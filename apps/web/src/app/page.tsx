@@ -1,14 +1,14 @@
-import type { PostgrestSingleResponse } from '@supabase/supabase-js'
-import Link from 'next/link'
+import type { PostgrestSingleResponse } from '@supabase/supabase-js';
+import Link from 'next/link';
 import {
   controls as fallbackControls,
   metrics as fallbackMetrics,
   products as fallbackProducts,
   steps as fallbackSteps,
-} from './data'
-import styles from './page.module.css'
-import { supabase } from '../lib/supabaseClient'
-import type { LandingPageData } from '../types/landingPage'
+} from './data';
+import styles from './page.module.css';
+import { supabase } from '../lib/supabaseClient';
+import type { LandingPageData } from '../types/landingPage';
 
 async function getData(): Promise<LandingPageData> {
   if (!supabase) {
@@ -17,29 +17,29 @@ async function getData(): Promise<LandingPageData> {
       products: [...fallbackProducts],
       controls: [...fallbackControls],
       steps: [...fallbackSteps],
-    }
+    };
   }
 
   const { data, error }: PostgrestSingleResponse<LandingPageData> = await supabase
     .from('landing_page_data')
     .select()
-    .single()
+    .single();
 
   if (error || !data) {
-    console.error('Error fetching landing page data:', error)
+    console.error('Error fetching landing page data:', error);
     return {
       metrics: [...fallbackMetrics],
       products: [...fallbackProducts],
       controls: [...fallbackControls],
       steps: [...fallbackSteps],
-    }
+    };
   }
 
-  return data
+  return data;
 }
 
 export default async function Home() {
-  const { metrics, products, controls, steps } = await getData()
+  const { metrics, products, controls, steps } = await getData();
 
   return (
     <div className={styles.page}>
@@ -141,5 +141,5 @@ export default async function Home() {
         </div>
       </section>
     </div>
-  )
+  );
 }

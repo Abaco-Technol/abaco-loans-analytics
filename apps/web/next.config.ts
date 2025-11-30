@@ -1,7 +1,6 @@
-import type { NextConfig } from 'next'
+import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
-  reactCompiler: true,
   typescript: {
     tsconfigPath: './tsconfig.json',
   },
@@ -33,6 +32,6 @@ const nextConfig: NextConfig = {
     afterFiles: [],
     fallback: [],
   }),
-}
+};
 
-export default nextConfig
+export default nextConfig;

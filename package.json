@@ -3,21 +3,16 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "next lint",
+    "dev": "cd apps/web && npm run dev",
+    "build": "cd apps/web && npm run build",
+    "start": "cd apps/web && npm run start",
+    "lint": "cd apps/web && npm run lint",
+    "type-check": "cd apps/web && npm run type-check",
+    "format": "cd apps/web && npm run format",
+    "check-all": "cd apps/web && npm run check-all",
     "prepare": "husky"
   },
-  "dependencies": {
-    "next": "14.2.33",
-    "openai": "^4.52.7",
-    "react": "^18",
-    "react-dom": "^18"
-  },
   "devDependencies": {
-    "eslint": "^8.57.0",
-    "eslint-config-next": "14.2.33",
     "husky": "^9.1.4",
     "lint-staged": "^15.2.8"
   },
@@ -27,3 +22,4 @@
     ]
   }
 }
+
