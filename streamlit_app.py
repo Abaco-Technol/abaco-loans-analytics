@@ -1,3 +1,4 @@
+import hashlib
 import os
 import re
 
@@ -73,6 +74,43 @@ def safe_numeric(series: pd.Series) -> pd.Series:
         .replace("", np.nan)
     )
     return pd.to_numeric(cleaned, errors="coerce")
+
+
+def compute_upload_signature(uploaded_file) -> str | None:
+    if uploaded_file is None:
+        return None
+    content = uploaded_file.getvalue()
+    digest = hashlib.md5(content[:1048576]).hexdigest()
+    return f"{uploaded_file.name}:{uploaded_file.size}:{digest}"
+
+
+def select_payer_column(df: pd.DataFrame) -> str | None:
+    preferred = [
+        "payer",
+        "payer_name",
+        "payor",
+        "pagador",
+        "offtaker",
+        "buyer",
+        "debtor",
+        "customer_name",
+    ]
+    preferred_lower = [col.lower() for col in preferred]
+    for col in df.columns:
+        if col.lower() in preferred_lower:
+            return col
+    return next(
+        (
+            col
+            for col in df.columns
+            if re.search(
+                r"payer|payor|pagador|offtaker|buyer|debtor",
+                col,
+                re.IGNORECASE,
+            )
+        ),
+        None,
+    )
 
 
 def compute_roll_rates(df: pd.DataFrame) -> pd.DataFrame:
@@ -167,12 +205,14 @@ if "loan_data" not in st.session_state:
     st.session_state["loan_data"] = pd.DataFrame()
 if "ingestion_state" not in st.session_state:
     st.session_state["ingestion_state"] = {}
-if "last_upload" not in st.session_state:
-    st.session_state["last_upload"] = None
+if "last_upload_signature" not in st.session_state:
+    st.session_state["last_upload_signature"] = None
+if "last_ingested_at" not in st.session_state:
+    st.session_state["last_ingested_at"] = None
 
 
-def ingest():
-    raw = parse_uploaded_file(uploaded)
+def ingest(uploaded_file, signature: str | None):
+    raw = parse_uploaded_file(uploaded_file)
     normalized = normalize_columns(raw)
     numeric_columns = normalized.select_dtypes(include=["object"]).columns
     numeric_payload = normalized.copy()
@@ -180,15 +220,19 @@ def ingest():
         numeric_payload[col] = safe_numeric(numeric_payload[col])
     st.session_state["loan_data"] = numeric_payload
     st.session_state["ingestion_state"] = define_ingestion_state(numeric_payload)
-    st.session_state["last_upload"] = pd.Timestamp.now()
+    st.session_state["last_upload_signature"] = signature
+    st.session_state["last_ingested_at"] = pd.Timestamp.now()
 
 
-if uploaded is not None:
-    ingest()
+if uploaded is not None and (current_signature := compute_upload_signature(uploaded)):
+    if current_signature != st.session_state.get("last_upload_signature"):
+        ingest(uploaded, current_signature)
+    else:
+        st.sidebar.info("Upload unchanged since last ingestion; skipping reload.")
 
 if st.sidebar.button("Refresh ingestion", use_container_width=True):
-    if uploaded is not None and pd.Timestamp.now() != st.session_state.get("last_upload"):
-        ingest()
+    if uploaded is not None and (signature := compute_upload_signature(uploaded)):
+        ingest(uploaded, signature)
         st.sidebar.success("Ingestion refreshed.")
     else:
         st.sidebar.warning("Upload a new file before refreshing.")
@@ -202,6 +246,8 @@ loan_df = st.session_state["loan_data"]
 ing_state = st.session_state["ingestion_state"]
 st.markdown(f"- Rows: {ing_state['rows']}, Columns: {ing_state['columns']}")
 st.markdown(f"- Loan base validated: {ing_state['has_loan_base']}")
+if st.session_state["last_ingested_at"] is not None:
+    st.markdown(f"- Last ingested at: {st.session_state['last_ingested_at'].strftime('%Y-%m-%d %H:%M:%S')}")
 
 st.markdown("## Data Quality Audit")
 quality_score = 100
@@ -212,6 +258,12 @@ else:
 quality_score = max(0, min(100, quality_score))
 st.progress(quality_score / 100)
 st.markdown("Critical tables scored, missing columns handled, and zeros penalized before KPI synthesis.")
+
+st.markdown("## Payer Coverage Scan")
+if payer_column := select_payer_column(loan_df):
+    st.success(f"Detected payer column: {payer_column}")
+else:
+    st.info("Add a payer/payor/pagador/offtaker/buyer/debtor column to assess coverage.")
 
 st.markdown("## KPI Calculations")
 loan_df["ltv_ratio"] = (loan_df["loan_amount"] / loan_df["appraised_value"]) * 100
@@ -240,9 +292,10 @@ alerts = loan_df[loan_df["ltv_ratio"] > 90].assign(
 st.dataframe(alerts[["alert_type", "ltv_ratio", "probability"]], hide_index=True)
 
 st.markdown("## Growth & Marketing Analysis")
-targets = {}
-targets["target_monthly_yield"] = st.number_input("Target monthly yield (%)", value=1.5)
-targets["target_active_loans"] = st.number_input("Target active loans", value=150)
+targets = {
+    "target_monthly_yield": st.number_input("Target monthly yield (%)", value=1.5),
+    "target_active_loans": st.number_input("Target active loans", value=150),
+}
 current_metrics = {
     "current_yield": portfolio_yield,
     "active_loans": total_loans,
