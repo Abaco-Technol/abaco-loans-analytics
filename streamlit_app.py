@@ -167,7 +167,17 @@ if validation_toggle and uploaded is not None:
 def get_upload_signature(uploaded_file) -> str | None:
     if uploaded_file is None:
         return None
-    content_hash = hashlib.md5(uploaded_file.getvalue()).hexdigest()
+    if hasattr(uploaded_file, "tell"):
+        current_position = uploaded_file.tell()
+    else:
+        current_position = None
+
+    file_bytes = uploaded_file.getvalue()
+    content_hash = hashlib.sha256(file_bytes).hexdigest()
+
+    if hasattr(uploaded_file, "seek") and current_position is not None:
+        uploaded_file.seek(current_position)
+
     return f"{uploaded_file.name}:{uploaded_file.size}:{content_hash}"
 
 
