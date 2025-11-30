@@ -1,6 +1,8 @@
-import { projectId, publicAnonKey } from '@/utils/supabase/info'
+import { projectId, publicAnonKey, supabaseConfigAvailable } from '@/utils/supabase/info'
 
 export type IntegrationPlatform = 'meta' | 'linkedin' | 'custom'
+
+export { supabaseConfigAvailable }
 
 const functionSlug = 'make-server-a7c39296'
 const integrationBaseUrl = `https://${projectId}.supabase.co/functions/v1/${functionSlug}/integrations`

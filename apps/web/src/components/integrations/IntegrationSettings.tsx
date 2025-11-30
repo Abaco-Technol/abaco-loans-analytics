@@ -7,8 +7,8 @@ import {
   integrationEndpoints,
   integrationHeaders,
   parseErrorMessage,
+  supabaseConfigAvailable,
 } from '@/utils/integrations/api'
-import { supabaseConfigAvailable } from '@/utils/supabase/info'
 
 interface TokenStatus {
   platform: IntegrationPlatform

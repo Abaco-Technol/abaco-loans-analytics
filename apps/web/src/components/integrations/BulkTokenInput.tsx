@@ -5,8 +5,8 @@ import {
   IntegrationPlatform,
   integrationEndpoints,
   integrationHeaders,
+  supabaseConfigAvailable,
 } from '@/utils/integrations/api'
-import { supabaseConfigAvailable } from '@/utils/supabase/info'
 
 interface TokenInputs {
   metaToken: string
