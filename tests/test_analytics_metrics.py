@@ -94,7 +94,7 @@ def test_portfolio_kpis_missing_column_raises():
 
 
 def test_portfolio_kpis_handles_empty_frame():
-    df = sample_df().iloc[0:0]
+    df = sample_df().iloc[:0]
     metrics, enriched = portfolio_kpis(df)
     assert metrics == {
         "delinquency_rate": 0.0,
