@@ -1,9 +1,29 @@
 {
+  "name": "abaco-loans-analytics",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "prepare": "husky"
+  },
   "dependencies": {
-    "@google/generative-ai": "^0.24.1",
-    "@supabase/supabase-js": "^2.86.0",
-    "dotenv": "^17.2.3",
-    "openai": "^6.9.1",
-    "zencoder": "^2.0.1"
+    "next": "14.2.33",
+    "openai": "^4.52.7",
+    "react": "^18",
+    "react-dom": "^18"
+  },
+  "devDependencies": {
+    "eslint": "^8.57.0",
+    "eslint-config-next": "^16.0.5",
+    "husky": "^9.1.4",
+    "lint-staged": "^15.2.8"
+  },
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx}": [
+      "eslint --fix"
+    ]
   }
 }
