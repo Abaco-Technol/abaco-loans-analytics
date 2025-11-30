@@ -9,8 +9,8 @@ jobs:
   analytics:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@ad675ce3f5cc7d71d4c5396b0ec8dadd6f39f110
-      - uses: actions/setup-python@270fb6bdc8d81da4cc4b67f3f276f0b0d496e7f3
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
       - name: Install
