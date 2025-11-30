@@ -10,22 +10,65 @@ function toNumber(value: string | number): number {
   return Number(cleaned) || 0
 }
 
+function parseCsvLine(line: string): string[] {
+  const result: string[] = []
+  let current = ''
+  let inQuotes = false
+
+  for (let i = 0; i < line.length; i += 1) {
+    const char = line[i]
+    if (char === '"') {
+      if (inQuotes && line[i + 1] === '"') {
+        current += '"'
+        i += 1
+      } else {
+        inQuotes = !inQuotes
+      }
+    } else if (char === ',' && !inQuotes) {
+      result.push(current.trim())
+      current = ''
+    } else {
+      current += char
+    }
+  }
+
+  result.push(current.trim())
+  return result
+}
+
 export function parseLoanCsv(content: string): LoanRow[] {
-  const rows = content
-    .trim()
+  const lines = content
     .split(/\r?\n/)
-    .map((line) => line.split(','))
-    .filter((parts) => parts.length >= 7)
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0)
 
-  const header = rows.shift()
-  if (!header) return []
+  if (lines.length === 0) {
+    throw new Error('CSV file is empty')
+  }
 
-  const keys = header.map((col) => col.trim().toLowerCase())
-  return rows.map((parts) => {
-    const record: any = {}
-    parts.forEach((value, index) => {
-      record[keys[index] ?? `col_${index}`] = value.trim()
+  const headers = parseCsvLine(lines[0]).map((header) => header.replace(/^"|"$/g, '').toLowerCase())
+  const requiredColumns = [
+    'loan_amount',
+    'appraised_value',
+    'borrower_income',
+    'monthly_debt',
+    'loan_status',
+    'interest_rate',
+    'principal_balance',
+  ]
+  const missingColumns = requiredColumns.filter((field) => !headers.includes(field))
+
+  if (missingColumns.length > 0) {
+    throw new Error(`Missing required columns: ${missingColumns.join(', ')}`)
+  }
+
+  return lines.slice(1).map((line) => {
+    const values = parseCsvLine(line).map((value) => value.replace(/^"|"$/g, ''))
+    const record: Record<string, string> = {}
+    headers.forEach((header, index) => {
+      record[header] = values[index]?.trim() ?? ''
     })
+
     return {
       loan_amount: toNumber(record.loan_amount),
       appraised_value: toNumber(record.appraised_value),
@@ -34,7 +77,7 @@ export function parseLoanCsv(content: string): LoanRow[] {
       loan_status: record.loan_status || 'unknown',
       interest_rate: toNumber(record.interest_rate),
       principal_balance: toNumber(record.principal_balance),
-      dpd_status: record.dpd_status || '',
+      dpd_status: record.dpd_status || record.dpd || '',
     }
   })
 }
