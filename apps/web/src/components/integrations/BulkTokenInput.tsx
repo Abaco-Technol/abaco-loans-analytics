@@ -18,31 +18,33 @@ type BulkTokenInputProps = {
   onProcessItem: (item: BulkTokenItem) => Promise<BulkProcessResult>
 }
 
+type ItemWithId = BulkTokenItem & { id: string }
+
 type ItemStatus = TokenStatus | 'pending' | 'success' | 'retrying'
 
 const defaultRow = 'platform,token,accountId(optional)'
 
 export function BulkTokenInput({ open, onClose, onProcessItem }: BulkTokenInputProps) {
   const [rawInput, setRawInput] = useState('')
-  const [items, setItems] = useState<BulkTokenItem[]>([])
+  const [items, setItems] = useState<ItemWithId[]>([])
   const [processing, setProcessing] = useState(false)
   const [summary, setSummary] = useState<string>('')
 
   const parsedItems = useMemo(() => parseInput(rawInput), [rawInput])
 
-  const updateItem = useCallback((entry: BulkTokenItem, changes: Partial<BulkTokenItem>) => {
+  const updateItem = useCallback((entry: ItemWithId, changes: Partial<ItemWithId>) => {
     setItems((current) =>
-      current.map((item) =>
-        item.platform === entry.platform &&
-        item.token === entry.token &&
-        item.accountId === entry.accountId
-          ? { ...item, ...changes }
-          : item
-      )
+      current.map((item) => {
+        const isMatch = entry.id
+          ? item.id === entry.id
+          : item.platform === entry.platform && item.token === entry.token && item.accountId === entry.accountId
+
+        return isMatch ? { ...item, ...changes } : item
+      })
     )
   }, [])
 
-  const processItems = async (list: BulkTokenItem[]) => {
+  const processItems = async (list: ItemWithId[]) => {
     const results: BulkProcessResult[] = []
     for (let index = 0; index < list.length; index++) {
       const entry = list[index]
@@ -59,6 +61,7 @@ export function BulkTokenInput({ open, onClose, onProcessItem }: BulkTokenInputP
         try {
           const result = await onProcessItem(entry)
           success = result.status === 'success'
+          const processedResult: BulkProcessResult = { ...result, item: entry }
           updateItem(entry, {
             status:
               result.status === 'success' ? ('success' as ItemStatus) : ('error' as ItemStatus),
@@ -66,9 +69,9 @@ export function BulkTokenInput({ open, onClose, onProcessItem }: BulkTokenInputP
             resultId: result.tokenId,
           })
           if (result.status === 'success') {
-            results.push(result)
+            results.push(processedResult)
           } else if (attempts >= 3) {
-            results.push({ ...result, status: 'error' })
+            results.push({ ...processedResult, status: 'error' })
           } else {
             await waitForDelay(attempts)
           }
@@ -87,7 +90,7 @@ export function BulkTokenInput({ open, onClose, onProcessItem }: BulkTokenInputP
         }
       }
 
-      if (!success && !results.find((result) => result.item === entry)) {
+      if (!success && !results.find((result) => result.item.id === entry.id)) {
         results.push({ item: entry, status: 'error', detail: 'Max retries reached' })
       }
     }
@@ -96,8 +99,13 @@ export function BulkTokenInput({ open, onClose, onProcessItem }: BulkTokenInputP
   }
 
   const handleProcess = async () => {
-    const list = parsedItems
-    setItems(list.map((item) => ({ ...item, status: 'pending', attempts: 0 })))
+    const list: ItemWithId[] = parsedItems.map((item, index) => ({
+      ...item,
+      id: `${item.platform}-${item.token}-${item.accountId ?? 'none'}-${index}-${Date.now()}`,
+      status: 'pending',
+      attempts: 0,
+    }))
+    setItems(list)
     setProcessing(true)
     setSummary('')
 
@@ -156,8 +164,8 @@ export function BulkTokenInput({ open, onClose, onProcessItem }: BulkTokenInputP
           </div>
           <div className={styles.progressList} aria-live="polite">
             {items.length === 0 && <p>No items yet. Paste tokens to begin.</p>}
-            {items.map((item, index) => (
-              <div key={`${item.platform}-${index}`} className={styles.progressItem}>
+            {items.map((item) => (
+              <div key={item.id} className={styles.progressItem}>
                 <div>
                   <strong>{PLATFORM_LABELS[item.platform]}</strong> —{' '}
                   {item.accountId || 'No account ID'}
