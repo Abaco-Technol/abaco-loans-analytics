@@ -84,6 +84,13 @@ def compute_upload_signature(uploaded_file) -> str | None:
     return f"{uploaded_file.name}:{uploaded_file.size}:{digest}"
 
 
+def normalize_text(value) -> str:
+    if not isinstance(value, str):
+        return ""
+    cleaned = re.sub(r"[^a-z0-9\s]", " ", value.lower())
+    return re.sub(r"\s+", " ", cleaned).strip()
+
+
 def select_payer_column(df: pd.DataFrame) -> str | None:
     preferred = [
         "payer",
@@ -95,10 +102,11 @@ def select_payer_column(df: pd.DataFrame) -> str | None:
         "debtor",
         "customer_name",
     ]
-    preferred_lower = [col.lower() for col in preferred]
-    for col in df.columns:
-        if col.lower() in preferred_lower:
-            return col
+    column_lookup = {col.lower(): col for col in df.columns}
+    for preferred_name in preferred:
+        lookup_key = preferred_name.lower()
+        if lookup_key in column_lookup:
+            return column_lookup[lookup_key]
     return next(
         (
             col
@@ -260,8 +268,43 @@ st.progress(quality_score / 100)
 st.markdown("Critical tables scored, missing columns handled, and zeros penalized before KPI synthesis.")
 
 st.markdown("## Payer Coverage Scan")
-if payer_column := select_payer_column(loan_df):
+payer_column = select_payer_column(loan_df)
+if payer_column:
     st.success(f"Detected payer column: {payer_column}")
+    normalized_col = f"{payer_column}_normalized"
+    loan_df[normalized_col] = loan_df[payer_column].apply(normalize_text)
+    target_aliases = {
+        "Vicepresidencia de la Republica": [r"vice\s*presidencia", r"vicepresidencia de la republica"],
+        "Bimbo": [r"bimbo", r"grupo\s*bimbo", r"marinela"],
+        "EPA": [r"\bepa\b", r"almacenes\s*epa", r"ferreteria\s*epa"],
+        "Walmart": [r"walmart", r"walmart de mexico y centroamerica", r"walmart centroamerica"],
+        "Pricesmart": [r"prices?mart"],
+        "Nestle": [r"nestl[eé]", r"nestle el salvador"],
+        "Coca Cola": [r"coca\s*cola", r"femsa"],
+    }
+    coverage_rows = []
+    for target, patterns in target_aliases.items():
+        pattern = "|".join(patterns)
+        mask = loan_df[normalized_col].str.contains(pattern, regex=True, na=False)
+        exposure = (
+            loan_df.loc[mask, "principal_balance"].sum()
+            if "principal_balance" in loan_df.columns
+            else np.nan
+        )
+        coverage_rows.append(
+            {
+                "Target": target,
+                "Matches": int(mask.sum()),
+                "Outstanding Exposure": exposure,
+            }
+        )
+    coverage_df = pd.DataFrame(coverage_rows)
+    st.dataframe(coverage_df, hide_index=True)
+    missing = coverage_df.loc[coverage_df["Matches"] == 0, "Target"].tolist()
+    if missing:
+        st.info(
+            f"No matches detected for: {', '.join(missing)}. Use normalized payer names to confirm coverage gaps."
+        )
 else:
     st.info("Add a payer/payor/pagador/offtaker/buyer/debtor column to assess coverage.")
 
