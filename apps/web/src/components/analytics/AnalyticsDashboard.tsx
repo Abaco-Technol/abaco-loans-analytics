@@ -10,6 +10,7 @@ import { TreemapVisualization } from './TreemapVisualization'
 import { GrowthPathChart } from './GrowthPathChart'
 import { RollRateMatrix } from './RollRateMatrix'
 import { ExportControls } from './ExportControls'
+import Link from 'next/link'
 
 const DEFAULT_SAMPLE: LoanRow[] = [
   {
@@ -38,10 +39,68 @@ export function AnalyticsDashboard() {
   const [loanData, setLoanData] = useState<LoanRow[]>(DEFAULT_SAMPLE)
 
   const analytics = useMemo(() => processLoanRows(loanData), [loanData])
+  const docBase = 'https://github.com/Abaco-Technol/abaco-loans-analytics/blob/main'
+
+  const runbookLinks = [
+    {
+      title: 'KPI catalog',
+      href: `${docBase}/docs/analytics/KPIs.md`,
+      description: 'Definitions, owners, thresholds, and drill-down/runbook mappings.',
+    },
+    {
+      title: 'Dashboards guide',
+      href: `${docBase}/docs/analytics/dashboards.md`,
+      description: 'Layout, drill-down rules, alert routing, and next-best actions.',
+    },
+    {
+      title: 'Runbook: KPI breach',
+      href: `${docBase}/docs/analytics/runbooks/kpi-breach.md`,
+      description: 'Actions when KPIs move to amber/red; includes next-best actions per owner.',
+    },
+    {
+      title: 'Runbook: Schema drift',
+      href: `${docBase}/docs/analytics/runbooks/schema-drift.md`,
+      description: 'Freeze, map fields, update contracts, and restore dashboards.',
+    },
+    {
+      title: 'Runbook: Ingestion failure',
+      href: `${docBase}/docs/analytics/runbooks/ingestion-failure.md`,
+      description: 'Containment, backfill, validation, and alert closure.',
+    },
+  ]
 
   return (
     <div className={styles.container}>
       <LoanUploader onData={setLoanData} />
+      <section className={styles.section}>
+        <div className={styles.sectionHeader}>
+          <p className={styles.sectionTitle}>Alert routing & runbooks</p>
+          <p className={styles.sectionCopy}>
+            Every chart links to drill-down tables and owners. Alerts route with SLA and next-best action.
+          </p>
+        </div>
+        <div className={styles.linkGrid}>
+          <div className={styles.linkCard}>
+            <div className={styles.pill}>Alert policy</div>
+            <p className={styles.linkDescription}>
+              Red = page owner + backup paged. Amber = owner notified. Messages include KPI, threshold, runbook link,
+              and ETA.
+            </p>
+          </div>
+          {runbookLinks.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              target="_blank"
+              rel="noreferrer"
+              className={styles.linkCard}
+            >
+              <span className={styles.linkTitle}>{item.title}</span>
+              <span className={styles.linkDescription}>{item.description}</span>
+            </Link>
+          ))}
+        </div>
+      </section>
       <PortfolioHealthKPIs kpis={analytics.kpis} />
       <TreemapVisualization entries={analytics.treemap} />
       <GrowthPathChart projection={analytics.growthProjection} />
