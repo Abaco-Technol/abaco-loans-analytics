@@ -18,6 +18,10 @@ Integraciones disponibles:
 
 Consulta `docs/integration-readiness.md` para verificar el estado de cada integración y las comprobaciones previas que debes ejecutar antes de usarlas.
 
+## KPI catalog and runbooks
+
+Consulta `docs/analytics/KPIs.md` para la taxonomía de KPIs, propietarios, orígenes de datos, umbrales y enlaces a dashboards, tablas de drill-down y runbooks (`docs/analytics/runbooks`). Usa `docs/analytics/dashboards.md` para la guía de visualizaciones y alertas.
+
 ## ContosoTeamStats
 
 This repository contains ContosoTeamStats, a .NET 6 Web API for managing sports teams that ships with Docker, Azure deployment scripts, SendGrid/Twilio integrations, and SQL Server migrations. Follow docs/ContosoTeamStats-setup.md for local setup, secrets, database provisioning, and container validation.
