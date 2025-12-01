@@ -1,7 +1,8 @@
-import pandas as pd
 from typing import Dict
 
-from metrics_utils import (
+import pandas as pd
+
+from .metrics_utils import (
     debt_to_income_ratio,
     loan_to_value,
     portfolio_delinquency_rate,
