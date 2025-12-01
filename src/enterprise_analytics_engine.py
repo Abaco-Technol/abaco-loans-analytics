@@ -74,7 +74,10 @@ class LoanAnalyticsEngine:
                     f"Column '{col}' contains missing numeric values; "
                     "set numeric_missing_fill_value to fill explicitly"
                 )
-            frame[col] = coerced.fillna(self.config.numeric_missing_fill_value or 0)
+            if missing_mask.any():
+                frame[col] = coerced.fillna(self.config.numeric_missing_fill_value)
+            else:
+                frame[col] = coerced
 
         frame["status"] = frame["status"].fillna("").astype(str)
         frame["arrears_flag"] = (
