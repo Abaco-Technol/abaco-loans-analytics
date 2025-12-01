@@ -5,7 +5,8 @@ gemini-cli/
 apps/.DS_Store
 node_modules/
 .next/
-.next/
+.gradle/
+build/
 
 # Local development tools and artifacts
 nvm/
