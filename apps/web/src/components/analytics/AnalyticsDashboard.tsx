@@ -76,15 +76,16 @@ export function AnalyticsDashboard() {
         <div className={styles.sectionHeader}>
           <p className={styles.sectionTitle}>Alert routing & runbooks</p>
           <p className={styles.sectionCopy}>
-            Every chart links to drill-down tables and owners. Alerts route with SLA and next-best action.
+            Every chart links to drill-down tables and owners. Alerts route with SLA and next-best
+            action.
           </p>
         </div>
         <div className={styles.linkGrid}>
           <div className={styles.linkCard}>
             <div className={styles.pill}>Alert policy</div>
             <p className={styles.linkDescription}>
-              Red = page owner + backup paged. Amber = owner notified. Messages include KPI, threshold, runbook link,
-              and ETA.
+              Red = page owner + backup paged. Amber = owner notified. Messages include KPI,
+              threshold, runbook link, and ETA.
             </p>
           </div>
           {runbookLinks.map((item) => (
