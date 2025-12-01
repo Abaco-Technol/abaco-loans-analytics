@@ -1,15 +1,9 @@
 import unittest
-from pathlib import Path
-import sys
 
 import pandas as pd
 
-# Ensure src folder is importable when running tests from repository root
-ROOT = Path(__file__).resolve().parents[1]
-sys.path.append(str(ROOT / "src"))
-
-from enterprise_analytics_engine import LoanAnalyticsEngine  # noqa: E402
-from metrics_utils import (  # noqa: E402
+from apps.analytics.src.enterprise_analytics_engine import LoanAnalyticsEngine
+from apps.analytics.src.metrics_utils import (
     debt_to_income_ratio,
     loan_to_value,
     portfolio_delinquency_rate,
@@ -70,6 +64,16 @@ class TestMetricsUtils(unittest.TestCase):
         self.assertEqual(set(dashboard.keys()), set(expected.keys()))
         for key in expected:
             self.assertAlmostEqual(dashboard[key], expected[key])
+
+    def test_numeric_coercion_and_defaults(self):
+        portfolio = self.portfolio.copy()
+        portfolio["loan_amount"] = portfolio["loan_amount"].astype(str)
+        portfolio["principal_balance"] = portfolio["principal_balance"].astype(str)
+
+        kpis = portfolio_kpis(portfolio)
+
+        self.assertGreater(kpis["portfolio_yield_percent"], 0)
+        self.assertGreater(kpis["average_ltv_ratio_percent"], 0)
 
 
 if __name__ == "__main__":
