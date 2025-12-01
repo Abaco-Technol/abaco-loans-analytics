@@ -83,7 +83,7 @@ export function AnalyticsDashboard() {
   ]
 
   const isStatusRecord = (value: unknown): value is Record<string, 'ok' | 'error'> => {
-    if (!value || typeof value !== 'object') return false
+    if (!value || typeof value !== 'object' || Array.isArray(value)) return false
     return Object.values(value).every((entry) => entry === 'ok' || entry === 'error')
   }
 
