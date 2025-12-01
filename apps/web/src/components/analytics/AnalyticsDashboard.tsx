@@ -95,6 +95,9 @@ export function AnalyticsDashboard() {
         const payload: unknown = await res.json()
         if (isStatusRecord(payload)) {
           setDrilldownStatuses((prev) => ({ ...prev, ...payload }))
+        } else {
+          // eslint-disable-next-line no-console
+          console.warn('Unexpected /api/drilldowns/status payload', payload)
         }
       } catch {
         // keep existing/unknown on failure
