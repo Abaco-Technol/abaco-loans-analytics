@@ -55,3 +55,61 @@ export function processedAnalyticsToJSON(analytics: ProcessedAnalytics): string 
     2
   )
 }
+
+export function processedAnalyticsToMarkdown(analytics: ProcessedAnalytics): string {
+  const kpiRows = [
+    ['Delinquency rate', `${analytics.kpis.delinquencyRate}%`],
+    ['Portfolio yield', `${analytics.kpis.portfolioYield}%`],
+    ['Average LTV', `${analytics.kpis.averageLTV}%`],
+    ['Average DTI', `${analytics.kpis.averageDTI}%`],
+    ['Active loans', analytics.kpis.loanCount.toString()],
+  ]
+
+  const treemapTable = analytics.treemap.length
+    ? [
+        '| Segment | Balance | Color |',
+        '| --- | ---: | --- |',
+        ...analytics.treemap.map(
+          (entry) => `| ${entry.label} | ${entry.value.toLocaleString()} | ${entry.color} |`
+        ),
+      ].join('\n')
+    : '_No treemap segments loaded_'
+
+  const rollRateTable = analytics.rollRates.length
+    ? [
+        '| From (DPD) | To (Status) | Share (%) |',
+        '| --- | --- | ---: |',
+        ...analytics.rollRates.map(
+          (row) => `| ${row.from} | ${row.to} | ${row.percent.toFixed(1)} |`
+        ),
+      ].join('\n')
+    : '_No roll-rate entries loaded_'
+
+  const growthTable = analytics.growthProjection.length
+    ? [
+        '| Month | Yield | Loan volume |',
+        '| --- | ---: | ---: |',
+        ...analytics.growthProjection.map(
+          (point) => `| ${point.label} | ${point.yield}% | ${point.loanVolume.toLocaleString()} |`
+        ),
+      ].join('\n')
+    : '_No growth projection available_'
+
+  return [
+    '# ABACO portfolio analytics export',
+    '',
+    '## KPI summary',
+    '| KPI | Value |',
+    '| --- | ---: |',
+    ...kpiRows.map((row) => `| ${row[0]} | ${row[1]} |`),
+    '',
+    '## Treemap breakdown',
+    treemapTable,
+    '',
+    '## Roll-rate cascade',
+    rollRateTable,
+    '',
+    '## Growth projection',
+    growthTable,
+  ].join('\n')
+}
