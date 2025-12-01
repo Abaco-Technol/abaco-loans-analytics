@@ -87,7 +87,7 @@ export function AnalyticsDashboard() {
       try {
         const res = await fetch('/api/drilldowns/status')
         if (!res.ok) throw new Error('status fetch failed')
-        const json: Record<string, 'ok' | 'error'> = await res.json()
+        const json = (await res.json()) as Record<string, 'ok' | 'error'>
         setDrilldownStatuses((prev) => ({ ...prev, ...json }))
       } catch {
         // keep existing/unknown on failure
