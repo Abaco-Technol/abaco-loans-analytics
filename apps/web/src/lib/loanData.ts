@@ -21,7 +21,7 @@ export function ensureLoanIds(rows: LoanRow[]): IdentifiedLoanRow[] {
 
 export function updateLoanById(
   rows: IdentifiedLoanRow[],
-  updated: Partial<IdentifiedLoanRow> & { id: string },
+  updated: Partial<Omit<IdentifiedLoanRow, 'id'>> & { id: string },
   fallbackIndex?: number
 ): IdentifiedLoanRow[] {
   const targetIndex = rows.findIndex((row) => row.id === updated.id)
