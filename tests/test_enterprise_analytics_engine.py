@@ -10,7 +10,9 @@ if str(ROOT) not in sys.path:
 
 from src.enterprise_analytics_engine import (  # noqa: E402
     LoanPosition,
+    PortfolioKPIs,
     calculate_monthly_payment,
+    calculate_portfolio_kpis,
     expected_loss,
     portfolio_interest_and_risk,
 )
@@ -35,7 +37,13 @@ def test_portfolio_interest_and_risk_tracks_defaults():
         loans=[prime, near_prime, subprime], loss_given_default=0.45
     )
 
-    assert monthly_interest > 0
+    expected_interest = (
+        prime.principal * (prime.annual_interest_rate / 12)
+        + near_prime.principal * (near_prime.annual_interest_rate / 12)
+        + subprime.principal * (subprime.annual_interest_rate / 12)
+    )
+
+    assert monthly_interest == pytest.approx(expected_interest)
     assert portfolio_loss == pytest.approx(
         expected_loss(prime, 0.45) + expected_loss(near_prime, 0.45) + expected_loss(subprime, 0.45)
     )
@@ -57,3 +65,31 @@ def test_invalid_inputs_raise_value_errors():
     valid_loan = LoanPosition(principal=10_000, annual_interest_rate=0.05, term_months=12)
     with pytest.raises(ValueError):
         expected_loss(valid_loan, loss_given_default=1.2)
+
+
+def test_portfolio_kpis_surfaces_weighted_metrics():
+    loans = [
+        LoanPosition(principal=100_000, annual_interest_rate=0.09, term_months=24, default_probability=0.02),
+        LoanPosition(principal=50_000, annual_interest_rate=0.12, term_months=36, default_probability=0.04),
+    ]
+
+    kpis = calculate_portfolio_kpis(loans, loss_given_default=0.4)
+
+    expected_exposure = sum(loan.principal for loan in loans)
+    weighted_rate = (
+        loans[0].annual_interest_rate * loans[0].principal + loans[1].annual_interest_rate * loans[1].principal
+    ) / expected_exposure
+    weighted_term = (
+        loans[0].term_months * loans[0].principal + loans[1].term_months * loans[1].principal
+    ) / expected_exposure
+    expected_interest = sum(loan.principal * (loan.annual_interest_rate / 12) for loan in loans)
+
+    assert isinstance(kpis, PortfolioKPIs)
+    assert kpis.exposure == expected_exposure
+    assert kpis.weighted_rate == pytest.approx(weighted_rate)
+    assert kpis.weighted_term_months == pytest.approx(weighted_term)
+    assert kpis.expected_monthly_interest == pytest.approx(expected_interest)
+    assert kpis.expected_monthly_payment == pytest.approx(
+        calculate_monthly_payment(loans[0]) + calculate_monthly_payment(loans[1])
+    )
+    assert kpis.expected_loss == pytest.approx(sum(expected_loss(loan, 0.4) for loan in loans))

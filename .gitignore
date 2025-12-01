@@ -9,6 +9,8 @@ node_modules/
 coverage/
 dist/
 artifacts/
+.scannerwork/
+.pytest_cache/
 apps/.DS_Store
 __pycache__/
 *.pyc

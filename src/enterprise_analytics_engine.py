@@ -23,9 +23,15 @@ class LoanPosition:
             raise ValueError("Default probability must be between 0 and 1.")
 
 
+def _monthly_interest_rate(loan: LoanPosition) -> float:
+    """Return the monthly interest rate as a decimal."""
+
+    return loan.annual_interest_rate / 12
+
+
 def calculate_monthly_payment(loan: LoanPosition) -> float:
     """Return the amortized monthly payment for a fixed-rate loan."""
-    monthly_rate = loan.annual_interest_rate / 12
+    monthly_rate = _monthly_interest_rate(loan)
     if monthly_rate == 0:
         return loan.principal / loan.term_months
 
@@ -47,7 +53,7 @@ def portfolio_interest_and_risk(
     loans: Iterable[LoanPosition], loss_given_default: float
 ) -> Tuple[float, float]:
     """
-    Aggregate expected monthly interest and expected loss across a portfolio.
+    Aggregate expected first-month interest and expected loss across a portfolio.
 
     Returns:
         A tuple with (expected_monthly_interest, expected_loss_value).
@@ -56,7 +62,58 @@ def portfolio_interest_and_risk(
     aggregated_loss = 0.0
 
     for loan in loans:
-        expected_interest += calculate_monthly_payment(loan) - loan.principal / loan.term_months
+        expected_interest += loan.principal * _monthly_interest_rate(loan)
         aggregated_loss += expected_loss(loan, loss_given_default)
 
     return expected_interest, aggregated_loss
+
+
+@dataclass(frozen=True)
+class PortfolioKPIs:
+    """Aggregate indicators for portfolio performance and risk."""
+
+    exposure: float
+    weighted_rate: float
+    weighted_term_months: float
+    expected_monthly_payment: float
+    expected_monthly_interest: float
+    expected_loss: float
+
+
+def calculate_portfolio_kpis(
+    loans: Iterable[LoanPosition], loss_given_default: float
+) -> PortfolioKPIs:
+    """
+    Compute weighted averages and expected first-month cash flows for a portfolio.
+
+    The calculation returns exposure, weighted rate and term (principal weighted),
+    expected total monthly payment, first-month interest, and expected loss.
+    """
+
+    exposure = 0.0
+    weighted_rate = 0.0
+    weighted_term = 0.0
+    expected_payment = 0.0
+    expected_interest = 0.0
+    aggregated_loss = 0.0
+
+    for loan in loans:
+        exposure += loan.principal
+        weighted_rate += loan.annual_interest_rate * loan.principal
+        weighted_term += loan.term_months * loan.principal
+        monthly_payment = calculate_monthly_payment(loan)
+        expected_payment += monthly_payment
+        expected_interest += loan.principal * _monthly_interest_rate(loan)
+        aggregated_loss += expected_loss(loan, loss_given_default)
+
+    if exposure == 0:
+        return PortfolioKPIs(0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
+
+    return PortfolioKPIs(
+        exposure=exposure,
+        weighted_rate=weighted_rate / exposure,
+        weighted_term_months=weighted_term / exposure,
+        expected_monthly_payment=expected_payment,
+        expected_monthly_interest=expected_interest,
+        expected_loss=aggregated_loss,
+    )
