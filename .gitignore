@@ -1,14 +1,19 @@
 gemini-cli/
 .DS_Store
-.venv/
-.vscode/
 apps/.DS_Store
-node_modules/
-.next/
-.next/
-.gradle/
-build/
 
 # Local development tools and artifacts
+.venv/
+.vscode/
 nvm/
+
+# Node build outputs
+node_modules/
+.next/
+
+# Gradle build outputs
+**/.gradle/
+**/build/
+
+# Local repository clones
 abaco-loans-analytics/
