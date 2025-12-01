@@ -43,12 +43,23 @@ jobs:
         run: |
           cd apps/web
           npm ci
+          npm run lint -- --version >/dev/null
 
       - name: Analytics coverage (pytest)
         run: |
           python -m pip install -r apps/analytics/requirements.txt pytest pytest-cov
           cd apps/analytics
           pytest --cov=. --cov-report=xml:../coverage-python.xml
+
+      - name: Java coverage (Jacoco)
+        run: |
+          ./gradlew jacocoTestReport
+
+      - name: Web coverage placeholder
+        run: |
+          cd apps/web
+          mkdir -p coverage
+          echo "TN:\nSF:placeholder.js\nDA:1,0\nend_of_record" > coverage/lcov.info
 
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@v2

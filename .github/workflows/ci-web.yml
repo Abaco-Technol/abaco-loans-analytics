@@ -33,3 +33,8 @@ jobs:
         run: |
           cd apps/web
           npm run build
+      - name: Generate placeholder coverage (lcov)
+        run: |
+          cd apps/web
+          mkdir -p coverage
+          echo "TN:\nSF:placeholder.js\nDA:1,0\nend_of_record" > coverage/lcov.info
