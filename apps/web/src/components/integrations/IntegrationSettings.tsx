@@ -105,7 +105,7 @@ export function IntegrationSettings() {
         const nextState: Record<Platform, TokenState> = { ...initialState }
         json.forEach((entry) => {
           if (isStatusRow(entry)) {
-            const {platform} = entry
+            const { platform } = entry
             if (PLATFORMS.includes(platform)) {
               nextState[platform] = {
                 status: entry.status || 'connected',
@@ -168,7 +168,7 @@ export function IntegrationSettings() {
   }
 
   const disconnectPlatform = async (platform: Platform) => {
-    const {tokenId} = tokenState[platform]
+    const { tokenId } = tokenState[platform]
     setPlatformState(platform, { status: 'syncing', message: 'Disconnecting...' })
     try {
       await callEdgeFunction('/disconnect', { tokenId, platform })
@@ -289,9 +289,7 @@ export function IntegrationSettings() {
         {logEntries.length === 0 ? (
           <p>No events yet.</p>
         ) : (
-          logEntries.map((entry, index) => (
-            <div key={`${index}-${entry}`}>{entry}</div>
-          ))
+          logEntries.map((entry, index) => <div key={`${index}-${entry}`}>{entry}</div>)
         )}
       </div>
 

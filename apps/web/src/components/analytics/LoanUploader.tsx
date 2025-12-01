@@ -22,14 +22,16 @@ export function LoanUploader({ onData }: Props) {
       }
       reader.readAsText(file)
     },
-    [onData],
+    [onData]
   )
 
   return (
     <section className={styles.section}>
       <div className={styles.sectionHeader}>
         <p className={styles.sectionTitle}>Loan uploader</p>
-        <p className={styles.sectionCopy}>Drag in loans.csv or copy the production extract; we handle currency symbols.</p>
+        <p className={styles.sectionCopy}>
+          Drag in loans.csv or copy the production extract; we handle currency symbols.
+        </p>
       </div>
       <input className={styles.uploadInput} type="file" accept=".csv" onChange={handleFile} />
     </section>
