@@ -30,9 +30,15 @@ export function BulkTokenInput({ open, onClose, onProcessItem }: BulkTokenInputP
 
   const parsedItems = useMemo(() => parseInput(rawInput), [rawInput])
 
-  const updateItem = useCallback((index: number, changes: Partial<BulkTokenItem>) => {
+  const updateItem = useCallback((entry: BulkTokenItem, changes: Partial<BulkTokenItem>) => {
     setItems((current) =>
-      current.map((item, idx) => (idx === index ? { ...item, ...changes } : item))
+      current.map((item) =>
+        item.platform === entry.platform &&
+        item.token === entry.token &&
+        item.accountId === entry.accountId
+          ? { ...item, ...changes }
+          : item
+      )
     )
   }, [])
 
@@ -45,7 +51,7 @@ export function BulkTokenInput({ open, onClose, onProcessItem }: BulkTokenInputP
 
       while (attempts < 3 && !success) {
         attempts += 1
-        updateItem(index, {
+        updateItem(entry, {
           status: attempts > 1 ? ('retrying' as ItemStatus) : ('pending' as ItemStatus),
           attempts,
           message: `${new Date().toLocaleTimeString()} • attempt ${attempts}`,
@@ -53,7 +59,7 @@ export function BulkTokenInput({ open, onClose, onProcessItem }: BulkTokenInputP
         try {
           const result = await onProcessItem(entry)
           success = result.status === 'success'
-          updateItem(index, {
+          updateItem(entry, {
             status:
               result.status === 'success' ? ('success' as ItemStatus) : ('error' as ItemStatus),
             message: result.detail,
@@ -68,7 +74,7 @@ export function BulkTokenInput({ open, onClose, onProcessItem }: BulkTokenInputP
           }
         } catch (error) {
           const detail = error instanceof Error ? error.message : 'Unable to connect'
-          updateItem(index, {
+          updateItem(entry, {
             status: attempts >= 3 ? ('error' as ItemStatus) : ('retrying' as ItemStatus),
             attempts,
             message: `${new Date().toLocaleTimeString()} • ${detail}`,
