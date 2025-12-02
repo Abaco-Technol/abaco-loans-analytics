@@ -21,13 +21,13 @@ export type Step = {
   copy: string
 }
 
-export const metrics = [
+export const metrics = Object.freeze([
   { label: 'Approval uplift with governed risk', value: '+18%' },
   { label: 'Reduction in manual reviews', value: '42%' },
   { label: 'Portfolio coverage with audit trails', value: '100%' },
-] as const satisfies readonly Metric[]
+] satisfies readonly Metric[])
 
-export const products = [
+export const products = Object.freeze([
   {
     title: 'Portfolio Intelligence',
     detail:
@@ -43,15 +43,15 @@ export const products = [
     detail:
       'Pre-approved journeys, partner-ready APIs, and data rooms that accelerate funding decisions.',
   },
-] as const satisfies readonly Product[]
+] satisfies readonly Product[])
 
-export const controls = [
+export const controls = Object.freeze([
   'Segregated roles, approvals, and immutable audit logs for every change.',
   'Real-time monitoring of SLAs, risk thresholds, and operational KPIs.',
   'Encryption by default with least-privilege access across environments.',
-] as const satisfies readonly string[]
+] satisfies readonly string[])
 
-export const steps = [
+export const steps = Object.freeze([
   {
     label: '01',
     title: 'Unify data signals',
@@ -67,7 +67,7 @@ export const steps = [
     title: 'Measure & learn',
     copy: 'Track outcomes against revenue and risk KPIs, iterating with governed experiment loops.',
   },
-] as const satisfies readonly Step[]
+] satisfies readonly Step[])
 
 export const marketingContent = Object.freeze({
   metrics,
