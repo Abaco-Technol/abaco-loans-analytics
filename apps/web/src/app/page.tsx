@@ -1,9 +1,14 @@
 import Link from 'next/link'
 import styles from './page.module.css'
-import { supabase } from '../lib/supabaseClient'
+import { isSupabaseConfigured, supabase } from '../lib/supabaseClient'
 import type { LandingPageData, Metric, Product, Step } from '../types/landingPage'
 
 async function getData(): Promise<LandingPageData> {
+  if (!supabase || !isSupabaseConfigured) {
+    console.warn('Supabase environment variables are missing; using fallback landing page data')
+    return { metrics: [], products: [], controls: [], steps: [] }
+  }
+
   const { data, error } = await supabase.from('landing_page_data').select('*').single()
 
   if (error) {
