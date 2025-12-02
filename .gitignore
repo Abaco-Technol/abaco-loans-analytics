@@ -5,5 +5,8 @@ gemini-cli/
 apps/.DS_Store
 node_modules/
 .next/
-.next/
+.pytest_cache/
+__pycache__/
+.mypy_cache/
+.ruff_cache/
 .gradle/
