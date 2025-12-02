@@ -40,3 +40,30 @@ def test_export_kpis_to_blob_uses_blob_name_and_metrics():
     assert result_path == "test-container/custom-kpis.json"
     assert exporter.received_blob_name == "custom-kpis.json"
     assert exporter.received_metrics == expected_metrics
+
+
+def test_export_kpis_to_blob_defaults_when_blob_name_missing():
+    data = {
+        "loan_amount": [180000, 220000],
+        "appraised_value": [200000, 240000],
+        "borrower_income": [90000, 130000],
+        "monthly_debt": [1500, 2500],
+        "loan_status": ["current", "current"],
+        "interest_rate": [0.045, 0.04],
+        "principal_balance": [175000, 210000],
+    }
+    engine = LoanAnalyticsEngine(pd.DataFrame(data))
+    exporter = StubExporter()
+
+    result_path = engine.export_kpis_to_blob(exporter)
+
+    expected_metrics = {
+        "portfolio_delinquency_rate_percent": pytest.approx(0.0),
+        "portfolio_yield_percent": pytest.approx(4.23, rel=1e-3),
+        "average_ltv_ratio_percent": pytest.approx(90.83, rel=1e-3),
+        "average_dti_ratio_percent": pytest.approx(21.54, rel=1e-3),
+    }
+
+    assert result_path == "test-container/kpi-dashboard.json"
+    assert exporter.received_blob_name is None
+    assert exporter.received_metrics == expected_metrics

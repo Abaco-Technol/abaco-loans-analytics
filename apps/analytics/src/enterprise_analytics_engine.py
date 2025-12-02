@@ -88,6 +88,8 @@ class LoanAnalyticsEngine:
     def export_kpis_to_blob(
         self, exporter: AzureBlobKPIExporter, blob_name: Optional[str] = None
     ) -> str:
+        if not hasattr(exporter, "upload_metrics") or not callable(exporter.upload_metrics):
+            raise TypeError("exporter must implement an upload_metrics callable")
         kpis = self.run_full_analysis()
         return exporter.upload_metrics(kpis, blob_name=blob_name)
 
