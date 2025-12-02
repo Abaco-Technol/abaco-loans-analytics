@@ -1,24 +1,30 @@
 import Link from 'next/link'
 import styles from './page.module.css'
 import { isSupabaseConfigured, supabase } from '../lib/supabaseClient'
-import type { LandingPageData, Metric, Product, Step } from '../types/landingPage'
+import {
+  EMPTY_LANDING_PAGE_DATA,
+  type LandingPageData,
+  type Metric,
+  type Product,
+  type Step,
+} from '../types/landingPage'
 
 async function getData(): Promise<LandingPageData> {
   if (!supabase || !isSupabaseConfigured) {
     console.warn('Supabase environment variables are missing; using fallback landing page data')
-    return { metrics: [], products: [], controls: [], steps: [] }
+    return EMPTY_LANDING_PAGE_DATA
   }
 
   const { data, error } = await supabase.from('landing_page_data').select('*').single()
 
   if (error) {
     console.error('Error fetching landing page data:', error)
-    return { metrics: [], products: [], controls: [], steps: [] }
+    return EMPTY_LANDING_PAGE_DATA
   }
 
   if (!data) {
     console.error('Landing page data is missing from Supabase response')
-    return { metrics: [], products: [], controls: [], steps: [] }
+    return EMPTY_LANDING_PAGE_DATA
   }
 
   return data

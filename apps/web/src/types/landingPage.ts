@@ -20,3 +20,10 @@ export interface LandingPageData {
   controls: string[]
   steps: Step[]
 }
+
+export const EMPTY_LANDING_PAGE_DATA: LandingPageData = Object.freeze({
+  metrics: [],
+  products: [],
+  controls: [],
+  steps: [],
+})

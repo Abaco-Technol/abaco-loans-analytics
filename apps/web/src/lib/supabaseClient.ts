@@ -11,10 +11,11 @@ type Database = {
   }
 }
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim()
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim()
 
-const hasSupabaseEnv = Boolean(supabaseUrl && supabaseAnonKey)
+const hasValidSupabaseUrl = Boolean(supabaseUrl && /^https?:\/\//.test(supabaseUrl))
+const hasSupabaseEnv = Boolean(hasValidSupabaseUrl && supabaseAnonKey)
 
 export const supabase: SupabaseClient<Database> | null = hasSupabaseEnv
   ? createClient<Database>(supabaseUrl as string, supabaseAnonKey as string)
