@@ -5,31 +5,37 @@ const nextConfig: NextConfig = {
   typescript: {
     tsconfigPath: './tsconfig.json',
   },
-  headers: () => [
-    {
-      source: '/:path*',
-      headers: [
-        {
-          key: 'X-Content-Type-Options',
-          value: 'nosniff',
-        },
-        {
-          key: 'X-Frame-Options',
-          value: 'DENY',
-        },
-        {
-          key: 'X-XSS-Protection',
-          value: '1; mode=block',
-        },
-      ],
-    },
-  ],
-  redirects: () => [],
-  rewrites: () => ({
-    beforeFiles: [],
-    afterFiles: [],
-    fallback: [],
-  }),
+  headers: async () =>
+    await Promise.resolve([
+      {
+        source: '/:path*',
+        headers: [
+          {
+            key: 'X-Content-Type-Options',
+            value: 'nosniff',
+          },
+          {
+            key: 'X-Frame-Options',
+            value: 'DENY',
+          },
+          {
+            key: 'X-XSS-Protection',
+            value: '1; mode=block',
+          },
+          {
+            key: 'Referrer-Policy',
+            value: 'strict-origin-when-cross-origin',
+          },
+        ],
+      },
+    ]),
+  redirects: async () => await Promise.resolve([]),
+  rewrites: async () =>
+    await Promise.resolve({
+      beforeFiles: [],
+      afterFiles: [],
+      fallback: [],
+    }),
 }
 
 export default nextConfig

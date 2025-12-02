@@ -1,5 +1,11 @@
-gemini-cli/
+node_modules/
+**/node_modules/
+pnpm-lock.yaml
+yarn.lock
 .DS_Store
 .venv/
 .vscode/
+.gemini-cli/
+.gemini-cli
+.gradle/
 apps/.DS_Store
