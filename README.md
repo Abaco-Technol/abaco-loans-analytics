@@ -50,6 +50,8 @@ seguridad, y mantengas alineada la checklist de Azure, GitHub Actions y KPIs dur
 (App Service F1, ACR Basic y tiers de seguridad gratuitos de Azure). El documento incluye prompts reutilizables cuando
 Copilot guíe los cambios.
 
+Validation signal: refreshed on the validation/contoso-team-stats branch to trigger CI verification for the current release cycle.
+
 ## Fitten Code AI 编程助手
 
 Para integrar Fitten Code AI en este monorepo (local y GitHub), consulta `docs/Fitten-Code-AI-Manual.md`, que cubre la
@@ -62,8 +64,8 @@ ejemplos para Context7, Figma, Chrome DevTools y cómo ejecutar Codex como servi
 
 ## Deno helper
 
-El repositorio expone un helper ligero en `main.ts` que verifica los directorios esperados antes de ejecutar
-herramientas como Fitten o scripts analíticos. Ejecútalo con:
+The repository exposes a tiny Deno helper at `main.ts` that verifies the expected directories before you execute
+tooling such as Fitten or analytics scripts. Run it with:
 
 ```sh
 deno run --allow-all main.ts
@@ -71,23 +73,22 @@ deno run --allow-all main.ts
 
 `--unstable` ya no es necesario en Deno 2.0; solo incluye los flags `--unstable-*` cuando dependas de APIs inestables.
 
-## Solución de problemas con la extensión VS Code Zencoder
+## VS Code Python terminals
+
+If you rely on `.env` files while running the Python analytics scripts, enable the VS Code setting
+`python.terminal.useEnvFile` so integrated terminals automatically load those variables. Add this to your user
+`settings.json` via the Command Palette to avoid missing secrets during local runs.
+
+## Troubleshooting VS Code Zencoder extension
 
 Si observas `Failed to spawn Zencoder process: ... zencoder-cli ENOENT` en VS Code, sigue la checklist de remediación en
 `docs/Zencoder-Troubleshooting.md` para reinstalar la extensión y restaurar el binario faltante.
 
 ## Java & Gradle
 
-La build de Gradle está configurada para JDK **21** mediante la toolchain en `build.gradle`. Ejecutar Gradle con JDKs en
-versión preliminar (por ejemplo, JDK 25) no es compatible con el wrapper actual (8.10) y fallará durante la
-sincronización del proyecto. Sigue estas prácticas para evitar el error "Unsupported Java Runtime" y mantener builds
-reproducibles:
-
-- **IDE (IntelliJ/VS Code):** configura el *Gradle JVM* explícitamente a un JDK 21 LTS (Settings → Build Tools →
-  Gradle → Gradle JVM → selecciona JDK 21). Si usas JDK 25 como JDK de proyecto, Gradle seguirá ejecutándose con 21.
-- **CLI:** exporta `JAVA_HOME` o `GRADLE_JAVA_HOME` apuntando a tu instalación de JDK 21 antes de ejecutar Gradle.
-  Ejemplo: `export GRADLE_JAVA_HOME=$JAVA_HOME` (asegúrate de que `$JAVA_HOME` sea 21 LTS).
-- **Versionado local:** el archivo `.java-version` fija el JDK a **21** para herramientas como `asdf`, `jenv` o
-  `sdkman`, evitando que se seleccione un runtime no soportado.
-
-Con estas medidas, mantienes la compatibilidad con Gradle 8.10 y evitas bloqueos al sincronizar o ejecutar tareas.
+The Gradle build is configured for JDK **21** via the toolchain in `build.gradle`. Running Gradle with newer
+early-access JDKs (e.g., JDK 25) is not supported by the current Gradle wrapper (8.10) and will fail during project
+sync. If your IDE selects a newer JDK by default, switch the Gradle JVM to JDK 21 (or another supported LTS version)
+and ensure your `JAVA_HOME` points to that installation. In IntelliJ IDEA, go to **Settings > Build, Execution,
+Deployment > Build Tools > Gradle** and set **Gradle JVM** to JDK 21 to avoid the sync error. You can verify the
+wrapper is using JDK 21 by running `./gradlew --version` and checking the `JVM` line.
