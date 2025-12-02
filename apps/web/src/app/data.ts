@@ -1,18 +1,18 @@
-export type Metric = Readonly<{
+export type Metric = {
   label: string
   value: string
-}>
+}
 
-export type Product = Readonly<{
+export type Product = {
   title: string
   detail: string
-}>
+}
 
-export type Step = Readonly<{
+export type Step = {
   label: string
   title: string
   copy: string
-}>
+}
 
 export const metrics = [
   { label: 'Approval uplift with governed risk', value: '+18%' },
