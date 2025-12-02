@@ -2,6 +2,7 @@ gemini-cli/
 .DS_Store
 .venv/
 .vscode/
+.gradle/
 apps/.DS_Store
 node_modules/
 **/node_modules/
