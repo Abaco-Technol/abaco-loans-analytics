@@ -47,7 +47,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        language: ["javascript", "python"]
+        language:
+          # CodeQL uses the `javascript` slug for both JavaScript and TypeScript projects
+          - javascript
+          - python
 
     steps:
       - name: Checkout repository
