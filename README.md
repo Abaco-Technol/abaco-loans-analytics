@@ -80,5 +80,14 @@ Si observas `Failed to spawn Zencoder process: ... zencoder-cli ENOENT` en VS Co
 
 La build de Gradle está configurada para JDK **21** mediante la toolchain en `build.gradle`. Ejecutar Gradle con JDKs en
 versión preliminar (por ejemplo, JDK 25) no es compatible con el wrapper actual (8.10) y fallará durante la
-sincronización del proyecto. Si tu IDE selecciona un JDK más reciente por defecto, cambia la JVM de Gradle a JDK 21 (u
-otra versión LTS soportada) y asegúrate de que `JAVA_HOME` apunte a esa instalación.
+sincronización del proyecto. Sigue estas prácticas para evitar el error "Unsupported Java Runtime" y mantener builds
+reproducibles:
+
+- **IDE (IntelliJ/VS Code):** configura el *Gradle JVM* explícitamente a un JDK 21 LTS (Settings → Build Tools →
+  Gradle → Gradle JVM → selecciona JDK 21). Si usas JDK 25 como JDK de proyecto, Gradle seguirá ejecutándose con 21.
+- **CLI:** exporta `JAVA_HOME` o `GRADLE_JAVA_HOME` apuntando a tu instalación de JDK 21 antes de ejecutar Gradle.
+  Ejemplo: `export GRADLE_JAVA_HOME=$JAVA_HOME` (asegúrate de que `$JAVA_HOME` sea 21 LTS).
+- **Versionado local:** el archivo `.java-version` fija el JDK a **21** para herramientas como `asdf`, `jenv` o
+  `sdkman`, evitando que se seleccione un runtime no soportado.
+
+Con estas medidas, mantienes la compatibilidad con Gradle 8.10 y evitas bloqueos al sincronizar o ejecutar tareas.
