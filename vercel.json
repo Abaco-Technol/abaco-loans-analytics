@@ -1,17 +1,17 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "rootDirectory": "apps/web",
-  "buildCommand": "npm run build",
-  "devCommand": "npm run dev",
-  "installCommand": "npm install",
+  "buildCommand": "npm run build --prefix apps/web",
+  "devCommand": "npm run dev --prefix apps/web",
+  "installCommand": "npm install --prefix apps/web",
   "framework": "nextjs",
-  "outputDirectory": ".next",
+  "outputDirectory": "apps/web/.next",
   "env": {
     "NODE_ENV": "production"
   },
   "regions": ["iad1"],
   "functions": {
-    "src/app/api/**/*.ts": {
+    "apps/web/src/app/api/**/*.ts": {
       "memory": 1024,
       "maxDuration": 10
     }
