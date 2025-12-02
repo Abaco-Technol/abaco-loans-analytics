@@ -1,109 +1,85 @@
-"""Streamlit application layout and interactions."""
-from __future__ import annotations
-
-import datetime as dt
-from typing import Dict
-
 import pandas as pd
 import streamlit as st
+import altair as alt
+from utils.feature_engineering import FeatureEngineer
+from utils.kri_calculator import KRICalculator
 
-from streamlit_app.config import theme
-from streamlit_app.utils.business_rules import IndustryType, MYPEBusinessRules
-from streamlit_app.utils.feature_engineering import FeatureEngineer
-from streamlit_app.utils.ingestion import DataIngestionEngine
+st.set_page_config(layout="wide", page_title="Abaco Loans Analytics Dashboard")
 
+# --- Data Ingestion Simulation ---
+@st.cache_data
+def load_and_prepare_data():
+    # In a real-world scenario, this would load data from a database or data warehouse.
+    data = {
+        'customer_id': range(100),
+        'revenue': pd.np.random.uniform(10000, 150000, 100),
+        'balance': pd.np.random.uniform(1000, 50000, 100),
+        'limit': pd.np.random.uniform(20000, 100000, 100),
+        'dpd': pd.np.random.choice([-1, 0, 15, 45, 75, 100], 100, p=[0.1, 0.6, 0.1, 0.1, 0.05, 0.05]),
+    }
+    raw_df = pd.DataFrame(data)
 
-def _sidebar_filters() -> Dict:
-    st.sidebar.subheader("Filters")
-    industry = st.sidebar.selectbox(
-        "Industry",
-        options=[option.name for option in MYPEBusinessRules.INDUSTRY_GDP_CONTRIBUTION.keys()],
-        index=0,
+    # Simulate data quality score
+    completeness = (raw_df.notna().sum().sum() / (raw_df.shape[0] * raw_df.shape[1])) * 100
+    return raw_df, completeness
+
+# --- Main Application ---
+st.title("Abaco Loans Analytics Dashboard")
+
+# 1. Ingestion and Enrichment
+raw_portfolio_df, data_quality_score = load_and_prepare_data()
+enriched_df = FeatureEngineer.enrich_portfolio(raw_portfolio_df)
+kri_metrics = KRICalculator.calculate(enriched_df)
+kri_mix = KRICalculator.segment_risk_mix(enriched_df)
+
+# 2. Display High-Level Metrics
+st.header("Portfolio Health & Quality Metrics")
+col1, col2, col3, col4 = st.columns(4)
+col1.metric("Data Quality Score", f"{data_quality_score:.2f}%", help="Completeness of the source data.")
+col2.metric("Benchmark Rotation", "94%", "1.5% vs. Target", delta_color="inverse")
+col3.metric("Collection Target", "88%", "-4% vs. Target")
+col4.metric("Portfolio Yield", "12.3%", "0.8% vs. Last Q")
+
+# 3. Key Risk Indicators
+st.header("Key Risk Indicators (KRIs)")
+kri_col1, kri_col2, kri_col3 = st.columns(3)
+kri_col1.metric("30+ Delinquency Rate", f"{kri_metrics.delinquency_30_plus_rate:.2%}" if pd.notna(kri_metrics.delinquency_30_plus_rate) else "N/A")
+kri_col2.metric("90+ Delinquency Rate", f"{kri_metrics.delinquency_90_plus_rate:.2%}" if pd.notna(kri_metrics.delinquency_90_plus_rate) else "N/A")
+kri_col3.metric("Average DPD", f"{kri_metrics.average_dpd:.1f}" if pd.notna(kri_metrics.average_dpd) else "N/A")
+
+kri_col4, kri_col5, _ = st.columns(3)
+kri_col4.metric("Avg Utilization", f"{kri_metrics.average_utilization:.2%}" if pd.notna(kri_metrics.average_utilization) else "N/A")
+kri_col5.metric("High Utilization Share", f"{kri_metrics.high_utilization_share:.2%}" if pd.notna(kri_metrics.high_utilization_share) else "N/A")
+
+if kri_mix is not None:
+    st.subheader("Risk Mix by Segment")
+    st.dataframe(kri_mix.style.format("{:.0%}"))
+
+# 4. Display Distribution Charts
+st.header("Customer Distributions")
+col_dist1, col_dist2 = st.columns(2)
+
+with col_dist1:
+    dpd_chart = alt.Chart(enriched_df).mark_bar().encode(
+        x=alt.X('dpd_bucket:N', title='DPD Bucket', sort=['Current', '1-30 DPD', '31-60 DPD', '61-90 DPD', '90+ DPD']),
+        y=alt.Y('count():Q', title='Number of Customers'),
+        tooltip=['dpd_bucket', 'count()']
+    ).properties(
+        title='DPD Bucket Distribution'
     )
-    target_date = st.sidebar.date_input("As of", value=dt.date.today())
-    return {"industry": industry, "as_of": target_date}
+    st.altair_chart(dpd_chart, use_container_width=True)
 
-
-def _render_metrics(df: pd.DataFrame) -> None:
-    utilization = FeatureEngineer.calculate_utilization(
-        balance=df["balance"].sum(), limit=df["limit"].sum()
+with col_dist2:
+    segment_chart = alt.Chart(enriched_df).mark_bar().encode(
+        x=alt.X('segment:N', title='Customer Segment', sort=['Bronze', 'Silver', 'Gold']),
+        y=alt.Y('count():Q', title='Number of Customers'),
+        tooltip=['segment', 'count()']
+    ).properties(
+        title='Customer Segment Distribution'
     )
-    rotation, meets_target, _ = MYPEBusinessRules.check_rotation_target(
-        total_revenue=df["revenue"].sum(), avg_balance=df["balance"].mean()
-    )
-    pod = (df["dpd"].mean() / MYPEBusinessRules.NPL_DAYS_THRESHOLD) * 100
+    st.altair_chart(segment_chart, use_container_width=True)
 
-    col1, col2, col3 = st.columns(3)
-    col1.metric("Utilization", f"{utilization:.2%}")
-    col2.metric("Rotation", f"{rotation:.1f}", delta="On target" if meets_target else "Below")
-    col3.metric("Probability of Default", f"{pod:.1f}%", delta_color="inverse")
-
-
-def render_dashboard() -> None:
-    st.title("AI-Powered Loan Analytics")
-    filters = _sidebar_filters()
-
-    ingestion = DataIngestionEngine("", "", {})
-    source_df = pd.DataFrame(
-        [
-            {"customer": "Acme", "balance": 120000, "limit": 200000, "revenue": 480000, "dpd": 12},
-            {
-                "customer": "Lumen",
-                "balance": 80000,
-                "limit": 150000,
-                "revenue": 300000,
-                "dpd": 45,
-            },
-        ]
-    )
-    df, quality_score = ingestion.normalize_dataframe(source_df, source_name="synthetic")
-    df = FeatureEngineer.enrich_portfolio(df)
-
-    st.subheader("Portfolio Overview")
-    _render_metrics(df)
-
-    col_quality, col_benchmark = st.columns(2)
-    quality_tier = "Excellent" if quality_score >= 90 else "Good" if quality_score >= 75 else "Review"
-    col_quality.metric("Data Quality Score", f"{quality_score}/100", help="Completeness and uniqueness weighted score")
-    col_quality.caption(f"Quality tier: {quality_tier}")
-
-    try:
-        selected_industry = IndustryType[filters["industry"]]
-    except (KeyError, ValueError):
-        selected_industry = MYPEBusinessRules.default_industry()
-
-    col_benchmark.metric(
-        "Rotation Target",
-        f"{MYPEBusinessRules.TARGET_ROTATION:.1f}x",
-        help="Annual revenue divided by average balance benchmark",
-    )
-    col_benchmark.metric(
-        "Collection Target",
-        f"{MYPEBusinessRules.TARGET_COLLECTION_RATE:.0%}",
-        help="Expected on-time collections for the segment",
-    )
-
-    st.subheader("Customer Table")
-    st.dataframe(df)
-
-    st.caption(
-        f"Benchmarks for {selected_industry.name}: GDP contribution "
-        f"{MYPEBusinessRules.INDUSTRY_GDP_CONTRIBUTION[selected_industry]:.1%}"
-    )
-
-    st.subheader("DPD Distribution & Segmentation")
-    dpd_distribution = (
-        df.get("dpd_bucket", pd.Series(dtype=str))
-        .value_counts(normalize=True)
-        .reindex(FeatureEngineer.DPD_LABELS, fill_value=0)
-        .rename("share")
-        .reset_index()
-        .rename(columns={"index": "dpd_bucket"})
-    )
-    segment_distribution = (
-        df.get("segment", pd.Series(dtype=str)).value_counts().rename("customers").reset_index().rename(columns={"index": "segment"})
-    )
-
-    col_dpd, col_segment = st.columns(2)
-    col_dpd.bar_chart(data=dpd_distribution.set_index("dpd_bucket"))
-    col_segment.bar_chart(data=segment_distribution.set_index("segment"))
+# 5. Display Customer Data Table
+st.header("Enriched Customer Portfolio Data")
+st.dataframe(enriched_df)
+st.caption("Industry GDP Benchmark: +2.1% (YoY)")

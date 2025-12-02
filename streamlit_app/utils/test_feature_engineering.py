@@ -1,33 +1,61 @@
-"""Tests for portfolio feature engineering utilities."""
-from __future__ import annotations
-
+import unittest
 import pandas as pd
+from .feature_engineering import FeatureEngineer
 
-from streamlit_app.utils.feature_engineering import FeatureEngineer
+class TestFeatureEngineering(unittest.TestCase):
+    """Unit tests for the FeatureEngineer class."""
 
+    def setUp(self):
+        """Set up sample data for testing."""
+        self.sample_data = pd.DataFrame({
+            'revenue': [40000, 80000, 120000],
+            'balance': [10000, 25000, 75000],
+            'limit': [20000, 100000, 100000],
+            'dpd': [0, 45, 91]
+        })
+        self.sparse_data = pd.DataFrame({
+            'revenue': [40000, 80000, 120000]
+        })
 
-def test_enrich_portfolio_adds_features():
-    df = pd.DataFrame(
-        [
-            {"customer": "Acme", "balance": 100000, "limit": 200000, "dpd": 15, "revenue": 750000},
-            {"customer": "Nova", "balance": 50000, "limit": 50000, "dpd": 95, "revenue": 90000},
-        ]
-    )
+    def test_enrichment_adds_all_columns(self):
+        """Test that enrichment adds utilization, dpd_bucket, and segment columns."""
+        enriched_df = FeatureEngineer.enrich_portfolio(self.sample_data)
+        self.assertIn('utilization', enriched_df.columns)
+        self.assertIn('dpd_bucket', enriched_df.columns)
+        self.assertIn('segment', enriched_df.columns)
 
-    enriched = FeatureEngineer.enrich_portfolio(df)
+    def test_enrichment_values_are_correct(self):
+        """Test that sample rows map to expected segment, bucket, and utilization values."""
+        enriched_df = FeatureEngineer.enrich_portfolio(self.sample_data)
 
-    assert {"utilization", "dpd_bucket", "segment"}.issubset(enriched.columns)
-    assert enriched.loc[0, "segment"] == "gold"
-    assert enriched.loc[1, "dpd_bucket"] == "90+"
-    assert enriched.loc[1, "utilization"] == 1.0
+        # Test utilization
+        self.assertAlmostEqual(enriched_df.loc[0, 'utilization'], 0.5)
+        self.assertAlmostEqual(enriched_df.loc[1, 'utilization'], 0.25)
+        self.assertAlmostEqual(enriched_df.loc[2, 'utilization'], 0.75)
 
+        # Test DPD bucket
+        self.assertEqual(enriched_df.loc[0, 'dpd_bucket'], 'Current')
+        self.assertEqual(enriched_df.loc[1, 'dpd_bucket'], '31-60 DPD')
+        self.assertEqual(enriched_df.loc[2, 'dpd_bucket'], '90+ DPD')
 
-def test_enrich_portfolio_handles_missing_columns_gracefully():
-    df = pd.DataFrame([
-        {"customer": "Flux", "revenue": 120000},
-    ])
+        # Test segment
+        self.assertEqual(enriched_df.loc[0, 'segment'], 'Bronze')
+        self.assertEqual(enriched_df.loc[1, 'segment'], 'Silver')
+        self.assertEqual(enriched_df.loc[2, 'segment'], 'Gold')
 
-    enriched = FeatureEngineer.enrich_portfolio(df)
+    def test_enrichment_graceful_with_sparse_inputs(self):
+        """Test that enrichment only adds segment when other columns are missing."""
+        enriched_df = FeatureEngineer.enrich_portfolio(self.sparse_data)
+        self.assertIn('segment', enriched_df.columns)
+        self.assertNotIn('utilization', enriched_df.columns)
+        self.assertNotIn('dpd_bucket', enriched_df.columns)
+        self.assertEqual(enriched_df.loc[0, 'segment'], 'Bronze')
 
-    assert "utilization" not in enriched.columns
-    assert enriched.loc[0, "segment"] == "silver"
+    def test_enrichment_does_not_mutate_original_dataframe(self):
+        """Test that the original dataframe is not mutated."""
+        original_columns = self.sample_data.columns.tolist()
+        FeatureEngineer.enrich_portfolio(self.sample_data)
+        self.assertEqual(self.sample_data.columns.tolist(), original_columns)
+
+if __name__ == '__main__':
+    unittest.main()
