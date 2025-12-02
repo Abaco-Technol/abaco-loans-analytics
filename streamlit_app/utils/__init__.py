@@ -1,27 +1,32 @@
-"""Utility exports for Streamlit features with lazy loading."""
+"""Public utilities exposed by :mod:`streamlit_app.utils` with lazy loading."""
 
 from importlib import import_module
-from typing import TYPE_CHECKING, Any, Callable, Dict, List
-
-__all__ = ["FeatureEngineer"]
+from typing import TYPE_CHECKING, Any, Callable, Dict, Iterable, List
 
 if TYPE_CHECKING:  # pragma: no cover - used for type checkers only
     from .feature_engineering import FeatureEngineer  # noqa: F401
 
 
-_LAZY_LOADERS: Dict[str, Callable[[], Any]] = {
-    "FeatureEngineer": lambda: getattr(
-        import_module(".feature_engineering", __name__), "FeatureEngineer"
-    ),
+def _load_feature_engineer() -> Any:
+    """Load ``FeatureEngineer`` without importing the module eagerly."""
+
+    module = import_module(".feature_engineering", __name__)
+    return module.FeatureEngineer
+
+
+_ATTR_LOADERS: Dict[str, Callable[[], Any]] = {
+    "FeatureEngineer": _load_feature_engineer,
 }
+
+__all__: Iterable[str] = tuple(_ATTR_LOADERS)
 
 
 def __getattr__(name: str) -> Any:
-    """Lazily import heavy dependencies when requested."""
-    try:
-        loader = _LAZY_LOADERS[name]
-    except KeyError as err:
-        raise AttributeError(f"module 'streamlit_app.utils' has no attribute {name!r}") from err
+    """Resolve lazily exported utilities on first access."""
+
+    loader = _ATTR_LOADERS.get(name)
+    if loader is None:
+        raise AttributeError(f"module 'streamlit_app.utils' has no attribute {name!r}")
 
     value = loader()
     globals()[name] = value
@@ -29,5 +34,6 @@ def __getattr__(name: str) -> Any:
 
 
 def __dir__() -> List[str]:
-    """Expose lazy attributes through introspection utilities."""
+    """Surface lazily exported attributes to introspection utilities."""
+
     return sorted(set(__all__) | set(globals().keys()))
