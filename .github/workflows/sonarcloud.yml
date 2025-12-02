@@ -11,6 +11,7 @@ jobs:
   sonarcloud:
     name: SonarCloud Scan
     permissions:
+      # Required so the SonarCloud action can read PR metadata and publish decorations
       contents: read
       pull-requests: read
       checks: write

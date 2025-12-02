@@ -1,3 +1,14 @@
+node_modules/
+.gradle/
+.env
+.env.*
+.next/
+.sonar/
+coverage/
+dist/
+build/
+Dockerfile.log
+# Existing ignores
 gemini-cli/
 .DS_Store
 .venv/
