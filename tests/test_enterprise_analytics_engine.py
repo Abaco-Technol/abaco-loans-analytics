@@ -67,3 +67,41 @@ def test_export_kpis_to_blob_defaults_when_blob_name_missing():
     assert result_path == "test-container/kpi-dashboard.json"
     assert exporter.received_blob_name is None
     assert exporter.received_metrics == expected_metrics
+
+
+def test_export_kpis_to_blob_strips_empty_blob_name():
+    data = {
+        "loan_amount": [150000],
+        "appraised_value": [300000],
+        "borrower_income": [100000],
+        "monthly_debt": [1800],
+        "loan_status": ["current"],
+        "interest_rate": [0.041],
+        "principal_balance": [150000],
+    }
+    engine = LoanAnalyticsEngine(pd.DataFrame(data))
+    exporter = StubExporter()
+
+    result_path = engine.export_kpis_to_blob(exporter, blob_name="   ")
+
+    assert result_path == "test-container/kpi-dashboard.json"
+    assert exporter.received_blob_name is None
+
+
+def test_export_kpis_to_blob_rejects_non_string_blob_name():
+    engine = LoanAnalyticsEngine(
+        pd.DataFrame(
+            {
+                "loan_amount": [100000],
+                "appraised_value": [200000],
+                "borrower_income": [120000],
+                "monthly_debt": [2000],
+                "loan_status": ["current"],
+                "interest_rate": [0.05],
+                "principal_balance": [100000],
+            }
+        )
+    )
+
+    with pytest.raises(TypeError):
+        engine.export_kpis_to_blob(StubExporter(), blob_name=123)

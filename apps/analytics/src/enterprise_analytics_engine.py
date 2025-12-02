@@ -90,8 +90,15 @@ class LoanAnalyticsEngine:
     ) -> str:
         if not hasattr(exporter, "upload_metrics") or not callable(exporter.upload_metrics):
             raise TypeError("exporter must implement an upload_metrics callable")
+
+        resolved_blob_name = blob_name
+        if blob_name is not None:
+            if not isinstance(blob_name, str):
+                raise TypeError("blob_name must be a string when provided")
+            resolved_blob_name = blob_name.strip() or None
+
         kpis = self.run_full_analysis()
-        return exporter.upload_metrics(kpis, blob_name=blob_name)
+        return exporter.upload_metrics(kpis, blob_name=resolved_blob_name)
 
 if __name__ == '__main__':
     # Example usage demonstrating the engine's capabilities
