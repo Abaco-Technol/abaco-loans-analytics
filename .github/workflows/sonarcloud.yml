@@ -16,9 +16,9 @@ jobs:
     permissions:
       # Required so the SonarCloud action can read PR metadata and publish decorations
       contents: read
-      pull-requests: read
-      checks: write
-      statuses: write
+      pull-requests: read # required so SonarCloud can fetch PR metadata/decorations
+      checks: write       # allow publishing quality gate results as checks
+      statuses: write     # allow setting commit statuses for the analysis
     runs-on: ubuntu-latest
 
     steps:
