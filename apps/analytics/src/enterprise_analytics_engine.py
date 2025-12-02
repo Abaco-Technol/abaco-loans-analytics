@@ -1,11 +1,11 @@
 import pandas as pd
 import numpy as np
-from typing import Dict, Protocol, runtime_checkable
+from typing import Dict, Optional, Protocol, runtime_checkable
 
 
 @runtime_checkable
 class KPIExporter(Protocol):
-    def upload_metrics(self, metrics: Dict[str, float], blob_name: str | None = None) -> str:
+    def upload_metrics(self, metrics: Dict[str, float], blob_name: Optional[str] = None) -> str:
         ...
 
 class LoanAnalyticsEngine:
@@ -90,8 +90,11 @@ class LoanAnalyticsEngine:
         }
 
     def export_kpis_to_blob(
-        self, exporter: KPIExporter, blob_name: str | None = None
+        self, exporter: KPIExporter, blob_name: Optional[str] = None
     ) -> str:
+        if blob_name is not None and not isinstance(blob_name, str):
+            raise ValueError("blob_name must be a string if provided.")
+
         kpis = self.run_full_analysis()
         return exporter.upload_metrics(kpis, blob_name=blob_name)
 
