@@ -10,6 +10,9 @@ on:
 jobs:
   sonarcloud:
     name: SonarCloud Scan
+    # Explicit permissions are required so the SonarCloud action can read PR metadata
+    # and publish decorations/check runs. The defaults are overridden when a block is
+    # present, so ensure the token retains the scopes it needs.
     permissions:
       # Required so the SonarCloud action can read PR metadata and publish decorations
       contents: read
