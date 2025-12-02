@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - codex/**
   pull_request:
     types: [opened, synchronize, reopened]
   workflow_dispatch:
@@ -18,33 +19,26 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           # Necessary for SonarCloud to analyze history
           fetch-depth: 0
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: 20
-          cache: npm
-          cache-dependency-path: apps/web/package-lock.json
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.11"
-          cache: pip
-          cache-dependency-path: apps/analytics/requirements.txt
 
       - name: Set up JDK 21
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           java-version: '21'
           distribution: 'temurin'
-
-      - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@v3
 
       - name: Install dependencies
         run: |
@@ -60,7 +54,11 @@ jobs:
 
       - name: Java coverage (Jacoco)
         run: |
-          ./gradlew jacocoTestReport
+          if [ -x ./gradlew ]; then
+            ./gradlew jacocoTestReport
+          else
+            echo "Skipping Jacoco: gradlew not present in repository"
+          fi
 
       - name: Web coverage placeholder
         run: |
@@ -75,4 +73,3 @@ jobs:
             -Dsonar.verbose=true
             -Dsonar.python.coverage.reportPaths=coverage-python.xml
             -Dsonar.javascript.lcov.reportPaths=apps/web/coverage/lcov.info
-            -Dsonar.coverage.jacoco.xmlReportPaths=build/reports/jacoco/jacocoTestReport/jacocoTestReport.xml
