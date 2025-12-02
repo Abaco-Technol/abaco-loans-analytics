@@ -92,6 +92,9 @@ class LoanAnalyticsEngine:
     def export_kpis_to_blob(
         self, exporter: KPIExporter, blob_name: Optional[str] = None
     ) -> str:
+        if blob_name is not None and not isinstance(blob_name, str):
+            raise ValueError("blob_name must be a string if provided.")
+
         kpis = self.run_full_analysis()
         return exporter.upload_metrics(kpis, blob_name=blob_name)
 
