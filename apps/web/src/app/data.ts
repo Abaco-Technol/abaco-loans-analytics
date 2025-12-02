@@ -1,26 +1,26 @@
-export type Metric = Readonly<{
+export type Metric = {
   label: string
   value: string
-}>
+}
 
-export type Product = Readonly<{
+export type Product = {
   title: string
   detail: string
-}>
+}
 
-export type Step = Readonly<{
+export type Step = {
   label: string
   title: string
   copy: string
-}>
+}
 
-const metricsData = [
+export const metrics = [
   { label: 'Approval uplift with governed risk', value: '+18%' },
   { label: 'Reduction in manual reviews', value: '42%' },
   { label: 'Portfolio coverage with audit trails', value: '100%' },
-] as const satisfies ReadonlyArray<Metric>
+] as const satisfies readonly Metric[]
 
-const productsData = [
+export const products = [
   {
     title: 'Portfolio Intelligence',
     detail:
@@ -36,15 +36,15 @@ const productsData = [
     detail:
       'Pre-approved journeys, partner-ready APIs, and data rooms that accelerate funding decisions.',
   },
-] as const satisfies ReadonlyArray<Product>
+] as const satisfies readonly Product[]
 
-const controlsData = [
+export const controls = [
   'Segregated roles, approvals, and immutable audit logs for every change.',
   'Real-time monitoring of SLAs, risk thresholds, and operational KPIs.',
   'Encryption by default with least-privilege access across environments.',
-] as const satisfies ReadonlyArray<string>
+] as const satisfies readonly string[]
 
-const stepsData = [
+export const steps = [
   {
     label: '01',
     title: 'Unify data signals',
@@ -60,9 +60,4 @@ const stepsData = [
     title: 'Measure & learn',
     copy: 'Track outcomes against revenue and risk KPIs, iterating with governed experiment loops.',
   },
-] as const satisfies ReadonlyArray<Step>
-
-export const metrics = Object.freeze(metricsData)
-export const products = Object.freeze(productsData)
-export const controls = Object.freeze(controlsData)
-export const steps = Object.freeze(stepsData)
+] as const satisfies readonly Step[]
