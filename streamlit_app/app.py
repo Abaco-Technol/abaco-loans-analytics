@@ -5,6 +5,19 @@ import streamlit as st
 import altair as alt
 from utils.feature_engineering import FeatureEngineer
 
+
+KPI_TARGETS = {
+    "delinquency_30_target_pct": 6.5,
+    "delinquency_90_target_pct": 5.0,
+    "avg_utilization_target_pct": 65.0,
+    "active_customers_target": 100,
+}
+
+DPD_THRESHOLDS = {
+    "dpd_30": 30,
+    "dpd_90": 90,
+}
+
 st.set_page_config(layout="wide", page_title="Abaco Loans Analytics Dashboard")
 
 # --- Data Ingestion Simulation ---
@@ -43,19 +56,25 @@ st.title("Abaco Loans Analytics Dashboard")
 # 1. Ingestion and Enrichment
 raw_portfolio_df, ingestion_metadata = load_and_prepare_data()
 enriched_df = FeatureEngineer.enrich_portfolio(raw_portfolio_df)
+if 'utilization' not in enriched_df.columns:
+    enriched_df['utilization'] = enriched_df['balance'] / enriched_df['limit']
+    st.warning(
+        "Utilization was derived from balance and limit because the enrichment step did not supply it."
+    )
 
 st.caption(
     "Data sources mocked for demo purposes. KPIs are derived deterministically for traceability."
 )
 
 portfolio_size = len(enriched_df)
-delinquency_rate = (enriched_df['dpd'] > 30).mean() * 100
+delinquency_rate = (enriched_df['dpd'] >= DPD_THRESHOLDS['dpd_30']).mean() * 100
 avg_utilization = (
     enriched_df['utilization'].mean() * 100 if 'utilization' in enriched_df.columns else 0
 )
 avg_yield = (enriched_df['revenue'] / enriched_df['balance']).mean()
 limit_utilization = (enriched_df['balance'] / enriched_df['limit']).mean() * 100
-dpd_30_rate = (enriched_df['dpd'] >= 30).mean() * 100
+dpd_30_rate = (enriched_df['dpd'] >= DPD_THRESHOLDS['dpd_30']).mean() * 100
+dpd_90_rate = (enriched_df['dpd'] >= DPD_THRESHOLDS['dpd_90']).mean() * 100
 pd_mapping = {
     'Current': 0.01,
     '1-30 DPD': 0.03,
@@ -125,15 +144,40 @@ st.header("Portfolio Health & Quality Metrics")
 col1, col2, col3, col4, col5 = st.columns(5)
 col1.metric("Data Quality Score", f"{ingestion_metadata['completeness_pct']:.2f}%", help="Completeness of the source data.")
 col2.metric("Data Freshness", f"{ingestion_metadata['freshness_days']} days", help="Lag since last ingestion.")
-col3.metric("Delinquency Rate", f"{delinquency_rate:.1f}%", delta="vs. target 6.5%", delta_color="inverse")
+col3.metric(
+    "30+ DPD Rate",
+    f"{delinquency_rate:.1f}%",
+    delta=f"vs. target {KPI_TARGETS['delinquency_30_target_pct']:.1f}%",
+    delta_color="inverse",
+)
 col4.metric("Avg. Portfolio Yield", f"{avg_yield:.2f}x", help="Revenue-to-balance yield factor.")
 col5.metric("Limit Utilization", f"{limit_utilization:.1f}%", help="Balance-to-limit consumption.")
 
 kpi_table = pd.DataFrame([
-    {"KPI": "Active Customers", "Value": portfolio_size, "Target": 100, "Status": "On Track"},
-    {"KPI": "Avg Utilization", "Value": f"{avg_utilization:.1f}%", "Target": "< 65%", "Status": "On Track"},
-    {"KPI": "30+ DPD", "Value": f"{dpd_30_rate:.1f}%", "Target": "< 12%", "Status": "Watch"},
-    {"KPI": "90+ DPD", "Value": f"{(enriched_df['dpd'] >= 90).mean() * 100:.1f}%", "Target": "< 5%", "Status": "Watch"},
+    {
+        "KPI": "Active Customers",
+        "Value": portfolio_size,
+        "Target": KPI_TARGETS['active_customers_target'],
+        "Status": "On Track",
+    },
+    {
+        "KPI": "Avg Utilization",
+        "Value": f"{avg_utilization:.1f}%",
+        "Target": f"< {KPI_TARGETS['avg_utilization_target_pct']:.0f}%",
+        "Status": "On Track" if avg_utilization <= KPI_TARGETS['avg_utilization_target_pct'] else "Watch",
+    },
+    {
+        "KPI": "30+ DPD Rate",
+        "Value": f"{dpd_30_rate:.1f}%",
+        "Target": f"< {KPI_TARGETS['delinquency_30_target_pct']:.1f}%",
+        "Status": "On Track" if dpd_30_rate <= KPI_TARGETS['delinquency_30_target_pct'] else "Watch",
+    },
+    {
+        "KPI": "90+ DPD Rate",
+        "Value": f"{dpd_90_rate:.1f}%",
+        "Target": f"< {KPI_TARGETS['delinquency_90_target_pct']:.1f}%",
+        "Status": "On Track" if dpd_90_rate <= KPI_TARGETS['delinquency_90_target_pct'] else "Watch",
+    },
     {"KPI": "Collections Coverage", "Value": "92%", "Target": "95%", "Status": "Catch-Up"},
 ])
 
@@ -297,7 +341,7 @@ st.altair_chart(yield_risk_chart, use_container_width=True)
 
 st.header("Delinquency Incidence by Segment")
 segment_delinquency = (
-    enriched_df.assign(delinquent=lambda df: df['dpd'] >= 30)
+    enriched_df.assign(delinquent=lambda df: df['dpd'] >= DPD_THRESHOLDS['dpd_30'])
     .groupby('segment')
     .agg(
         customers=('customer_id', 'count'),
