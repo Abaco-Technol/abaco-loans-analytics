@@ -41,6 +41,14 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-web-npm-
 
+      - name: Cache SonarCloud scanner
+        uses: actions/cache@13aacd865c20de90d75de3b17ebe84f7a17d57d2 # v4.0.2
+        with:
+          path: ~/.sonar/cache
+          key: ${{ runner.os }}-sonar-${{ hashFiles('sonar-project.properties', 'apps/web/package-lock.json', 'pyproject.toml', 'requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-sonar-
+
       - name: Install dependencies
         working-directory: apps/web
         run: npm ci
