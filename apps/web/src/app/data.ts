@@ -1,3 +1,10 @@
+export type MarketingContent = Readonly<{
+  metrics: readonly Metric[]
+  products: readonly Product[]
+  controls: readonly string[]
+  steps: readonly Step[]
+}>
+
 export type Metric = {
   label: string
   value: string
@@ -62,16 +69,9 @@ export const steps = [
   },
 ] as const satisfies readonly Step[]
 
-export type MarketingContent = Readonly<{
-  metrics: readonly Metric[]
-  products: readonly Product[]
-  controls: readonly string[]
-  steps: readonly Step[]
-}>
-
-export const marketingContent = {
+export const marketingContent = Object.freeze({
   metrics,
   products,
   controls,
   steps,
-} as const satisfies MarketingContent
+} satisfies MarketingContent)
