@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import styles from './page.module.css'
 import { isSupabaseConfigured, supabase } from '../lib/supabaseClient'
+import { logLandingPageDiagnostic } from '../lib/landingPageDiagnostics'
 import {
   EMPTY_LANDING_PAGE_DATA,
   landingPageDataSchema,
@@ -12,6 +13,11 @@ import {
 
 async function getData(): Promise<LandingPageData> {
   if (!supabase || !isSupabaseConfigured) {
+    logLandingPageDiagnostic({
+      status: 'missing-config',
+      supabaseConfigured: false,
+      payload: EMPTY_LANDING_PAGE_DATA,
+    })
     console.warn('Supabase environment variables are missing; using fallback landing page data')
     return EMPTY_LANDING_PAGE_DATA
   }
@@ -19,11 +25,22 @@ async function getData(): Promise<LandingPageData> {
   const { data, error } = await supabase.from('landing_page_data').select('*').single()
 
   if (error) {
+    logLandingPageDiagnostic({
+      status: 'fetch-error',
+      supabaseConfigured: true,
+      error,
+      payload: EMPTY_LANDING_PAGE_DATA,
+    })
     console.error('Error fetching landing page data:', error)
     return EMPTY_LANDING_PAGE_DATA
   }
 
   if (!data) {
+    logLandingPageDiagnostic({
+      status: 'no-data',
+      supabaseConfigured: true,
+      payload: EMPTY_LANDING_PAGE_DATA,
+    })
     console.error('Landing page data is missing from Supabase response')
     return EMPTY_LANDING_PAGE_DATA
   }
@@ -31,10 +48,21 @@ async function getData(): Promise<LandingPageData> {
   const parsed = landingPageDataSchema.safeParse(data)
 
   if (!parsed.success) {
+    logLandingPageDiagnostic({
+      status: 'invalid-shape',
+      supabaseConfigured: true,
+      error: parsed.error.flatten(),
+      payload: EMPTY_LANDING_PAGE_DATA,
+    })
     console.error('Invalid landing page data shape from Supabase:', parsed.error.flatten())
     return EMPTY_LANDING_PAGE_DATA
   }
 
+  logLandingPageDiagnostic({
+    status: 'ok',
+    supabaseConfigured: true,
+    payload: parsed.data,
+  })
   return parsed.data
 }
 
