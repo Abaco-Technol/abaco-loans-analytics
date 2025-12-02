@@ -8,7 +8,7 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: __dirname,
   },
-  headers: async () => [
+  headers: () => [
     {
       source: '/:path*',
       headers: [
@@ -27,8 +27,8 @@ const nextConfig: NextConfig = {
       ],
     },
   ],
-  redirects: async () => [],
-  rewrites: async () => ({
+  redirects: () => [],
+  rewrites: () => ({
     beforeFiles: [],
     afterFiles: [],
     fallback: [],
