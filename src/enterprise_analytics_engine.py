@@ -69,18 +69,7 @@ class LoanAnalyticsEngine:
         )
 
         for col in numeric_cols:
-            coerced = pd.to_numeric(frame[col], errors="coerce")
-            invalid_mask = frame[col].notna() & coerced.isna()
-            if invalid_mask.any():
-                bad_values = frame.loc[invalid_mask, col].unique()
-                raise ValueError(f"Column '{col}' contains non-numeric values: {bad_values.tolist()}")
-            missing_mask = frame[col].isna() & coerced.isna()
-            if missing_mask.any() and self.config.numeric_missing_fill_value is None:
-                raise ValueError(
-                    f"Column '{col}' contains missing numeric values; "
-                    "set numeric_missing_fill_value to fill explicitly"
-                )
-            frame[col] = coerced.fillna(fill_value)
+            frame[col] = self._coerce_numeric_column(frame[col], col, fill_value)
 
         frame["status"] = frame["status"].fillna("").astype(str)
         frame["arrears_flag"] = (
@@ -147,6 +136,29 @@ class LoanAnalyticsEngine:
         if not scheduled_total:
             return float("nan")
         return portfolio["paid_principal"].sum() / scheduled_total
+
+    def _coerce_numeric_column(self, series: pd.Series, name: str, fill_value: float) -> pd.Series:
+        coerced = pd.to_numeric(series, errors="coerce")
+        invalid_mask = series.notna() & coerced.isna()
+        if invalid_mask.any():
+            offending = series[invalid_mask]
+            raise ValueError(
+                "Column '"
+                + name
+                + "' contains non-numeric values at indices "
+                + ", ".join(map(str, offending.index))
+                + ": "
+                + str(offending.tolist())
+            )
+
+        missing_mask = series.isna() & coerced.isna()
+        if missing_mask.any() and self.config.numeric_missing_fill_value is None:
+            raise ValueError(
+                f"Column '{name}' contains missing numeric values; "
+                "set numeric_missing_fill_value to fill explicitly"
+            )
+
+        return coerced.fillna(fill_value)
 
     def segment_kpis(self, segment_by: List[str]) -> pd.DataFrame:
         if not segment_by:
