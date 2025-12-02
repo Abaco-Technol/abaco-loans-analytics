@@ -33,10 +33,17 @@ jobs:
         with:
           node-version: 20
 
+      - name: Cache npm dependencies
+        uses: actions/cache@13aacd865c20de90d75de3b17ebe84f7a17d57d2 # v4.0.2
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-web-npm-${{ hashFiles('apps/web/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-web-npm-
+
       - name: Install dependencies
-        run: |
-          cd apps/web
-          npm ci
+        working-directory: apps/web
+        run: npm ci
 
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@e44258b109568baa0df60ed515909fc6c72cba92 # v2.3.0
