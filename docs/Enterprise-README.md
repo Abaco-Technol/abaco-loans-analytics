@@ -29,7 +29,7 @@ This guide captures the operational steps to onboard the team to GitHub Copilot,
 - **Policy controls**: enable **content attachment restrictions**, restrict GitHub Apps to an allowlist, require **Dependabot auto-triage rules** and auto-merge for patch updates after checks pass.
 
 ## Code security scans for this repo
-- **CodeQL code scanning**: enable via **Security → Code scanning alerts → Set up → Default** or keep `.github/workflows/codeql.yml`. The workflow scans **JavaScript/TypeScript, Python, and C#** on PRs to `main` and weekly. For local verification: `gh codeql database analyze --language=javascript,python,csharp` (requires GHAS CLI and token).
+- **CodeQL code scanning**: enable via **Security → Code scanning alerts → Set up → Default** or keep `.github/workflows/codeql.yml`. The workflow scans **JavaScript/TypeScript, Python, and C#** on PRs to `main` and weekly; C# analysis activates only when a `.csproj`/`.sln` exists to avoid spurious failures in non-.NET repos. For local verification: `gh codeql database analyze --language=javascript,python,csharp` (requires GHAS CLI and token).
 - **Secret scanning**: confirm org-level Secret scanning + Push Protection. Add custom patterns for internal API keys. Verify with **Security → Secret scanning → Enable for private repos** and test by pushing a fake secret (should be blocked).
 - **Dependabot**: `.github/dependabot.yml` now covers **npm, pip, NuGet, and GitHub Actions** weekly. Use branch protections to require reviewers/status checks and enable auto-merge for patch groups.
 - **Sonar/SAST**: keep `sonarcloud.yml` active; gate merges on the quality gate; notify `#sre` on failures via webhook.

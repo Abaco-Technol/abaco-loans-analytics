@@ -25,21 +25,37 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Detect C# projects
+        id: detect_csharp
+        run: |
+          has_csharp=$(python - <<'PY'
+import pathlib
+
+root = pathlib.Path('.')
+has_projects = any(root.rglob('*.csproj')) or any(root.rglob('*.sln'))
+print('true' if has_projects else 'false')
+PY
+)
+          echo "has_csharp=${has_csharp}" >> "$GITHUB_OUTPUT"
+
       - name: Set up .NET
-        if: matrix.language == 'csharp'
+        if: matrix.language == 'csharp' && steps.detect_csharp.outputs.has_csharp == 'true'
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '6.0.x'
 
       - name: Set up CodeQL
+        if: matrix.language != 'csharp' || steps.detect_csharp.outputs.has_csharp == 'true'
         uses: github/codeql-action/init@v3
         with:
           languages: ${{ matrix.language }}
 
       - name: Autobuild
+        if: matrix.language != 'csharp' || steps.detect_csharp.outputs.has_csharp == 'true'
         uses: github/codeql-action/autobuild@v3
 
       - name: Perform CodeQL Analysis
+        if: matrix.language != 'csharp' || steps.detect_csharp.outputs.has_csharp == 'true'
         uses: github/codeql-action/analyze@v3
         with:
           category: "/language:${{ matrix.language }}"
