@@ -17,6 +17,10 @@
 Consulta `docs/integration-readiness.md` para verificar el estado de cada integración y las comprobaciones previas que
 debes ejecutar antes de usarlas.
 
+## KPI catalog and runbooks
+
+Consulta `docs/analytics/KPIs.md` para la taxonomía de KPIs, propietarios, orígenes de datos, umbrales y enlaces a dashboards, tablas de drill-down y runbooks (`docs/analytics/runbooks`). Usa `docs/analytics/dashboards.md` para la guía de visualizaciones y alertas.
+
 ## ContosoTeamStats
 
 Este repositorio contiene ContosoTeamStats, una API Web de .NET 6 para gestionar equipos deportivos que incluye Docker,
