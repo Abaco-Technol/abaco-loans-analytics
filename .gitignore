@@ -8,9 +8,11 @@ gemini-cli/
 node_modules/
 coverage/
 dist/
+build/
 artifacts/
 .scannerwork/
 .pytest_cache/
+.gradle/
 apps/.DS_Store
 __pycache__/
 *.pyc
