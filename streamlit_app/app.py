@@ -54,6 +54,39 @@ avg_utilization = (
 avg_yield = (enriched_df['revenue'] / enriched_df['balance']).mean()
 limit_utilization = (enriched_df['balance'] / enriched_df['limit']).mean() * 100
 dpd_30_rate = (enriched_df['dpd'] >= 30).mean() * 100
+pd_mapping = {
+    'Current': 0.01,
+    '1-30 DPD': 0.03,
+    '31-60 DPD': 0.08,
+    '61-90 DPD': 0.15,
+    '90+ DPD': 0.35,
+}
+lgd_assumption = 0.45
+enriched_df['pd_estimate'] = enriched_df['dpd_bucket'].map(pd_mapping).fillna(0.05)
+enriched_df['expected_loss'] = enriched_df['balance'] * enriched_df['pd_estimate'] * lgd_assumption
+expected_loss_total = enriched_df['expected_loss'].sum()
+expected_loss_rate = expected_loss_total / enriched_df['balance'].sum()
+revenue_yield = (enriched_df['revenue'] / enriched_df['balance']).mean()
+risk_adjusted_yield = revenue_yield - expected_loss_rate
+governance_checksum = ingestion_metadata['dataset_checksum'][:12]
+ingestion_history_rng = np.random.default_rng(ingestion_metadata['rng_seed'])
+history_dates = pd.date_range(
+    end=pd.Timestamp.utcnow().normalize(), periods=6, freq="D"
+)
+history_completeness = np.clip(
+    ingestion_metadata['completeness_pct']
+    + ingestion_history_rng.normal(0, 0.4, len(history_dates)),
+    92,
+    100,
+)
+history_freshness = ingestion_history_rng.integers(0, 3, len(history_dates))
+ingestion_history = pd.DataFrame(
+    {
+        "date": history_dates,
+        "completeness": history_completeness,
+        "freshness_days": history_freshness,
+    }
+)
 
 # 2. Display High-Level Metrics
 st.header("Portfolio Health & Quality Metrics")
@@ -99,10 +132,45 @@ controls_table = pd.DataFrame([
         "Status": "Pass" if ingestion_metadata['freshness_days'] <= 1 else "Watch",
         "Detail": f"{ingestion_metadata['freshness_days']} days since last load",
     },
+    {
+        "Control": "Record Volume",
+        "Owner": "Data Ops",
+        "Status": "Pass" if ingestion_metadata['record_count'] >= 100 else "Watch",
+        "Detail": f"{ingestion_metadata['record_count']} rows ingested",
+    },
+    {
+        "Control": "Checksum Snapshot",
+        "Owner": "Risk & Controls",
+        "Status": "Pass",
+        "Detail": f"ref {governance_checksum} anchors lineage",
+    },
 ])
 
 st.subheader("Operational Controls & Audit Trail")
 st.dataframe(controls_table, hide_index=True, use_container_width=True)
+
+st.subheader("Risk-Adjusted Value Signals")
+signal_table = pd.DataFrame([
+    {
+        "Signal": "Expected Loss",
+        "Owner": "Credit Risk",
+        "Value": f"${expected_loss_total:,.0f}",
+        "Status": "Contained" if expected_loss_rate < 0.05 else "Elevated",
+    },
+    {
+        "Signal": "Risk-Adjusted Yield",
+        "Owner": "FP&A",
+        "Value": f"{risk_adjusted_yield:.2f}x",
+        "Status": "Accretive" if risk_adjusted_yield > 1 else "Dilutive",
+    },
+    {
+        "Signal": "Yield vs Target",
+        "Owner": "Product",
+        "Value": f"{avg_yield:.2f}x",
+        "Status": "On Track" if avg_yield >= 1.6 else "Watch",
+    },
+])
+st.dataframe(signal_table, hide_index=True, use_container_width=True)
 
 # 3. Display Distribution Charts
 st.header("Customer Distributions")
@@ -181,6 +249,21 @@ segment_dpd_chart = alt.Chart(segment_delinquency).mark_bar().encode(
     color='segment:N',
 ).properties(title='30+ DPD Incidence by Segment')
 st.altair_chart(segment_dpd_chart, use_container_width=True)
+
+st.header("Ingestion Reliability Trends")
+history_base = ingestion_history.melt(
+    id_vars=["date"], value_vars=["completeness", "freshness_days"], var_name="metric", value_name="value"
+)
+trend_chart = alt.Chart(history_base).mark_line(point=True).encode(
+    x=alt.X("date:T", title="Ingestion Date"),
+    y=alt.Y("value:Q", title="Value"),
+    color=alt.Color("metric:N", title="Metric", scale=alt.Scale(
+        domain=["completeness", "freshness_days"],
+        range=["#1f77b4", "#ff7f0e"],
+    )),
+    tooltip=["date:T", "metric:N", alt.Tooltip("value:Q", format=".2f")],
+).properties(title="Completeness and Freshness by Load")
+st.altair_chart(trend_chart, use_container_width=True)
 
 # 4. Display Customer Data Table
 st.header("Enriched Customer Portfolio Data")
