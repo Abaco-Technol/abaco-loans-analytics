@@ -9,7 +9,8 @@ st.set_page_config(layout="wide", page_title="Abaco Loans Analytics Dashboard")
 # --- Data Ingestion Simulation ---
 @st.cache_data
 def load_and_prepare_data():
-    rng = np.random.default_rng(7)
+    rng_seed = 7
+    rng = np.random.default_rng(rng_seed)
     data = {
         'customer_id': range(100),
         'revenue': rng.uniform(10000, 150000, 100),
@@ -21,13 +22,20 @@ def load_and_prepare_data():
 
     completeness = (raw_df.notna().sum().sum() / (raw_df.shape[0] * raw_df.shape[1])) * 100
     freshness_days = rng.integers(0, 5)
-    return raw_df, completeness, freshness_days
+    metadata = {
+        "rng_seed": rng_seed,
+        "record_count": len(raw_df),
+        "completeness_pct": completeness,
+        "freshness_days": int(freshness_days),
+        "ingestion_ts": pd.Timestamp.utcnow().isoformat(),
+    }
+    return raw_df, metadata
 
 # --- Main Application ---
 st.title("Abaco Loans Analytics Dashboard")
 
 # 1. Ingestion and Enrichment
-raw_portfolio_df, data_quality_score, data_freshness_days = load_and_prepare_data()
+raw_portfolio_df, ingestion_metadata = load_and_prepare_data()
 enriched_df = FeatureEngineer.enrich_portfolio(raw_portfolio_df)
 
 st.caption(
@@ -40,18 +48,22 @@ avg_utilization = (
     enriched_df['utilization'].mean() * 100 if 'utilization' in enriched_df.columns else 0
 )
 avg_yield = (enriched_df['revenue'] / enriched_df['balance']).mean()
+limit_utilization = (enriched_df['balance'] / enriched_df['limit']).mean() * 100
+dpd_30_rate = (enriched_df['dpd'] >= 30).mean() * 100
 
 # 2. Display High-Level Metrics
 st.header("Portfolio Health & Quality Metrics")
-col1, col2, col3, col4 = st.columns(4)
-col1.metric("Data Quality Score", f"{data_quality_score:.2f}%", help="Completeness of the source data.")
-col2.metric("Data Freshness", f"{data_freshness_days} days", help="Lag since last ingestion.")
+col1, col2, col3, col4, col5 = st.columns(5)
+col1.metric("Data Quality Score", f"{ingestion_metadata['completeness_pct']:.2f}%", help="Completeness of the source data.")
+col2.metric("Data Freshness", f"{ingestion_metadata['freshness_days']} days", help="Lag since last ingestion.")
 col3.metric("Delinquency Rate", f"{delinquency_rate:.1f}%", delta="vs. target 6.5%", delta_color="inverse")
 col4.metric("Avg. Portfolio Yield", f"{avg_yield:.2f}x", help="Revenue-to-balance yield factor.")
+col5.metric("Limit Utilization", f"{limit_utilization:.1f}%", help="Balance-to-limit consumption.")
 
 kpi_table = pd.DataFrame([
     {"KPI": "Active Customers", "Value": portfolio_size, "Target": 100, "Status": "On Track"},
     {"KPI": "Avg Utilization", "Value": f"{avg_utilization:.1f}%", "Target": "< 65%", "Status": "On Track"},
+    {"KPI": "30+ DPD", "Value": f"{dpd_30_rate:.1f}%", "Target": "< 12%", "Status": "Watch"},
     {"KPI": "90+ DPD", "Value": f"{(enriched_df['dpd'] >= 90).mean() * 100:.1f}%", "Target": "< 5%", "Status": "Watch"},
     {"KPI": "Collections Coverage", "Value": "92%", "Target": "95%", "Status": "Catch-Up"},
 ])
@@ -95,7 +107,33 @@ utilization_chart = alt.Chart(enriched_df).mark_bar().encode(
 ).properties(title='Segment Utilization Efficiency')
 st.altair_chart(utilization_chart, use_container_width=True)
 
+st.header("Yield and Risk Correlation")
+yield_risk_chart = alt.Chart(enriched_df).mark_circle(size=80, opacity=0.7).encode(
+    x=alt.X('utilization:Q', title='Utilization'),
+    y=alt.Y('dpd:Q', title='Days Past Due'),
+    color=alt.Color('segment:N', title='Segment'),
+    size=alt.Size('revenue:Q', title='Revenue', legend=None),
+    tooltip=[
+        alt.Tooltip('customer_id', title='Customer'),
+        alt.Tooltip('segment', title='Segment'),
+        alt.Tooltip('utilization', title='Utilization', format='.1%'),
+        alt.Tooltip('dpd', title='DPD'),
+        alt.Tooltip('revenue', title='Revenue', format=',.0f')
+    ]
+).properties(title='Utilization vs. Delinquency by Segment')
+st.altair_chart(yield_risk_chart, use_container_width=True)
+
 # 4. Display Customer Data Table
 st.header("Enriched Customer Portfolio Data")
 st.dataframe(enriched_df)
+with st.expander("Data lineage & governance"):
+    st.json(
+        {
+            "ingestion_ts": ingestion_metadata['ingestion_ts'],
+            "rng_seed": ingestion_metadata['rng_seed'],
+            "records": ingestion_metadata['record_count'],
+            "completeness_pct": round(ingestion_metadata['completeness_pct'], 2),
+            "freshness_days": ingestion_metadata['freshness_days'],
+        }
+    )
 st.caption("Industry GDP Benchmark: +2.1% (YoY)")
