@@ -1,4 +1,5 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
 export type MarketingContent = Readonly<{
   metrics: readonly Metric[]
   products: readonly Product[]
@@ -7,6 +8,25 @@ export type MarketingContent = Readonly<{
 }>
 
 export type Metric = {
+=======
+export type Metric = {
+  label: string
+  value: string
+}
+
+export type Product = {
+  title: string
+  detail: string
+}
+
+export type Step = {
+  label: string
+  title: string
+  copy: string
+}
+
+export const metrics: Metric[] = [
+>>>>>>> upstream/main
 =======
 export type Metric = Readonly<{
 >>>>>>> origin/main
@@ -36,7 +56,11 @@ export const metrics: ReadonlyArray<Metric> = [
 ] satisfies readonly Metric[])
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 export const products = Object.freeze([
+=======
+export const products: Product[] = [
+>>>>>>> upstream/main
 =======
 export const products: ReadonlyArray<Product> = [
 >>>>>>> origin/main
@@ -58,7 +82,11 @@ export const products: ReadonlyArray<Product> = [
 ] satisfies readonly Product[])
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 export const controls = Object.freeze([
+=======
+export const controls: string[] = [
+>>>>>>> upstream/main
 =======
 export const controls: ReadonlyArray<string> = [
 >>>>>>> origin/main
@@ -68,7 +96,11 @@ export const controls: ReadonlyArray<string> = [
 ] satisfies readonly string[])
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 export const steps = Object.freeze([
+=======
+export const steps: Step[] = [
+>>>>>>> upstream/main
 =======
 export const steps: ReadonlyArray<Step> = [
 >>>>>>> origin/main
