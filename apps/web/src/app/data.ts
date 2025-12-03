@@ -1,82 +1,53 @@
-<<<<<<< HEAD
-export type Metric = {
-  label: string
-  value: string
-}
-
-export type Product = {
-  title: string
-  detail: string
-}
-
-export type Step = {
-  label: string
-  title: string
-  copy: string
-}
-
-export const metrics: Metric[] = [
-=======
-export type Metric = Readonly<{
-  label: string
-  value: string
-}>
-
-export type Product = Readonly<{
-  title: string
-  detail: string
-}>
-
-export type Step = Readonly<{
-  label: string
-  title: string
-  copy: string
-}>
+import type { Metric, Product, Step } from '@/types/landingPage'
 
 export const metrics: ReadonlyArray<Metric> = [
->>>>>>> origin/main
-  { label: 'Approval uplift with governed risk', value: '+18%' },
-  { label: 'Reduction in manual reviews', value: '42%' },
+  {
+    label: 'Approval uplift with governed risk',
+    value: '+18%',
+    helper: 'Quarter-over-quarter across prime and near-prime.',
+  },
+  {
+    label: 'Reduction in manual reviews',
+    value: '42%',
+    helper: 'Workflow automation with auditability.',
+  },
   { label: 'Portfolio coverage with audit trails', value: '100%' },
+  {
+    label: 'Straight-through processing',
+    value: '70%',
+    helper: 'Decisions cleared with controls and service-level guardrails.',
+  },
 ]
 
-<<<<<<< HEAD
-export const products: Product[] = [
-=======
 export const products: ReadonlyArray<Product> = [
->>>>>>> origin/main
   {
     title: 'Portfolio Intelligence',
     detail:
       'Daily performance lenses across cohorts, pricing, and liquidity to unlock resilient margins.',
+    kicker: 'Capital efficiency, reserve discipline, and covenant readiness.',
   },
   {
     title: 'Risk Orchestration',
     detail:
       'Dynamic policy controls, challenger experiments, and guardrails to defend credit quality.',
+    kicker: 'Segregation of duties with sign-offs and immutable change logs.',
   },
   {
     title: 'Growth Enablement',
     detail:
       'Pre-approved journeys, partner-ready APIs, and data rooms that accelerate funding decisions.',
+    kicker: 'Unified evidence packs for investors, auditors, and strategic partners.',
   },
 ]
 
-<<<<<<< HEAD
-export const controls: string[] = [
-=======
 export const controls: ReadonlyArray<string> = [
->>>>>>> origin/main
   'Segregated roles, approvals, and immutable audit logs for every change.',
   'Real-time monitoring of SLAs, risk thresholds, and operational KPIs.',
   'Encryption by default with least-privilege access across environments.',
+  'Continuous evidence packs for regulators, investors, and funding partners.',
 ]
 
-<<<<<<< HEAD
-export const steps: Step[] = [
-=======
 export const steps: ReadonlyArray<Step> = [
->>>>>>> origin/main
   {
     label: '01',
     title: 'Unify data signals',
