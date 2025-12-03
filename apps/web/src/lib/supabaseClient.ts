@@ -1,4 +1,4 @@
-import { createClient } from '@supabase/supabase-js'
+import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 
 export interface LandingPageData {
   metrics: { value: string; label: string }[]
@@ -21,8 +21,20 @@ type Database = {
   }
 }
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co'
-const supabaseAnonKey =
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.placeholder'
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
-export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey)
+export const isSupabaseConfigured =
+  typeof supabaseUrl === 'string' &&
+  typeof supabaseAnonKey === 'string' &&
+  supabaseUrl.trim() !== '' &&
+  supabaseAnonKey.trim() !== '' &&
+  !supabaseUrl.includes('placeholder')
+
+let supabaseClient: SupabaseClient<Database> | null = null
+
+if (isSupabaseConfigured && supabaseUrl && supabaseAnonKey) {
+  supabaseClient = createClient<Database>(supabaseUrl, supabaseAnonKey)
+}
+
+export const supabase = supabaseClient

@@ -1,15 +1,19 @@
 import Link from 'next/link'
 import styles from './page.module.css'
-import { supabase, type LandingPageData } from '../lib/supabaseClient'
+import { isSupabaseConfigured, supabase, type LandingPageData } from '../lib/supabaseClient'
 
 type Metric = LandingPageData['metrics'][number]
 type Product = LandingPageData['products'][number]
 type Step = LandingPageData['steps'][number]
 
 async function getData(): Promise<LandingPageData> {
-  const { data, error } = await supabase.from('landing_page_data').select().single()
-
   const fallback: LandingPageData = { metrics: [], products: [], controls: [], steps: [] }
+
+  if (!isSupabaseConfigured || !supabase) {
+    return fallback
+  }
+
+  const { data, error } = await supabase.from('landing_page_data').select().single()
 
   const typedData = (data as unknown as LandingPageData | null) ?? null
 
