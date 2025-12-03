@@ -3,6 +3,7 @@
     "lint": "npm --prefix apps/web run lint"
   },
   "dependencies": {
+    "@azure/storage-blob": "^12.29.1",
     "@openai/codex-sdk": "^0.63.0",
     "@supabase/supabase-js": "^2.86.0",
     "@vercel/analytics": "^1.6.0",
