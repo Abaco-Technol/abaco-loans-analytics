@@ -1,5 +1,15 @@
 # ABACO — Loan Analytics Platform
 
+<<<<<<< HEAD
+Architecture:
+
+- **apps/web**: Corporate Next.js dashboard.
+- **apps/analytics**: Python pipelines for risk, scoring, and KPIs.
+- **infra/azure**: Azure deployment scripts.
+- **data_samples**: Anonymized datasets for development.
+
+Available integrations:
+=======
 ## Arquitectura
 
 - **apps/web**: Next.js dashboard corporativo.
@@ -7,6 +17,7 @@
 - **infra/azure**: scripts de despliegue Azure.
 - **data_samples**: datasets anonimizados para desarrollo.
 ## Integraciones disponibles
+>>>>>>> origin/main
 
 - Azure SQL / Cosmos / Storage
 - Supabase
@@ -14,6 +25,9 @@
 - OpenAI / Gemini / Claude
 - SonarCloud
 - GitHub Actions
+<<<<<<< HEAD
+- Figma / Notion / Slack (see [integrations guide](docs/integrations.md))
+=======
 Consulta `docs/integration-readiness.md` para verificar el estado de cada integración y las comprobaciones previas que
 debes ejecutar antes de usarlas.
 
@@ -96,3 +110,4 @@ sync. If your IDE selects a newer JDK by default, switch the Gradle JVM to JDK 2
 and ensure your `JAVA_HOME` points to that installation. In IntelliJ IDEA, go to **Settings > Build, Execution,
 Deployment > Build Tools > Gradle** and set **Gradle JVM** to JDK 21 to avoid the sync error. You can verify the
 wrapper is using JDK 21 by running `./gradlew --version` and checking the `JVM` line.
+>>>>>>> origin/main
