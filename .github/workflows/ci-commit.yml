@@ -1,0 +1,34 @@
+name: CI Commit Gate
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-commit-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate-all:
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install all dependencies
+        run: npm ci
+
+      - name: Run all checks
+        run: npm run ci:check
+
+      - name: Report status
+        if: always()
+        run: echo "✓ CI Commit Gate: PASSED"

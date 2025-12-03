@@ -1,6 +1,23 @@
 {
-  "dependencies": {
-    "@openai/codex-sdk": "^0.63.0",
-    "@supabase/supabase-js": "^2.86.0"
-  }
+  "name": "abaco-loans-analytics",
+  "version": "1.0.0",
+  "description": "ABACO: Executive-grade analytics and governance stack for lending teams",
+  "private": true,
+  "workspaces": ["apps/web", "apps/analytics"],
+  "scripts": {
+    "dev": "npm -w @abaco/web run dev",
+    "build": "npm run build:web",
+    "build:web": "npm -w @abaco/web run build",
+    "lint": "npm -w @abaco/web run lint",
+    "lint:fix": "npm -w @abaco/web run lint:fix",
+    "type-check": "npm -w @abaco/web run type-check",
+    "format": "npm -w @abaco/web run format",
+    "format:check": "npm -w @abaco/web run format:check",
+    "check-all": "npm run type-check && npm run lint && npm run format:check",
+    "ci:check": "npm run check-all && npm run build"
+  },
+  "engines": {"node": ">=18.0.0", "npm": ">=9.0.0"},
+  "keywords": ["fintech", "loan-analytics", "risk-scoring", "portfolio-management", "kpi", "governance"],
+  "author": "ABACO Team",
+  "license": "MIT"
 }
