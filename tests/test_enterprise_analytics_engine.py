@@ -82,6 +82,10 @@ def test_portfolio_kpis_surfaces_weighted_metrics():
     weighted_term = (
         loans[0].term_months * loans[0].principal + loans[1].term_months * loans[1].principal
     ) / expected_exposure
+    weighted_default_probability = (
+        loans[0].default_probability * loans[0].principal
+        + loans[1].default_probability * loans[1].principal
+    ) / expected_exposure
     expected_interest = sum(loan.principal * (loan.annual_interest_rate / 12) for loan in loans)
     expected_loss_value = sum(expected_loss(loan, 0.4) for loan in loans)
 
@@ -89,6 +93,7 @@ def test_portfolio_kpis_surfaces_weighted_metrics():
     assert kpis.exposure == expected_exposure
     assert kpis.weighted_rate == pytest.approx(weighted_rate)
     assert kpis.weighted_term_months == pytest.approx(weighted_term)
+    assert kpis.weighted_default_probability == pytest.approx(weighted_default_probability)
     assert kpis.expected_monthly_interest == pytest.approx(expected_interest)
     assert kpis.expected_monthly_payment == pytest.approx(
         calculate_monthly_payment(loans[0]) + calculate_monthly_payment(loans[1])

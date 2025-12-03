@@ -75,6 +75,7 @@ class PortfolioKPIs:
     exposure: float
     weighted_rate: float
     weighted_term_months: float
+    weighted_default_probability: float
     expected_monthly_payment: float
     expected_monthly_interest: float
     expected_loss: float
@@ -96,6 +97,7 @@ def calculate_portfolio_kpis(
     exposure = 0.0
     weighted_rate = 0.0
     weighted_term = 0.0
+    weighted_default_probability = 0.0
     expected_payment = 0.0
     expected_interest = 0.0
     aggregated_loss = 0.0
@@ -104,22 +106,25 @@ def calculate_portfolio_kpis(
         exposure += loan.principal
         weighted_rate += loan.annual_interest_rate * loan.principal
         weighted_term += loan.term_months * loan.principal
+        weighted_default_probability += loan.default_probability * loan.principal
         monthly_payment = calculate_monthly_payment(loan)
         expected_payment += monthly_payment
         expected_interest += loan.principal * _monthly_interest_rate(loan)
         aggregated_loss += expected_loss(loan, loss_given_default)
 
     if exposure == 0:
-        return PortfolioKPIs(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
+        return PortfolioKPIs(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
 
     expected_loss_rate = aggregated_loss / exposure
     interest_yield_rate = expected_interest / exposure
     risk_adjusted_return = (expected_interest - aggregated_loss) / exposure
+    weighted_default_prob = weighted_default_probability / exposure
 
     return PortfolioKPIs(
         exposure=exposure,
         weighted_rate=weighted_rate / exposure,
         weighted_term_months=weighted_term / exposure,
+        weighted_default_probability=weighted_default_prob,
         expected_monthly_payment=expected_payment,
         expected_monthly_interest=expected_interest,
         expected_loss=aggregated_loss,
