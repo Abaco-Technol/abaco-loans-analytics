@@ -29,3 +29,25 @@ deno run --allow-all main.ts
 ```
 
 `--unstable` is no longer needed in Deno 2.0; only include the specific `--unstable-*` flags when you actually depend on unstable APIs.
+
+## Quality gates
+
+Run the web experience checks (type safety, linting, and formatting) with a single command from the repository root:
+
+```
+./scripts/check-web.sh
+```
+
+The helper script enforces consistent paths and exits on the first failure to keep audit trails predictable for CI, SonarQube, and code review agents.
+
+## PR sync and merge workflow
+
+Use the reproducible workflow below to keep branches aligned with `origin/main`, surface conflicts early, and provide a copy-paste path for CI agents such as SonarQube, Sourcery, CodeRabbit, and Codex:
+
+```
+./scripts/git-pr-sync.sh
+./scripts/check-web.sh
+git commit -am "Describe the change"
+git push
+# Merge via the GitHub UI or: gh pr merge --merge --delete-branch
+```
