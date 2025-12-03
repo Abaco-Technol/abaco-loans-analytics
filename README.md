@@ -14,12 +14,19 @@
 - OpenAI / Gemini / Claude
 - SonarCloud
 - GitHub Actions
+<<<<<<< HEAD
+- Fitten Code AI
+- Copilot/agents (slide payload + PR summaries)
+
+Consulta `docs/Integrations-and-Agents.md` para conectar cada integración (Azure, Supabase, Vercel, IA) y activar los disparadores de agentes (Copilot, Fitten, SonarCloud, GitHub Actions). Incluye la lista de secretos necesarios, comandos de smoke test y el ciclo rápido de validación.
+=======
 Consulta `docs/integration-readiness.md` para verificar el estado de cada integración y las comprobaciones previas que
 debes ejecutar antes de usarlas.
 
 ## KPI catalog and runbooks
 
 Consulta `docs/analytics/KPIs.md` para la taxonomía de KPIs, propietarios, orígenes de datos, umbrales y enlaces a dashboards, tablas de drill-down y runbooks (`docs/analytics/runbooks`). Usa `docs/analytics/dashboards.md` para la guía de visualizaciones y alertas.
+>>>>>>> origin/main
 
 ## ContosoTeamStats
 
