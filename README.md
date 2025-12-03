@@ -51,3 +51,10 @@ git commit -am "Describe the change"
 git push
 # Merge via the GitHub UI or: gh pr merge --merge --delete-branch
 ```
+
+For branches that need the full cycle (checkout → merge `origin/main` → checks → commit → push) in a single, auditable command, use:
+
+```
+./scripts/pr-merge.sh <branch> "Commit message"
+# The script stops on conflicts and prints status so you can resolve safely before rerunning.
+```
