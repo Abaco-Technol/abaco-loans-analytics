@@ -5,6 +5,7 @@ xgboost==3.1.2
 matplotlib==3.10.7
 seaborn==0.13.2
 <<<<<<< HEAD
+<<<<<<< HEAD
 jupyterlab==4.2.3
 notebook==7.2.1
 sqlalchemy==2.0.30
@@ -12,9 +13,16 @@ azure-storage-blob==12.20.0
 azure-identity==1.17.1
 pytest==8.3.2
 =======
+=======
+>>>>>>> origin/main
 jupyterlab==4.5.0
 notebook==7.5.0
 sqlalchemy==2.0.44
 azure-storage-blob==12.27.1
 azure-identity==1.25.1
+<<<<<<< HEAD
+>>>>>>> origin/main
+=======
+pytest==9.0.1
+pytest-cov==5.0.0
 >>>>>>> origin/main

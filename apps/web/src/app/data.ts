@@ -1,4 +1,5 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
 export type Metric = {
   label: string
   value: string
@@ -17,6 +18,8 @@ export type Step = {
 
 export const metrics: Metric[] = [
 =======
+=======
+>>>>>>> origin/main
 export type Metric = Readonly<{
   label: string
   value: string
@@ -34,7 +37,11 @@ export type Step = Readonly<{
 }>
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 export const metrics = [
+=======
+export const metrics: ReadonlyArray<Metric> = [
+>>>>>>> origin/main
 =======
 export const metrics: ReadonlyArray<Metric> = [
 >>>>>>> origin/main
@@ -45,10 +52,14 @@ export const metrics: ReadonlyArray<Metric> = [
 
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 export const products = [
 =======
 export const products: Product[] = [
 >>>>>>> upstream/main
+=======
+export const products: ReadonlyArray<Product> = [
+>>>>>>> origin/main
 =======
 export const products: ReadonlyArray<Product> = [
 >>>>>>> origin/main
@@ -71,10 +82,14 @@ export const products: ReadonlyArray<Product> = [
 
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 export const controls = [
 =======
 export const controls: string[] = [
 >>>>>>> upstream/main
+=======
+export const controls: ReadonlyArray<string> = [
+>>>>>>> origin/main
 =======
 export const controls: ReadonlyArray<string> = [
 >>>>>>> origin/main
@@ -85,10 +100,14 @@ export const controls: ReadonlyArray<string> = [
 
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 export const steps = [
 =======
 export const steps: Step[] = [
 >>>>>>> upstream/main
+=======
+export const steps: ReadonlyArray<Step> = [
+>>>>>>> origin/main
 =======
 export const steps: ReadonlyArray<Step> = [
 >>>>>>> origin/main

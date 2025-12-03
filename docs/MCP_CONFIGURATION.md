@@ -25,7 +25,11 @@ After launching Codex and opening the TUI, run `/mcp` to see your actively conne
 ## Config file (`config.toml`)
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 For granular control, edit `~/.codex/config.toml`. In the IDE extension, open the gear icon in the top right, choose **MCP settings**, then **Open config.toml**.
+=======
+For granular control, edit `~/.codex/config.toml` (on Windows, `%USERPROFILE%\\.codex\\config.toml`). In the IDE extension, open the gear icon in the top right, choose **MCP settings**, then **Open config.toml** to modify the active config file.
+>>>>>>> origin/main
 =======
 For granular control, edit `~/.codex/config.toml` (on Windows, `%USERPROFILE%\\.codex\\config.toml`). In the IDE extension, open the gear icon in the top right, choose **MCP settings**, then **Open config.toml** to modify the active config file.
 >>>>>>> origin/main
@@ -51,7 +55,11 @@ Each MCP server uses its own `[mcp_servers.<server-name>]` table.
 - `enabled` (optional): set `false` to disable a configured server without deleting it.
 - `enabled_tools` (optional): allow-list of tools exposed from the server.
 <<<<<<< HEAD
+<<<<<<< HEAD
 - `disabled_tools` (optional): deny-list of tools to hide (applied after `enabled_tools`).
+=======
+- `disabled_tools` (optional): deny-list of tools to hide; it overrides overlaps with `enabled_tools`.
+>>>>>>> origin/main
 =======
 - `disabled_tools` (optional): deny-list of tools to hide; it overrides overlaps with `enabled_tools`.
 >>>>>>> origin/main
@@ -85,7 +93,11 @@ http_headers = { "X-Figma-Region" = "us-east-1" }
 url = "http://localhost:3000/mcp"
 enabled_tools = ["open", "screenshot"]
 <<<<<<< HEAD
+<<<<<<< HEAD
 disabled_tools = ["screenshot"] # applied after enabled_tools
+=======
+disabled_tools = ["open"] # disabled takes precedence even if also listed in enabled_tools
+>>>>>>> origin/main
 =======
 disabled_tools = ["open"] # disabled takes precedence even if also listed in enabled_tools
 >>>>>>> origin/main

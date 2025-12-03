@@ -1,6 +1,11 @@
 import numpy as np
 <<<<<<< HEAD
+<<<<<<< HEAD
 from typing import Dict, Optional, Protocol, runtime_checkable
+=======
+import pandas as pd
+from typing import Dict, List, Optional, Protocol, runtime_checkable
+>>>>>>> origin/main
 
 
 @runtime_checkable

@@ -41,10 +41,15 @@ class AzureBlobKPIExporter:
             raise ValueError("Metrics payload must be a non-empty dictionary.")
 
 <<<<<<< HEAD
+<<<<<<< HEAD
         if blob_name is not None and not isinstance(blob_name, str):
             raise ValueError("blob_name must be a string if provided.")
 
 =======
+>>>>>>> origin/main
+=======
+        if blob_name is not None and not isinstance(blob_name, str):
+            raise ValueError("blob_name must be a string if provided.")
 >>>>>>> origin/main
         normalized_metrics: Dict[str, float] = {}
         for key, value in metrics.items():

@@ -10,7 +10,10 @@ ignore:
   - '**/build/**'
   - '**/data_samples/**'
   - '**/.github/**'
+<<<<<<< HEAD
 
 options:
   lint: true
   test_command: ''
+=======
+>>>>>>> origin/main

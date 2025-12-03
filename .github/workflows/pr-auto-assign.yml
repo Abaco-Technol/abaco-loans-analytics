@@ -1,4 +1,5 @@
 name: Assign and request reviewers for PRs
+<<<<<<< HEAD
 
 on:
   pull_request:
@@ -7,6 +8,13 @@ on:
 permissions:
   pull-requests: write
 
+=======
+on:
+  pull_request:
+    types: [opened, reopened, ready_for_review, synchronize]
+permissions:
+  pull-requests: write
+>>>>>>> origin/main
 jobs:
   assign-and-request:
     runs-on: ubuntu-latest
@@ -17,14 +25,20 @@ jobs:
           script: |
             const prNumber = context.payload.pull_request.number;
             const repo = context.repo;
+<<<<<<< HEAD
 
             const desiredAssignees = ['codex'];
             const desiredReviewers = ['sonarqube', 'coderabbit', 'sourcery'];
 
+=======
+            const desiredAssignees = ['codex'];
+            const desiredReviewers = [];
+>>>>>>> origin/main
             const { data: pull } = await github.rest.pulls.get({
               ...repo,
               pull_number: prNumber,
             });
+<<<<<<< HEAD
 
             const currentAssignees = pull.assignees.map(({ login }) => login);
             const currentReviewers = pull.requested_reviewers.map(({ login }) => login);
@@ -32,6 +46,12 @@ jobs:
             const assigneesToAdd = desiredAssignees.filter((login) => !currentAssignees.includes(login));
             const reviewersToAdd = desiredReviewers.filter((login) => !currentReviewers.includes(login));
 
+=======
+            const currentAssignees = pull.assignees.map(({ login }) => login);
+            const currentReviewers = pull.requested_reviewers.map(({ login }) => login);
+            const assigneesToAdd = desiredAssignees.filter((login) => !currentAssignees.includes(login));
+            const reviewersToAdd = desiredReviewers.filter((login) => !currentReviewers.includes(login));
+>>>>>>> origin/main
             if (assigneesToAdd.length > 0) {
               await github.rest.issues.addAssignees({
                 ...repo,
@@ -39,7 +59,10 @@ jobs:
                 assignees: assigneesToAdd,
               });
             }
+<<<<<<< HEAD
 
+=======
+>>>>>>> origin/main
             if (reviewersToAdd.length > 0) {
               await github.rest.pulls.requestReviewers({
                 ...repo,

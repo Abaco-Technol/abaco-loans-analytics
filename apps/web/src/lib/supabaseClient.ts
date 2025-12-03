@@ -12,6 +12,9 @@ type Database = {
 }
 
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> origin/main
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim()
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim()
 
@@ -23,10 +26,13 @@ export const supabase: SupabaseClient<Database> | null = hasSupabaseEnv
   : null
 
 export const isSupabaseConfigured = hasSupabaseEnv
+<<<<<<< HEAD
 =======
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
 export const supabase: SupabaseClient<Database> | null =
   supabaseUrl && supabaseAnonKey ? createClient<Database>(supabaseUrl, supabaseAnonKey) : null
+>>>>>>> origin/main
+=======
 >>>>>>> origin/main

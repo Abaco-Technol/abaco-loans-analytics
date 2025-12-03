@@ -1,4 +1,7 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> origin/main
 import math
 import sys
 from pathlib import Path
@@ -34,9 +37,13 @@ def test_portfolio_interest_and_risk_tracks_defaults():
     near_prime = LoanPosition(principal=75_000, annual_interest_rate=0.14, term_months=36, default_probability=0.05)
     subprime = LoanPosition(principal=40_000, annual_interest_rate=0.2, term_months=18, default_probability=0.12)
 
+<<<<<<< HEAD
     monthly_interest, portfolio_loss = portfolio_interest_and_risk(
         loans=[prime, near_prime, subprime], loss_given_default=0.45
     )
+=======
+    monthly_interest, portfolio_loss = portfolio_interest_and_risk(loans=[prime, near_prime, subprime], loss_given_default=0.45)
+>>>>>>> origin/main
 
     expected_interest = (
         prime.principal * (prime.annual_interest_rate / 12)
@@ -105,6 +112,7 @@ def test_portfolio_kpis_surfaces_weighted_metrics():
     assert kpis.risk_adjusted_return == pytest.approx(
         (expected_interest - expected_loss_value) / expected_exposure
     )
+<<<<<<< HEAD
 =======
 from pathlib import Path
 import sys
@@ -239,4 +247,6 @@ def test_cashflow_curve_generates_cumulative_view():
     assert len(curve) == 3
     expected_cumulative = [-70000, -200000, -250000]
     assert curve["cumulative_cashflow"].tolist() == expected_cumulative
+>>>>>>> origin/main
+=======
 >>>>>>> origin/main

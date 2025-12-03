@@ -16,7 +16,11 @@ import type { BulkProcessResult, BulkTokenItem, TokenState } from '@/types/integ
 
 import styles from './IntegrationSettings.module.css'
 
+<<<<<<< HEAD
 type StatusRow = {
+=======
+export type StatusRow = {
+>>>>>>> origin/main
   platform: Platform
   status?: TokenStatus
   account_id?: string

@@ -1,5 +1,6 @@
 {
 <<<<<<< HEAD
+<<<<<<< HEAD
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "version": 3,
   "framework": "nextjs",
@@ -11,4 +12,13 @@
   "outputDirectory": "apps/web/.next",
   "installCommand": "npm install"
 >>>>>>> c18a8d46 (Fix: Modernize vercel.json configuration)
+=======
+  "version": 2,
+  "builds": [
+    { "src": "apps/web/package.json", "use": "@vercel/next" }
+  ],
+  "routes": [
+    { "src": "/(.*)", "dest": "/apps/web/$1" }
+  ]
+>>>>>>> origin/main
 }
