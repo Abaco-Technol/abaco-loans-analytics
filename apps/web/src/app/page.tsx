@@ -1,3 +1,8 @@
+<<<<<<< HEAD
+import Link from 'next/link'
+import { controls, metrics, products, steps } from './data'
+import styles from './page.module.css'
+=======
 import type { PostgrestSingleResponse } from '@supabase/supabase-js'
 import Link from 'next/link'
 import { z } from 'zod'
@@ -143,6 +148,7 @@ async function getData(): Promise<LandingPageData> {
 
 export default async function Home() {
   const { metrics, products, controls, steps } = await getData()
+>>>>>>> origin/main
 
   return (
     <div className={styles.page}>
