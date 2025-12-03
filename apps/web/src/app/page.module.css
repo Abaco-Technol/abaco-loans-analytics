@@ -21,8 +21,17 @@
   gap: 96px;
   padding: 72px 24px 96px;
   background:
-    radial-gradient(circle at 20% 20%, color-mix(in srgb, var(--color-accent-blue), transparent 88%), transparent 30%),
-    radial-gradient(circle at 80% 0%, color-mix(in srgb, var(--color-accent-green), transparent 86%), transparent 28%), var(--color-bg);
+    radial-gradient(
+      circle at 20% 20%,
+      color-mix(in srgb, var(--color-accent-blue), transparent 88%),
+      transparent 30%
+    ),
+    radial-gradient(
+      circle at 80% 0%,
+      color-mix(in srgb, var(--color-accent-green), transparent 86%),
+      transparent 28%
+    ),
+    var(--color-bg);
   color: var(--color-text-primary);
 }
 
@@ -168,7 +177,11 @@
 }
 
 .card {
-  background: linear-gradient(160deg, color-mix(in srgb, var(--surface-subtle), #fff 20%), color-mix(in srgb, var(--surface-subtle), #000 20%));
+  background: linear-gradient(
+    160deg,
+    color-mix(in srgb, var(--surface-subtle), #fff 20%),
+    color-mix(in srgb, var(--surface-subtle), #000 20%)
+  );
   border: 1px solid var(--border-subtle);
   border-radius: 16px;
   padding: 20px;
@@ -221,7 +234,11 @@
 
 .auditBox {
   background:
-    radial-gradient(circle at 20% 20%, color-mix(in srgb, var(--color-accent-green), transparent 84%), transparent 40%),
+    radial-gradient(
+      circle at 20% 20%,
+      color-mix(in srgb, var(--color-accent-green), transparent 84%),
+      transparent 40%
+    ),
     var(--surface-interactive);
   border: 1px solid color-mix(in srgb, var(--border-subtle), #fff 20%);
   border-radius: 16px;
