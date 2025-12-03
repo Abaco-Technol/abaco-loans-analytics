@@ -1,0 +1,24 @@
+name: PR Assignee Check
+
+on:
+  pull_request:
+    types: [opened, reopened, ready_for_review, synchronize]
+
+permissions:
+  pull-requests: read
+
+jobs:
+  ensure-assignee:
+    name: Ensure PR has assignee
+    if: ${{ github.event.pull_request.draft == false }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate assignee
+        env:
+          ASSIGNEES: ${{ toJson(github.event.pull_request.assignees) }}
+        run: |
+          if [ "$ASSIGNEES" = "[]" ] || [ "$ASSIGNEES" = "null" ]; then
+            echo "Please assign at least one owner to this pull request before running CI."
+            exit 1
+          fi
+          echo "Assignees present: $ASSIGNEES"
