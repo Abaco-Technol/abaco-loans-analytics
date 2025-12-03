@@ -10,6 +10,15 @@ function toNumber(value: string | number): number {
   return Number(cleaned) || 0
 }
 
+function normalizeHeader(header: string) {
+  const cleaned = header.replace(/^"|"$/g, '').trim().toLowerCase()
+  const collapsed = cleaned.replace(/[^a-z0-9]+/g, '_')
+  if (collapsed === 'dpd' || collapsed === 'dpd_status' || collapsed === 'dpdstatus') {
+    return 'dpd_status'
+  }
+  return collapsed
+}
+
 function parseCsvLine(line: string): string[] {
   const result: string[] = []
   let current = ''
@@ -46,7 +55,7 @@ export function parseLoanCsv(content: string): LoanRow[] {
     throw new Error('CSV file is empty')
   }
 
-  const headers = parseCsvLine(lines[0]).map((header) => header.replace(/^"|"$/g, '').toLowerCase())
+  const headers = parseCsvLine(lines[0]).map(normalizeHeader)
   const requiredColumns = [
     'loan_amount',
     'appraised_value',

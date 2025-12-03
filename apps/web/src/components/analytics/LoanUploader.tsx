@@ -1,6 +1,6 @@
 'use client'
 
-import { ChangeEvent, DragEvent, useCallback, useState } from 'react'
+import { ChangeEvent, DragEvent, useCallback, useRef, useState } from 'react'
 import styles from './analytics.module.css'
 import { parseLoanCsv } from '@/lib/analyticsProcessor'
 import type { LoanRow } from '@/types/analytics'
@@ -20,6 +20,7 @@ export function LoanUploader({ onData }: Props) {
   const [isProcessing, setIsProcessing] = useState(false)
   const [validation, setValidation] = useState<ValidationState>({ status: 'idle' })
   const [fileName, setFileName] = useState<string>('')
+  const inputRef = useRef<HTMLInputElement | null>(null)
 
   const processFile = useCallback(
     async (file: File) => {
@@ -78,12 +79,22 @@ export function LoanUploader({ onData }: Props) {
 
   const handleDragLeave = useCallback((event: DragEvent<HTMLDivElement>) => {
     event.preventDefault()
+
+    const relatedTarget = event.relatedTarget as Node | null
+
+    if (relatedTarget && event.currentTarget.contains(relatedTarget)) {
+      return
+    }
+
     setIsDragging(false)
   }, [])
 
   const resetState = useCallback(() => {
     setValidation({ status: 'idle' })
     setFileName('')
+    if (inputRef.current) {
+      inputRef.current.value = ''
+    }
   }, [])
 
   return (
@@ -108,6 +119,7 @@ export function LoanUploader({ onData }: Props) {
           onChange={handleFileChange}
           disabled={isProcessing}
           aria-label="Upload loans.csv"
+          ref={inputRef}
         />
 
         <p className={styles.sectionTitle} style={{ textTransform: 'none', letterSpacing: '0.04em' }}>
