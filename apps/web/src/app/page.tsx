@@ -151,7 +151,7 @@ export default async function Home() {
       itemOffered: {
         '@type': 'Service',
         name: score.label,
-        description: score.value,
+        description: `${score.label}: ${score.value}`,
       },
     })),
   }
