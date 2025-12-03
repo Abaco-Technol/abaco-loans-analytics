@@ -1,23 +1,35 @@
 # ABACO — Loan Analytics Platform
 
-Arquitectura:
+ABACO delivers an executive-grade analytics and governance stack for lending teams. The platform pairs a Next.js dashboard with Python risk pipelines, Azure deployment scripts, and traceable KPI governance.
 
-- **apps/web**: Next.js dashboard corporativo.
-- **apps/analytics**: pipelines de Python para riesgo, scoring y KPIs.
-- **infra/azure**: scripts de despliegue Azure.
-- **data_samples**: datasets anonimizados para desarrollo.
+## Stack map
+- **apps/web**: Next.js dashboard for portfolio, risk, and growth views.
+- **apps/analytics**: Python scoring, stress testing, and KPI pipelines.
+- **infra/azure**: Azure infra-as-code and deployment scripts.
+- **data_samples**: Anonymized datasets for repeatable development and testing.
 
-Integraciones disponibles:
+## Observability, KPIs, and lineage
+- **KPI catalog**: Use `docs/KPI-Operating-Model.md` to define owners, formulas, and lineage links for every metric; keep PR and issue references for auditability.
+- **Dashboards**: Ensure every visualization lists source tables, refresh timestamp, and on-call owner. Target vs. actual, sparkline trends, and SLA badges should be present on executive views.
+- **Data quality**: Track null/invalid rates, schema drift counts, ingestion success %, and freshness lag; surface alerts into the dashboard and CI comments.
 
-- Azure SQL / Cosmos / Storage
-- Supabase
-- Vercel
-- OpenAI / Gemini / Claude
-- SonarCloud
-- GitHub Actions
+## Governance and compliance guardrails
+- Enforce PR reviews, lint/test gates, and SonarQube quality gates before merging to main.
+- Store secrets in GitHub or cloud KMS; never commit credentials or sample PII.
+- Require audit logs for dashboard publishes/exports and validate access controls for sensitive fields.
+- Align contributions to the `docs/Analytics-Vision.md` narrative to keep KPIs, prompts, and dashboards within fintech standards.
 
-## Fitten Code AI 编程助手
+## Getting started
+- Validate repository structure before running tooling:
+  ```
+  deno run --allow-all main.ts
+  ```
+  `--unstable` is unnecessary in Deno 2.0; add specific `--unstable-*` flags only when required.
+- Web: see `apps/web` for Next.js dashboard setup.
+- Analytics: use `apps/analytics` pipelines for risk and KPI computation; keep formulas versioned and tested.
+- Infra: apply `infra/azure` scripts for environment provisioning; confirm `docs/integration-readiness.md` for service readiness and pre-checks.
 
+<<<<<<< HEAD
 Para integrar Fitten Code AI en este monorepo (local y GitHub), consulta `docs/Fitten-Code-AI-Manual.md`, que cubre la introducción al producto, instalación, integración, preguntas frecuentes y pruebas de inferencia local.
 
 ## Deno helper
@@ -51,3 +63,13 @@ git commit -am "Describe the change"
 git push
 # Merge via the GitHub UI or: gh pr merge --merge --delete-branch
 ```
+=======
+## Essential knowledge base
+- `docs/Analytics-Vision.md`: Vision, Streamlit blueprint, and narrative alignment for KPIs and prompts.
+- `docs/KPI-Operating-Model.md`: Ownership, formulas, dashboard standards, lineage, GitHub guardrails, and audit controls.
+- `docs/Copilot-Team-Workflow.md`: Inviting teams to GitHub Copilot, validation/security workflows, and Azure/GitHub/KPI checklists during the Enterprise trial.
+- `docs/ContosoTeamStats-setup.md`: Setup, secrets, migrations, Docker validation, and Azure deployment for the bundled ContosoTeamStats .NET 6 Web API.
+- `docs/Fitten-Code-AI-Manual.md`: Fitten Code AI installation, GitHub integration, FAQs, and local inference testing.
+- `docs/MCP_CONFIGURATION.md`: Adding MCP servers via Codex CLI or `config.toml`, including Context7, Figma, Chrome DevTools, and running Codex as an MCP server.
+- `docs/Zencoder-Troubleshooting.md`: Remediation checklist for the VS Code Zencoder extension (`zencoder-cli ENOENT`).
+>>>>>>> upstream/main
