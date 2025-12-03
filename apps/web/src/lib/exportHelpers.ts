@@ -22,35 +22,44 @@ export function processedAnalyticsToJSON(analytics: ProcessedAnalytics): string 
 export function processedAnalyticsToMarkdown(analytics: ProcessedAnalytics): string {
   const { kpis, treemap, rollRates, growthProjection } = analytics
 
+  const sanitizeMarkdownCell = (value: string): string =>
+    value
+      .replace(/[\r\n]+/g, ' ')
+      .replace(/[|`]/g, (match) => `\\${match}`)
+
   const treemapSection = treemap
-    .map((entry) => `| ${entry.label} | ${entry.value.toLocaleString()} | ${entry.color} |`)
+    .map((entry) => `| ${sanitizeMarkdownCell(entry.label)} | ${entry.value.toLocaleString()} | ${sanitizeMarkdownCell(entry.color)} |`)
     .join('\n')
 
   const rollRateSection = rollRates
-    .map((rate) => `| ${rate.from} | ${rate.to} | ${rate.percent.toFixed(1)}% |`)
+    .map((rate) => `| ${sanitizeMarkdownCell(rate.from)} | ${sanitizeMarkdownCell(rate.to)} | ${rate.percent.toFixed(1)}% |`)
     .join('\n')
 
   const growthSection = growthProjection
-    .map((point) => `| ${point.label} | ${point.yield}% | ${point.loanVolume.toLocaleString()} |`)
+    .map((point) => `| ${sanitizeMarkdownCell(point.label)} | ${point.yield.toFixed(1)}% | ${point.loanVolume.toLocaleString()} |`)
     .join('\n')
+
+  const treemapTable = treemapSection || '| – | – | – |'
+  const rollRateTable = rollRateSection || '| – | – | – |'
+  const growthTable = growthSection || '| – | – | – |'
 
   return `# Portfolio Analytics Report\n\n` +
     `## KPIs\n` +
-    `- Delinquency rate: ${kpis.delinquencyRate}%\n` +
-    `- Portfolio yield: ${kpis.portfolioYield}%\n` +
-    `- Average LTV: ${kpis.averageLTV}%\n` +
-    `- Average DTI: ${kpis.averageDTI}%\n` +
+    `- Delinquency rate: ${kpis.delinquencyRate.toFixed(1)}%\n` +
+    `- Portfolio yield: ${kpis.portfolioYield.toFixed(1)}%\n` +
+    `- Average LTV: ${kpis.averageLTV.toFixed(1)}%\n` +
+    `- Average DTI: ${kpis.averageDTI.toFixed(1)}%\n` +
     `- Active loans: ${kpis.loanCount}\n\n` +
     `## Segment Treemap\n` +
     `| Segment | Principal Balance | Color |\n` +
     `|---|---|---|\n` +
-    `${treemapSection}\n\n` +
+    `${treemapTable}\n\n` +
     `## Roll-rate Cascade\n` +
     `| From | To | Percent |\n` +
     `|---|---|---|\n` +
-    `${rollRateSection || '| – | – | – |'}\n\n` +
+    `${rollRateTable}\n\n` +
     `## Growth Path\n` +
     `| Month | Yield | Loan Volume |\n` +
     `|---|---|---|\n` +
-    `${growthSection}`
+    `${growthTable}`
 }
