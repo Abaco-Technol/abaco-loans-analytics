@@ -1,82 +1,20 @@
-# Gradle
-.gradle/
-build/
-
-# Node / JavaScript
 node_modules/
+**/node_modules/
+pnpm-lock.yaml
+yarn.lock
+.gradle/
+.env
+.env.*
 .next/
-<<<<<<< Updated upstream
-<<<<<<< HEAD
-.turbo/
-dist/
+.sonar/
 coverage/
-=======
-<<<<<<< Updated upstream
-.next/
->>>>>>> codex/create-integrations-page-layout
-
-# Python
-.venv/
-venv/
-__pycache__/
-*.pyc
-
-# IDE / Editor
-.vscode/
-.idea/
-*.vsix
-
-# OS files
-.DS_Store
-Thumbs.db
-
-# Project-specific artifacts
-apps/.DS_Store
-nvm/
-abaco-loans-analytics/
-<<<<<<< HEAD
-data_samples/
-gemini-cli/
-gradle.properties
-=======
-=======
-=======
->>>>>>> Stashed changes
-
-<<<<<<< ours
-<<<<<<< ours
-# Python
-.venv/
-venv/
-__pycache__/
-*.pyc
-
-# IDE / Editor specific
-.vscode/
-*.vsix
-.idea/
-
-# OS specific
-.DS_Store
-Thumbs.db
-=======
-# Gradle build artifacts
-.gradle/
+dist/
 build/
-
-=======
->>>>>>> theirs
-# Local development tools and artifacts
-nvm/
-abaco-loans-analytics/
->>>>>>> theirs
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-.gradle/
->>>>>>> codex/create-integrations-page-layout
-.env
-.env
-
-.env*.local
-=======
->>>>>>> Stashed changes
+Dockerfile.log
+gemini-cli/
+.DS_Store
+.venv/
+.vscode/
+.gemini-cli/
+.gemini-cli
+apps/.DS_Store
