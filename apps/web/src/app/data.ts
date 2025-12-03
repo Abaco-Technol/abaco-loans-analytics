@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 export type MarketingContent = Readonly<{
   metrics: readonly Metric[]
   products: readonly Product[]
@@ -6,28 +7,39 @@ export type MarketingContent = Readonly<{
 }>
 
 export type Metric = {
+=======
+export type Metric = Readonly<{
+>>>>>>> origin/main
   label: string
   value: string
-}
+}>
 
-export type Product = {
+export type Product = Readonly<{
   title: string
   detail: string
-}
+}>
 
-export type Step = {
+export type Step = Readonly<{
   label: string
   title: string
   copy: string
-}
+}>
 
+<<<<<<< HEAD
 export const metrics = Object.freeze([
+=======
+export const metrics: ReadonlyArray<Metric> = [
+>>>>>>> origin/main
   { label: 'Approval uplift with governed risk', value: '+18%' },
   { label: 'Reduction in manual reviews', value: '42%' },
   { label: 'Portfolio coverage with audit trails', value: '100%' },
 ] satisfies readonly Metric[])
 
+<<<<<<< HEAD
 export const products = Object.freeze([
+=======
+export const products: ReadonlyArray<Product> = [
+>>>>>>> origin/main
   {
     title: 'Portfolio Intelligence',
     detail:
@@ -45,13 +57,21 @@ export const products = Object.freeze([
   },
 ] satisfies readonly Product[])
 
+<<<<<<< HEAD
 export const controls = Object.freeze([
+=======
+export const controls: ReadonlyArray<string> = [
+>>>>>>> origin/main
   'Segregated roles, approvals, and immutable audit logs for every change.',
   'Real-time monitoring of SLAs, risk thresholds, and operational KPIs.',
   'Encryption by default with least-privilege access across environments.',
 ] satisfies readonly string[])
 
+<<<<<<< HEAD
 export const steps = Object.freeze([
+=======
+export const steps: ReadonlyArray<Step> = [
+>>>>>>> origin/main
   {
     label: '01',
     title: 'Unify data signals',
