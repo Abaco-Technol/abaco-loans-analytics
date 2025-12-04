@@ -37,3 +37,4 @@ ABACO delivers an executive-grade analytics and governance stack for lending tea
 - `docs/Fitten-Code-AI-Manual.md`: Fitten Code AI installation, GitHub integration, FAQs, and local inference testing.
 - `docs/MCP_CONFIGURATION.md`: Adding MCP servers via Codex CLI or `config.toml`, including Context7, Figma, Chrome DevTools, and running Codex as an MCP server.
 - `docs/Zencoder-Troubleshooting.md`: Remediation checklist for the VS Code Zencoder extension (`zencoder-cli ENOENT`).
+- `docs/GitHub-Workflow-Runbook.md`: Branching, lint/type-check commands, SonarQube and agent coordination, and merge standards for traceable releases.
