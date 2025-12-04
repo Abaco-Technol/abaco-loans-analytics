@@ -1,11 +1,7 @@
-<<<<<<< HEAD
-import Link from 'next/link'
-import { controls, metrics, products, steps } from './data'
-import styles from './page.module.css'
-=======
 import type { PostgrestSingleResponse } from '@supabase/supabase-js'
 import Link from 'next/link'
 import { z } from 'zod'
+
 import {
   controls as fallbackControls,
   metrics as fallbackMetrics,
@@ -13,93 +9,10 @@ import {
   steps as fallbackSteps,
 } from './data'
 import styles from './page.module.css'
-<<<<<<< HEAD
-import { isSupabaseConfigured, supabase } from '../lib/supabaseClient'
-import { logLandingPageDiagnostic } from '../lib/landingPageDiagnostics'
-import {
-  EMPTY_LANDING_PAGE_DATA,
-  landingPageDataSchema,
-  type LandingPageData,
-  type Metric,
-  type Product,
-  type Step,
-} from '../types/landingPage'
-
-async function getData(): Promise<LandingPageData> {
-  if (!supabase || !isSupabaseConfigured) {
-    logLandingPageDiagnostic({
-      status: 'missing-config',
-      supabaseConfigured: false,
-      payload: EMPTY_LANDING_PAGE_DATA,
-    })
-    console.warn('Supabase environment variables are missing; using fallback landing page data')
-    return EMPTY_LANDING_PAGE_DATA
-  }
-
-  const { data, error } = await supabase.from('landing_page_data').select('*').single()
-
-  if (error) {
-    logLandingPageDiagnostic({
-      status: 'fetch-error',
-      supabaseConfigured: true,
-      error,
-      payload: EMPTY_LANDING_PAGE_DATA,
-    })
-    console.error('Error fetching landing page data:', error)
-    return EMPTY_LANDING_PAGE_DATA
-  }
-
-  if (!data) {
-    logLandingPageDiagnostic({
-      status: 'no-data',
-      supabaseConfigured: true,
-      payload: EMPTY_LANDING_PAGE_DATA,
-    })
-    console.error('Landing page data is missing from Supabase response')
-    return EMPTY_LANDING_PAGE_DATA
-  }
-
-  const parsed = landingPageDataSchema.safeParse(data)
-
-  if (!parsed.success) {
-    logLandingPageDiagnostic({
-      status: 'invalid-shape',
-      supabaseConfigured: true,
-      error: parsed.error.flatten(),
-      payload: EMPTY_LANDING_PAGE_DATA,
-    })
-    console.error('Invalid landing page data shape from Supabase:', parsed.error.flatten())
-    return EMPTY_LANDING_PAGE_DATA
-  }
-
-  logLandingPageDiagnostic({
-    status: 'ok',
-    supabaseConfigured: true,
-    payload: parsed.data,
-  })
-=======
-import { supabase } from '../lib/supabaseClient'
-import type { LandingPageData } from '../types/landingPage'
 import { AnalyticsDashboard } from '@/components/analytics/AnalyticsDashboard'
-
-<<<<<<< HEAD
-type Metric = {
-  label: string
-  value: string
-  helper?: string
-}
-
-type Product = {
-  title: string
-  detail: string
-  kicker?: string
-}
-
-type Step = {
-  label: string
-  title: string
-  copy: string
-}
+import { logLandingPageDiagnostic } from '../lib/landingPageDiagnostics'
+import { isSupabaseConfigured, supabase } from '../lib/supabaseClient'
+import { type LandingPageData } from '../types/landingPage'
 
 const navLinks = [
   { label: 'KPIs', href: '#kpis' },
@@ -109,25 +22,7 @@ const navLinks = [
   { label: 'Playbook', href: '#demo' },
 ]
 
-const metrics: Metric[] = [
-  {
-    label: 'Approval uplift with governed risk',
-    value: '+18%',
-    helper: 'Quarter-over-quarter across prime and near-prime',
-  },
-  {
-    label: 'Reduction in manual reviews',
-    value: '42%',
-    helper: 'Workflow automation with auditability',
-  },
-  {
-    label: 'Portfolio coverage with audit trails',
-    value: '100%',
-    helper: 'Evidence mapped to every decision',
-  },
-]
-
-const scorecards: Metric[] = [
+const scorecards = [
   {
     label: 'Application-to-cash velocity',
     value: '< 48 hours',
@@ -145,27 +40,7 @@ const scorecards: Metric[] = [
   },
 ]
 
-const products: Product[] = [
-  {
-    title: 'Portfolio Intelligence',
-    detail: 'Daily performance lenses across cohorts, pricing, liquidity, and partner flows.',
-    kicker: 'Capital efficiency, reserve discipline, and covenant readiness.',
-  },
-  {
-    title: 'Risk Orchestration',
-    detail:
-      'Dynamic policy controls, challenger experiments, and guardrails to defend credit quality.',
-    kicker: 'Segregation of duties with sign-offs and immutable change logs.',
-  },
-  {
-    title: 'Growth Enablement',
-    detail:
-      'Pre-approved journeys, partner-ready APIs, and data rooms that accelerate funding decisions.',
-    kicker: 'Unified evidence packs for investors, auditors, and strategic partners.',
-  },
-]
-
-const dashboards: Product[] = [
+const dashboards = [
   {
     title: 'Liquidity & funding cockpit',
     detail: 'Covenant monitoring, cash runway, and facility utilization in one governed console.',
@@ -183,83 +58,26 @@ const dashboards: Product[] = [
   },
 ]
 
-const controls = [
-  'Segregated roles, approvals, and immutable audit logs for every change.',
-  'Real-time monitoring of SLAs, risk thresholds, and operational KPIs.',
-  'Encryption by default with least-privilege access across environments.',
-  'Continuous evidence packs for regulators, investors, and funding partners.',
-]
-
-const steps: Step[] = [
-  {
-    label: '01',
-    title: 'Unify data signals',
-    copy: 'Blend credit bureau, behavioral, and operational streams to build a trusted lending graph.',
-  },
-  {
-    label: '02',
-    title: 'Model & decide',
-    copy: 'Score applicants with explainable risk layers and adaptive policies aligned to appetite.',
-  },
-  {
-    label: '03',
-    title: 'Measure & learn',
-    copy: 'Track outcomes against revenue and risk KPIs, iterating with governed experiment loops.',
-  },
-]
-
-const structuredData = {
-  '@context': 'https://schema.org',
-  '@type': 'Organization',
-  name: 'Abaco Loans Analytics',
-  url: 'https://abaco-loans-analytics.com',
-  description:
-    'Abaco Loans Analytics unifies lending KPIs, governance, and revenue acceleration in one compliant, investor-ready experience.',
-  areaServed: 'Global',
-  brand: {
-    '@type': 'Brand',
-    name: 'Abaco Loans Analytics',
-  },
-  offers: {
-    '@type': 'Offer',
-    category: 'Financial technology',
-    availability: 'https://schema.org/InStock',
-  },
-  hasOfferCatalog: {
-    '@type': 'OfferCatalog',
-    name: 'Growth & Risk Intelligence Suite',
-    itemListElement: products.map((product) => ({
-      '@type': 'Offer',
-      itemOffered: {
-        '@type': 'Service',
-        name: product.title,
-        description: product.detail,
-      },
-    })),
-  },
-  makesOffer: scorecards.map((score) => ({
-    '@type': 'Offer',
-    itemOffered: {
-      '@type': 'Service',
-      name: score.label,
-      description: score.helper,
-    },
-  })),
+const fallbackData: LandingPageData = {
+  metrics: fallbackMetrics,
+  products: fallbackProducts,
+  controls: fallbackControls,
+  steps: fallbackSteps,
 }
 
-export default function Home() {
-=======
 const landingPageSchema = z.object({
   metrics: z.array(
     z.object({
       label: z.string().min(1),
       value: z.string().min(1),
+      helper: z.string().optional(),
     })
   ),
   products: z.array(
     z.object({
       title: z.string().min(1),
       detail: z.string().min(1),
+      kicker: z.string().optional(),
     })
   ),
   controls: z.array(z.string().min(1)),
@@ -272,13 +90,6 @@ const landingPageSchema = z.object({
   ),
 })
 
-const fallbackData: LandingPageData = {
-  metrics: fallbackMetrics,
-  products: fallbackProducts,
-  controls: fallbackControls,
-  steps: fallbackSteps,
-}
-
 function cloneFallback(): LandingPageData {
   return {
     metrics: fallbackData.metrics.map((item) => ({ ...item })),
@@ -289,7 +100,12 @@ function cloneFallback(): LandingPageData {
 }
 
 async function getData(): Promise<LandingPageData> {
-  if (!supabase) {
+  if (!supabase || !isSupabaseConfigured) {
+    logLandingPageDiagnostic({
+      status: 'missing-config',
+      supabaseConfigured: false,
+      payload: fallbackData,
+    })
     return cloneFallback()
   }
 
@@ -299,25 +115,71 @@ async function getData(): Promise<LandingPageData> {
     .single()
 
   if (error || !data) {
-    console.error('Error fetching landing page data:', error)
+    logLandingPageDiagnostic({
+      status: 'fetch-error',
+      supabaseConfigured: true,
+      error,
+      payload: fallbackData,
+    })
     return cloneFallback()
   }
 
   const parsed = landingPageSchema.safeParse(data)
   if (!parsed.success) {
-    console.error('Invalid landing page payload received:', parsed.error.flatten())
+    logLandingPageDiagnostic({
+      status: 'invalid-shape',
+      supabaseConfigured: true,
+      error: parsed.error.flatten(),
+      payload: fallbackData,
+    })
     return cloneFallback()
   }
 
->>>>>>> origin/main
+  logLandingPageDiagnostic({
+    status: 'ok',
+    supabaseConfigured: true,
+    payload: parsed.data,
+  })
   return parsed.data
 }
 
-export default async function Home() {
-  const { metrics, products, controls, steps } = await getData()
->>>>>>> origin/main
+function buildStructuredData({ products }: LandingPageData) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    name: 'Abaco Loans Analytics',
+    url: 'https://abaco-loans-analytics.com',
+    description:
+      'Abaco Loans Analytics unifies lending KPIs, governance, and revenue acceleration in one compliant, investor-ready experience.',
+    areaServed: 'Global',
+    brand: {
+      '@type': 'Brand',
+      name: 'Abaco Loans Analytics',
+    },
+    offers: {
+      '@type': 'Offer',
+      category: 'Financial technology',
+      availability: 'https://schema.org/InStock',
+    },
+    hasOfferCatalog: {
+      '@type': 'OfferCatalog',
+      name: 'Growth & Risk Intelligence Suite',
+      itemListElement: products.map((product) => ({
+        '@type': 'Offer',
+        itemOffered: {
+          '@type': 'Service',
+          name: product.title,
+          description: product.detail,
+        },
+      })),
+    },
+  }
+}
 
->>>>>>> origin/main
+export default async function Home() {
+  const landingPageData = await getData()
+  const structuredData = buildStructuredData(landingPageData)
+
   return (
     <main id="main-content" className={styles.page}>
       <script
@@ -354,17 +216,12 @@ export default async function Home() {
           <Link href="#products" className={styles.secondaryButton}>
             Explore products
           </Link>
-<<<<<<< HEAD
           <Link href="#kpis" className={styles.linkGhost}>
             View KPI cockpit
-=======
-          <Link href="/settings" className={styles.secondaryButton}>
-            Open settings
->>>>>>> origin/main
           </Link>
         </div>
         <div className={styles.metrics}>
-          {metrics.map((metric) => (
+          {landingPageData.metrics.map((metric) => (
             <dl key={metric.label} className={styles.metricCard}>
               <dt className={styles.metricLabel}>{metric.label}</dt>
               <dd className={styles.metricValue}>{metric.value}</dd>
@@ -374,7 +231,6 @@ export default async function Home() {
         </div>
       </header>
 
-<<<<<<< HEAD
       <section id="kpis" aria-labelledby="kpis-heading" className={styles.section}>
         <div className={styles.sectionHeader}>
           <p className={styles.eyebrow}>Performance cockpit</p>
@@ -395,10 +251,7 @@ export default async function Home() {
         </div>
       </section>
 
-      <section id="products" aria-labelledby="products-heading" className={styles.section}>
-=======
       <section id="products" className={styles.section} aria-labelledby="products-heading">
->>>>>>> origin/main
         <div className={styles.sectionHeader}>
           <p className={styles.eyebrow}>Customer-centric growth</p>
           <h2 id="products-heading">Build, fund, and protect every loan strategy</h2>
@@ -408,7 +261,7 @@ export default async function Home() {
           </p>
         </div>
         <div className={styles.cardGrid}>
-          {products.map((product) => (
+          {landingPageData.products.map((product) => (
             <div key={product.title} className={styles.card}>
               <div className={styles.cardHeader}>
                 <h3>{product.title}</h3>
@@ -422,7 +275,6 @@ export default async function Home() {
         </div>
       </section>
 
-<<<<<<< HEAD
       <section id="dashboards" aria-labelledby="dashboards-heading" className={styles.section}>
         <div className={styles.sectionHeader}>
           <p className={styles.eyebrow}>Signals and dashboards</p>
@@ -455,10 +307,7 @@ export default async function Home() {
         </div>
       </section>
 
-      <section id="compliance" aria-labelledby="compliance-heading" className={styles.section}>
-=======
-      <section className={styles.section} aria-labelledby="excellence-heading">
->>>>>>> origin/main
+      <section className={styles.section} aria-labelledby="compliance-heading" id="compliance">
         <div className={styles.sectionHeader}>
           <p className={styles.eyebrow}>Operational excellence</p>
           <h2 id="compliance-heading">Compliance-first, automation-ready</h2>
@@ -469,7 +318,7 @@ export default async function Home() {
         </div>
         <div className={styles.compliance}>
           <ul className={styles.complianceList}>
-            {controls.map((item) => (
+            {landingPageData.controls.map((item) => (
               <li key={item} className={styles.checkItem}>
                 <span className={styles.checkBullet} aria-hidden="true" />
                 <span>{item}</span>
@@ -490,11 +339,7 @@ export default async function Home() {
         </div>
       </section>
 
-<<<<<<< HEAD
-      <section id="demo" aria-labelledby="playbook-heading" className={styles.section}>
-=======
       <section id="demo" className={styles.section} aria-labelledby="playbook-heading">
->>>>>>> origin/main
         <div className={styles.sectionHeader}>
           <p className={styles.eyebrow}>Delivery playbook</p>
           <h2 id="playbook-heading">From data to decisions in weeks</h2>
@@ -504,7 +349,7 @@ export default async function Home() {
           </p>
         </div>
         <div className={styles.timeline}>
-          {steps.map((step) => (
+          {landingPageData.steps.map((step) => (
             <div key={step.label} className={styles.timelineStep}>
               <span className={styles.stepBadge}>{step.label}</span>
               <div>
@@ -515,14 +360,10 @@ export default async function Home() {
           ))}
         </div>
       </section>
-<<<<<<< HEAD
-    </main>
-=======
 
       <section className={styles.section} id="analytics">
         <AnalyticsDashboard />
       </section>
-    </div>
->>>>>>> origin/main
+    </main>
   )
 }
