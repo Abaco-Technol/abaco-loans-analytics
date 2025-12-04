@@ -143,7 +143,7 @@ docs/
 5. ⏳ Set up monitoring dashboard for covenant compliance
 
 ## Notes
-- All data represents Abaco Capital facility
+- All data represent the Abaco Capital facility
 - Cascade platform operates in USD
 - Measurement dates vary by data type (see specific records)
 - This extraction represents a point-in-time snapshot
