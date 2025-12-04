@@ -92,6 +92,8 @@ export function LoanUploader({ onData }: Props) {
   const resetState = useCallback(() => {
     setValidation({ status: 'idle' })
     setFileName('')
+    setIsDragging(false)
+    setIsProcessing(false)
     if (inputRef.current) {
       inputRef.current.value = ''
     }

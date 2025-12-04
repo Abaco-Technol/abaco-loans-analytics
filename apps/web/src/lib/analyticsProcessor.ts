@@ -13,7 +13,17 @@ function toNumber(value: string | number): number {
 function normalizeHeader(header: string) {
   const cleaned = header.replace(/^"|"$/g, '').trim().toLowerCase()
   const collapsed = cleaned.replace(/[^a-z0-9]+/g, '_')
-  if (collapsed === 'dpd' || collapsed === 'dpd_status' || collapsed === 'dpdstatus') {
+  const dpdSynonyms = new Set([
+    'dpd',
+    'dpd_status',
+    'dpdstatus',
+    'dpd_code',
+    'dpd_bucket',
+    'days_past_due',
+    'dayspastdue',
+  ])
+
+  if (dpdSynonyms.has(collapsed)) {
     return 'dpd_status'
   }
   return collapsed
