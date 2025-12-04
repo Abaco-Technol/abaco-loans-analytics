@@ -2,6 +2,14 @@
 
 Use these steps to run Supabase locally for the Abaco Loans Analytics stack. Docker Desktop must be running before you start.
 
+## Environment file
+- Copy `.env.example` to `.env` and add the Supabase project values. Keep this file local-only and out of Git history.
+  ```bash
+  cp .env.example .env
+  export NEXT_PUBLIC_SUPABASE_URL=... # from the Supabase project settings
+  export NEXT_PUBLIC_SUPABASE_ANON_KEY=... # from the Supabase project settings
+  ```
+
 ## Prerequisites
 - Docker Desktop running with at least 8 GB RAM allocated (verify with `docker info`).
 - Supabase CLI installed ([docs](https://supabase.com/docs/guides/cli)).
