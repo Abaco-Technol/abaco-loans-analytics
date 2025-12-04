@@ -1,4 +1,6 @@
 name: Compliance Audit Trail
+permissions:
+  contents: read
 
 on:
   workflow_dispatch:
