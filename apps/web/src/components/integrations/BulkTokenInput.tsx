@@ -214,21 +214,24 @@ function parseInput(input: string): BulkTokenItem[] {
     .filter(Boolean)
     .map((line) => line.split(',').map((segment) => segment.trim()))
     .filter((parts) => parts.length >= 2)
-    .map((parts) => {
+    .reduce<BulkTokenItem[]>((acc, parts) => {
       const [rawPlatform, token, accountId] = parts
-      const normalizedPlatform = rawPlatform?.toLowerCase() as Platform | undefined
+      const normalizedPlatform = (rawPlatform ?? '').toLowerCase() as Platform
 
-      return {
+      if (!PLATFORMS.includes(normalizedPlatform) || !accountId) {
+        return acc
+      }
+
+      acc.push({
         platform: normalizedPlatform,
         token: token ?? '',
         accountId,
         status: 'pending' as ItemStatus,
         attempts: 0,
-      }
-    })
-    .filter(
-      (item): item is BulkTokenItem => Boolean(item.platform) && PLATFORMS.includes(item.platform)
-    )
+      })
+
+      return acc
+    }, [])
 }
 
 function waitForDelay(attempt: number) {
