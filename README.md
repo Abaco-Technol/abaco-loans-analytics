@@ -7,10 +7,7 @@ ABACO delivers an executive-grade analytics and governance stack for lending tea
 - **apps/analytics**: Python scoring, stress testing, and KPI pipelines.
 - **infra/azure**: Azure infra-as-code and deployment scripts.
 - **data_samples**: Anonymized datasets for repeatable development and testing.
-<<<<<<< Updated upstream
-=======
-- **Integrations**: Figma / Notion / Slack setup guide at `docs/integrations.md` (see `docs/integration-readiness.md` for service checks).
->>>>>>> Stashed changes
+- **Integrations**: Figma / Notion / Slack setup guide at `docs/integrations.md`.
 
 ## Observability, KPIs, and lineage
 - **KPI catalog**: Use `docs/KPI-Operating-Model.md` to define owners, formulas, and lineage links for every metric; keep PR and issue references for auditability.
@@ -31,7 +28,7 @@ ABACO delivers an executive-grade analytics and governance stack for lending tea
   `--unstable` is unnecessary in Deno 2.0; add specific `--unstable-*` flags only when required.
 - Web: see `apps/web` for Next.js dashboard setup.
 - Analytics: use `apps/analytics` pipelines for risk and KPI computation; keep formulas versioned and tested.
-- Infra: apply `infra/azure` scripts for environment provisioning; confirm `docs/integration-readiness.md` for service readiness and pre-checks.
+- Infra: apply `infra/azure` scripts for environment provisioning; confirm `docs/integrations.md` for service readiness and pre-checks.
 
 ## Essential knowledge base
 - `docs/Analytics-Vision.md`: Vision, Streamlit blueprint, and narrative alignment for KPIs and prompts.
