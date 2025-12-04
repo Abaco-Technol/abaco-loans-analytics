@@ -2,6 +2,9 @@ gemini-cli/
 .DS_Store
 .venv/
 .vscode/
+.gradle/
+.env.local
+.vercel
 apps/.DS_Store
 node_modules/
 .next/

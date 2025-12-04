@@ -1,23 +1,38 @@
 import Link from 'next/link'
 import styles from './page.module.css'
-import { supabase } from '../lib/supabaseClient'
+import { isSupabaseConfigured, supabase, type LandingPageData } from '../lib/supabaseClient'
 
-// Define types for our data
-interface Metric { value: string; label: string; }
-interface Product { title: string; detail: string; }
-interface Step { label: string; title: string; copy: string; }
+type Metric = LandingPageData['metrics'][number]
+type Product = LandingPageData['products'][number]
+type Step = LandingPageData['steps'][number]
 
-async function getData() {
-  const { data, error } = await supabase.from('landing_page_data').select().single()
-  if (error) {
-    console.error('Error fetching landing page data:', error)
-    return { metrics: [], products: [], controls: [], steps: [] }
+async function getData(): Promise<LandingPageData> {
+  const fallback: LandingPageData = { metrics: [], products: [], controls: [], steps: [] }
+
+  if (!isSupabaseConfigured || !supabase) {
+    return fallback
   }
-  return data
+
+  const { data, error } = await supabase.from('landing_page_data').select().single()
+
+  const typedData = (data as unknown as LandingPageData | null) ?? null
+
+  if (error || !typedData) {
+    console.error('Error fetching landing page data:', error)
+    return fallback
+  }
+
+  return {
+    metrics: typedData.metrics ?? [],
+    products: typedData.products ?? [],
+    controls: typedData.controls ?? [],
+    steps: typedData.steps ?? [],
+  }
 }
 
 export default async function Home() {
-  const { metrics, products, controls, steps } = await getData()
+  const data: LandingPageData = await getData()
+  const { metrics, products, controls, steps } = data
 
   return (
     <div className={styles.page}>
