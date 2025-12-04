@@ -22,6 +22,9 @@ export function processedAnalyticsToJSON(analytics: ProcessedAnalytics): string 
 export function processedAnalyticsToMarkdown(analytics: ProcessedAnalytics): string {
   const { kpis, treemap, rollRates, growthProjection } = analytics
 
+  const formatPercent = (value: number): string =>
+    Number.isFinite(value) ? `${value.toFixed(1)}%` : '–'
+
   const sanitizeMarkdownCell = (value: string): string =>
     value
       .replace(/[\r\n]+/g, ' ')
@@ -32,11 +35,11 @@ export function processedAnalyticsToMarkdown(analytics: ProcessedAnalytics): str
     .join('\n')
 
   const rollRateSection = rollRates
-    .map((rate) => `| ${sanitizeMarkdownCell(rate.from)} | ${sanitizeMarkdownCell(rate.to)} | ${rate.percent.toFixed(1)}% |`)
+    .map((rate) => `| ${sanitizeMarkdownCell(rate.from)} | ${sanitizeMarkdownCell(rate.to)} | ${formatPercent(rate.percent)} |`)
     .join('\n')
 
   const growthSection = growthProjection
-    .map((point) => `| ${sanitizeMarkdownCell(point.label)} | ${point.yield.toFixed(1)}% | ${point.loanVolume.toLocaleString()} |`)
+    .map((point) => `| ${sanitizeMarkdownCell(point.label)} | ${formatPercent(point.yield)} | ${point.loanVolume.toLocaleString()} |`)
     .join('\n')
 
   const treemapTable = treemapSection || '| – | – | – |'
@@ -45,10 +48,10 @@ export function processedAnalyticsToMarkdown(analytics: ProcessedAnalytics): str
 
   return `# Portfolio Analytics Report\n\n` +
     `## KPIs\n` +
-    `- Delinquency rate: ${kpis.delinquencyRate.toFixed(1)}%\n` +
-    `- Portfolio yield: ${kpis.portfolioYield.toFixed(1)}%\n` +
-    `- Average LTV: ${kpis.averageLTV.toFixed(1)}%\n` +
-    `- Average DTI: ${kpis.averageDTI.toFixed(1)}%\n` +
+    `- Delinquency rate: ${formatPercent(kpis.delinquencyRate)}\n` +
+    `- Portfolio yield: ${formatPercent(kpis.portfolioYield)}\n` +
+    `- Average LTV: ${formatPercent(kpis.averageLTV)}\n` +
+    `- Average DTI: ${formatPercent(kpis.averageDTI)}\n` +
     `- Active loans: ${kpis.loanCount}\n\n` +
     `## Segment Treemap\n` +
     `| Segment | Principal Balance | Color |\n` +
