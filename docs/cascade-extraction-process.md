@@ -22,7 +22,7 @@ Successfully extracted 9 comprehensive analytics views:
 
 2. **Delinquency (Portfolio at Risk)**
    - PAR90: 1.61% (as of latest)
-   - 36 months historical PAR7 data
+   - 36 months of historical PAR7 data
    - DPD breakdown: 7/30/60/90+ day buckets
    - URL: https://app.cascadedebt.com/analytics/risk/delinquency?pid=abaco
 
