@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # 🚀 ABACO FINTECH — CEO OPERATING SYSTEM v2
 ### Board Presentation — Oct-16, 2025 (Mid-month snapshot)
 
