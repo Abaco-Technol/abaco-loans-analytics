@@ -39,3 +39,5 @@ ABACO delivers an executive-grade analytics and governance stack for lending tea
 - `docs/MCP_CONFIGURATION.md`: Adding MCP servers via Codex CLI or `config.toml`, including Context7, Figma, Chrome DevTools, and running Codex as an MCP server.
 - `docs/Zencoder-Troubleshooting.md`: Remediation checklist for the VS Code Zencoder extension (`zencoder-cli ENOENT`).
 - `docs/integrations.md`: Figma, Notion, and Slack SDK setup guides with environment variables, CLI token export, and client snippets for Node.js/TypeScript and Python.
+- `docs/supabase-local.md`: Supabase + Docker local setup with authentication, project linking, health checks, and cleanup commands.
+- `docs/sonar.md`: SonarQube/SonarCloud scanner prerequisites and the command to run analysis with `sonar-project.properties`.
