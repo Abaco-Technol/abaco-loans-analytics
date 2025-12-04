@@ -3,8 +3,7 @@
 Arquitectura:
 
 - **apps/web**: Next.js dashboard corporativo.
-- **apps/analytics**: pipelines de Python para riesgo, scoring y KPIs.
-- **infra/azure**: scripts de despliegue Azure.
+- **streamlit_app.py**: experiencia analítica ligera.
 - **data_samples**: datasets anonimizados para desarrollo.
 
 Integraciones disponibles:
@@ -15,6 +14,10 @@ Integraciones disponibles:
 - OpenAI / Gemini / Claude
 - SonarCloud
 - GitHub Actions
+
+## Supabase local
+
+Follow `docs/supabase-local.md` for Docker Desktop prerequisites, Supabase CLI login, project linking (`pljjgdtczxmrxydfuaep`), and the `supabase start/status` health checks. Keep `.env.local` and `.vercel` untracked.
 
 ## Fitten Code AI 编程助手
 

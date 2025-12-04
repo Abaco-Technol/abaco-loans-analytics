@@ -24,6 +24,9 @@ const nextConfig: NextConfig = {
       ],
     },
   ],
+  experimental: {
+    turbopackUseSystemTlsCerts: true,
+  },
   redirects: () => [],
   rewrites: () => ({
     beforeFiles: [],
