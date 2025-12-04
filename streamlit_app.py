@@ -2,10 +2,11 @@ import os
 import re
 import unicodedata
 
-import numpy as np
 import pandas as pd
 import plotly.express as px
 import streamlit as st
+
+from streamlit_ingestion import coerce_numeric_columns, normalize_columns, safe_numeric
 
 ABACO_THEME = {
     "colors": {
@@ -54,28 +55,6 @@ def apply_theme(fig: px.Figure) -> px.Figure:
     )
     fig.update_traces(marker=dict(line=dict(color=ABACO_THEME["colors"]["background"], width=1)))
     return fig
-
-
-def normalize_columns(df: pd.DataFrame) -> pd.DataFrame:
-    clean = (
-        df.rename(
-            columns=lambda col: re.sub(r"[^a-z0-9_]", "_", re.sub(r"\s+", "_", col.strip().lower()))
-        )
-        .pipe(lambda d: d.loc[:, ~d.columns.duplicated()])
-    )
-    return clean
-
-
-def safe_numeric(series: pd.Series) -> pd.Series:
-    cleaned = (
-        series.astype(str)
-        .str.replace(r"[₡$€,,%]", "", regex=True)
-        .str.replace(",", "", regex=False)
-        .replace("", np.nan)
-    )
-    return pd.to_numeric(cleaned, errors="coerce")
-
-
 def compute_roll_rates(df: pd.DataFrame) -> pd.DataFrame:
     if "dpd_status" not in df.columns or "loan_status" not in df.columns:
         return pd.DataFrame()
@@ -187,18 +166,18 @@ st.sidebar.header("Streamlit Ingestion")
 uploaded = st.sidebar.file_uploader("Upload the core loan dataset (CSV)", type=["csv"], accept_multiple_files=False)
 validation_toggle = st.sidebar.checkbox("Validate upload schema", value=True)
 st.sidebar.caption("Use this area to trigger ingestion, refresh safely, and capture metadata.")
+REQUIRED_NUMERIC_COLUMNS = {
+    "loan_amount",
+    "appraised_value",
+    "borrower_income",
+    "monthly_debt",
+    "interest_rate",
+    "principal_balance",
+}
+REQUIRED_COLUMNS = [*sorted(REQUIRED_NUMERIC_COLUMNS), "loan_status"]
 if validation_toggle and uploaded is not None:
-    required = [
-        'loan_amount',
-        'appraised_value',
-        'borrower_income',
-        'monthly_debt',
-        'loan_status',
-        'interest_rate',
-        'principal_balance',
-    ]
     columns = normalize_columns(parse_uploaded_file(uploaded)).columns
-    missing = [col for col in required if col not in columns]
+    missing = [col for col in REQUIRED_COLUMNS if col not in columns]
     if missing:
         st.sidebar.error(f"Missing required columns: {', '.join(sorted(set(missing)))}")
 
@@ -213,12 +192,7 @@ if "last_upload" not in st.session_state:
 def ingest():
     raw = parse_uploaded_file(uploaded)
     normalized = normalize_columns(raw)
-    numeric_columns = normalized.select_dtypes(include=["object"]).columns
-    numeric_payload = normalized.copy()
-    for col in numeric_columns:
-        converted = safe_numeric(numeric_payload[col])
-        if converted.notna().sum() > 0:
-            numeric_payload[col] = converted
+    numeric_payload = coerce_numeric_columns(normalized, REQUIRED_NUMERIC_COLUMNS)
     st.session_state["loan_data"] = numeric_payload
     st.session_state["ingestion_state"] = define_ingestion_state(numeric_payload)
     st.session_state["last_upload"] = pd.Timestamp.now()
