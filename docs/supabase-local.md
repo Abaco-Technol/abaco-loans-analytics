@@ -3,14 +3,14 @@
 This project expects Supabase services to be available locally. Use the Supabase CLI with Docker Desktop running to mirror the hosted project `pljjgdtczxmrxydfuaep`.
 
 ## Prerequisites
-- Docker Desktop running with adequate resources
+- Docker Desktop running with adequate resources (validate with `docker info`)
 - Supabase CLI installed and authenticated
 - Environment variables available in a local `.env` file (not committed):
   - `NEXT_PUBLIC_SUPABASE_URL`
   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 
 ## Bootstrap steps
-1) Sign in to Supabase:
+1) Sign in to Supabase (interactive browser/device flow):
    ```bash
    supabase login
    ```
