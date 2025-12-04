@@ -52,6 +52,13 @@ deno run --allow-all main.ts
 
 `--unstable` is no longer needed in Deno 2.0; only include the specific `--unstable-*` flags when you actually depend on unstable APIs.
 
+## Git workflow commands
+
+Use `docs/Git-Workflow-Commands.md` for copy/paste commands that keep `work` in sync, run lint/tests plus SonarQube/Sourcery gates, and deliver traceable commits and merges through GitHub.
+
 ## Troubleshooting VS Code Zencoder extension
 
 If you see `Failed to spawn Zencoder process: ... zencoder-cli ENOENT` while working in VS Code, follow the remediation checklist in `docs/Zencoder-Troubleshooting.md` to reinstall the extension and restore the missing binary.
+## Git workflow commands
+
+Use `docs/Git-Workflow-Commands.md` for copy/paste commands that keep `work` in sync, run lint/tests plus SonarQube/Sourcery gates, and deliver traceable commits and merges through GitHub.
