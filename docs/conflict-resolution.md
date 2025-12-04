@@ -29,7 +29,12 @@ This playbook standardizes how to clear merge conflicts in Abaco Loans Analytics
    git add .
    git commit -m "chore: resolve merge conflicts"
    ```
-6. **Push and merge**
+6. **Preflight before pushing**
+   ```bash
+   python scripts/conflict_guard.py
+   ```
+   - Confirms no conflict markers, tracked secrets (`.env.local`, `.vercel`), or uncommitted changes remain.
+7. **Push and merge**
    ```bash
    git push
    gh pr merge <pr_number> --merge --delete-branch

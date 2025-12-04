@@ -1,29 +1,3 @@
-<<<<<<< HEAD
-gemini-cli/
-.DS_Store
-apps/.DS_Store
-
-# Local development tools and artifacts
-.venv/
-.vscode/
-=======
-# Gradle
-.gradle/
-build/
-
-# Node / JavaScript
-node_modules/
-.next/
-.turbo/
-dist/
-coverage/
-
-# Python
-.venv/
-venv/
-__pycache__/
-*.pyc
-
 # IDE / Editor
 .vscode/
 .idea/
@@ -32,19 +6,27 @@ __pycache__/
 # OS files
 .DS_Store
 Thumbs.db
-
-# Project-specific artifacts
 apps/.DS_Store
->>>>>>> upstream/main
-nvm/
 
-# Node build outputs
+# Node / JavaScript
 node_modules/
 .next/
+.turbo/
+dist/
+coverage/
+nvm/
 
-# Gradle build outputs
+# Gradle
+.gradle/
+build/
 **/.gradle/
 **/build/
+
+# Python
+.venv/
+venv/
+__pycache__/
+*.pyc
 
 # Local repository clones
 abaco-loans-analytics/
