@@ -3,7 +3,7 @@
 Use these steps to run Supabase locally for the Abaco Loans Analytics stack. Docker Desktop must be running before you start.
 
 ## Prerequisites
-- Docker Desktop running with at least 8 GB RAM allocated.
+- Docker Desktop running with at least 8 GB RAM allocated (verify with `docker info`).
 - Supabase CLI installed ([docs](https://supabase.com/docs/guides/cli)).
 - Access to the project `pljjgdtczxmrxydfuaep`.
 - Environment variables set in a `.env` file at the repo root:
@@ -24,8 +24,9 @@ supabase link --project-ref pljjgdtczxmrxydfuaep
 # From the repository root
 supabase start
 
-# Verify containers and services are healthy
+# Verify containers and services are healthy and ports are bound
 supabase status
+docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
 ```
 
 If Docker is not running, `supabase start` will fail. Start Docker Desktop and retry.
