@@ -41,3 +41,7 @@ deno run --allow-all main.ts
 ```
 
 `--unstable` is no longer needed in Deno 2.0; only include the specific `--unstable-*` flags when you actually depend on unstable APIs.
+
+## Git workflow commands
+
+Use `docs/Git-Workflow-Commands.md` for copy/paste commands that keep `work` in sync, run lint/tests plus SonarQube/Sourcery gates, and deliver traceable commits and merges through GitHub.
