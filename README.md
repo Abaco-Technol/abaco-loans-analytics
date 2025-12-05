@@ -29,6 +29,41 @@ ABACO delivers an executive-grade analytics and governance stack for lending tea
 - Analytics: use `apps/analytics` pipelines for risk and KPI computation; keep formulas versioned and tested.
 - Infra: apply `infra/azure` scripts for environment provisioning; confirm `docs/integration-readiness.md` for service readiness and pre-checks.
 
+<<<<<<< HEAD
+Para integrar Fitten Code AI en este monorepo (local y GitHub), consulta `docs/Fitten-Code-AI-Manual.md`, que cubre la introducción al producto, instalación, integración, preguntas frecuentes y pruebas de inferencia local.
+
+## Deno helper
+
+The repository exposes a tiny Deno helper at `main.ts` that verifies the expected directories before you execute tooling such as Fitten or analytics scripts. Run it with:
+
+```
+deno run --allow-all main.ts
+```
+
+`--unstable` is no longer needed in Deno 2.0; only include the specific `--unstable-*` flags when you actually depend on unstable APIs.
+
+## Quality gates
+
+Run the web experience checks (type safety, linting, and formatting) with a single command from the repository root:
+
+```
+./scripts/check-web.sh
+```
+
+The helper script enforces consistent paths and exits on the first failure to keep audit trails predictable for CI, SonarQube, and code review agents.
+
+## PR sync and merge workflow
+
+Use the reproducible workflow below to keep branches aligned with `origin/main`, surface conflicts early, and provide a copy-paste path for CI agents such as SonarQube, Sourcery, CodeRabbit, and Codex:
+
+```
+./scripts/git-pr-sync.sh
+./scripts/check-web.sh
+git commit -am "Describe the change"
+git push
+# Merge via the GitHub UI or: gh pr merge --merge --delete-branch
+```
+=======
 ## Essential knowledge base
 - `docs/Analytics-Vision.md`: Vision, Streamlit blueprint, and narrative alignment for KPIs and prompts.
 - `docs/KPI-Operating-Model.md`: Ownership, formulas, dashboard standards, lineage, GitHub guardrails, and audit controls.
@@ -37,3 +72,4 @@ ABACO delivers an executive-grade analytics and governance stack for lending tea
 - `docs/Fitten-Code-AI-Manual.md`: Fitten Code AI installation, GitHub integration, FAQs, and local inference testing.
 - `docs/MCP_CONFIGURATION.md`: Adding MCP servers via Codex CLI or `config.toml`, including Context7, Figma, Chrome DevTools, and running Codex as an MCP server.
 - `docs/Zencoder-Troubleshooting.md`: Remediation checklist for the VS Code Zencoder extension (`zencoder-cli ENOENT`).
+>>>>>>> upstream/main

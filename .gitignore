@@ -35,6 +35,12 @@ Thumbs.db
 
 # Project-specific artifacts
 apps/.DS_Store
+<<<<<<< HEAD
+node_modules/
+.gradle/
+
+build/
+=======
 >>>>>>> upstream/main
 nvm/
 
@@ -56,3 +62,4 @@ gemini-cli/
 .env.local
 .env*.local
 .vercel/
+>>>>>>> upstream/main
