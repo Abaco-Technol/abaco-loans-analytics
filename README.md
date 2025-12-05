@@ -2,10 +2,12 @@
 
 Arquitectura:
 
-- **apps/web**: Next.js dashboard corporativo.
-- **apps/analytics**: pipelines de Python para riesgo, scoring y KPIs.
-- **infra/azure**: scripts de despliegue Azure.
-- **data_samples**: datasets anonimizados para desarrollo.
+## Stack map
+- **apps/web**: Next.js dashboard for portfolio, risk, and growth views.
+- **apps/analytics**: Python scoring, stress testing, and KPI pipelines.
+- **infra/azure**: Azure infra-as-code and deployment scripts.
+- **data_samples**: Anonymized datasets for repeatable development and testing.
+- **Integrations**: Figma / Notion / Slack setup guide at `docs/integrations.md` (see `docs/integration-readiness.md` for service checks).
 
 Integraciones disponibles:
 
@@ -24,7 +26,11 @@ This repository contains ContosoTeamStats, a .NET 6 Web API for managing sports 
 
 See docs/Analytics-Vision.md for the analytics vision, Streamlit blueprint, and the agent-ready narrative that keeps every KPI, scenario, and AI prompt aligned with our fintech-grade delivery.
 
- contains ContosoTeamStats, a .NET 6 Web API for managing sports teams that ships with Docker, Azure deployment scripts, SendGrid/Twilio integrations, and SQL Server migrations. Follow docs/ContosoTeamStats-setup.md for local setup, secrets, database provisioning, and container validation.
+  contains ContosoTeamStats, a .NET 6 Web API for managing sports teams that ships with Docker, Azure deployment scripts, SendGrid/Twilio integrations, and SQL Server migrations. Follow docs/ContosoTeamStats-setup.md for local setup, secrets, database provisioning, and container validation.
+
+## Java and Gradle setup
+
+Use a locally installed JDK (21+ recommended) and let Gradle's toolchain resolver download the appropriate compiler per module. Avoid adding `org.gradle.java.home` to version control so CI and developers can rely on their own `JAVA_HOME` or toolchains without path-specific overrides.
 
 ## Copilot Enterprise workflow
 
@@ -53,3 +59,5 @@ deno run --allow-all main.ts
 ## Troubleshooting VS Code Zencoder extension
 
 If you see `Failed to spawn Zencoder process: ... zencoder-cli ENOENT` while working in VS Code, follow the remediation checklist in `docs/Zencoder-Troubleshooting.md` to reinstall the extension and restore the missing binary.
+- rerun CI
+- rerun CI

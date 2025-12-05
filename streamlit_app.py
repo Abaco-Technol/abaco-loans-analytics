@@ -1,10 +1,20 @@
+import hashlib
 import os
 import re
+import unicodedata
+from typing import Optional
 
 import numpy as np
 import pandas as pd
 import plotly.express as px
 import streamlit as st
+
+from src.analytics_metrics import (
+    calculate_quality_score,
+    portfolio_kpis,
+    project_growth,
+    standardize_numeric,
+)
 
 ABACO_THEME = {
     "colors": {
@@ -39,6 +49,16 @@ ABACO_THEME = {
     },
 }
 
+REQUIRED_COLUMNS = [
+    "loan_amount",
+    "appraised_value",
+    "borrower_income",
+    "monthly_debt",
+    "loan_status",
+    "interest_rate",
+    "principal_balance",
+]
+
 
 def apply_theme(fig: px.Figure) -> px.Figure:
     fig.update_layout(
@@ -47,7 +67,10 @@ def apply_theme(fig: px.Figure) -> px.Figure:
         paper_bgcolor=ABACO_THEME["colors"]["background"],
         plot_bgcolor=ABACO_THEME["colors"]["background"],
         legend=dict(
-            font=dict(family=ABACO_THEME["typography"]["secondary_font"], color=ABACO_THEME["colors"]["light_gray"])
+            font=dict(
+                family=ABACO_THEME["typography"]["secondary_font"],
+                color=ABACO_THEME["colors"]["light_gray"],
+            )
         ),
         margin=dict(l=0, r=0, t=40, b=0),
     )
@@ -57,22 +80,10 @@ def apply_theme(fig: px.Figure) -> px.Figure:
 
 def normalize_columns(df: pd.DataFrame) -> pd.DataFrame:
     clean = (
-        df.rename(
-            columns=lambda col: re.sub(r"[^a-z0-9_]", "_", re.sub(r"\s+", "_", col.strip().lower()))
-        )
+        df.rename(columns=lambda col: re.sub(r"[^a-z0-9_]", "_", re.sub(r"\s+", "_", col.strip().lower())))
         .pipe(lambda d: d.loc[:, ~d.columns.duplicated()])
     )
     return clean
-
-
-def safe_numeric(series: pd.Series) -> pd.Series:
-    cleaned = (
-        series.astype(str)
-        .str.replace(r"[₡$€,,%]", "", regex=True)
-        .str.replace(",", "", regex=False)
-        .replace("", np.nan)
-    )
-    return pd.to_numeric(cleaned, errors="coerce")
 
 
 def compute_roll_rates(df: pd.DataFrame) -> pd.DataFrame:
@@ -102,12 +113,16 @@ def define_ingestion_state(df: pd.DataFrame) -> pd.Series:
 def parse_uploaded_file(uploaded) -> pd.DataFrame:
     if uploaded is None:
         return pd.DataFrame()
-    return pd.read_csv(uploaded)
+    uploaded.seek(0)
+    try:
+        return pd.read_csv(uploaded)
+    except Exception:
+        return pd.DataFrame()
 
 
 st.set_page_config(
     page_title="ABACO Financial Intelligence Platform",
-    page_icon="💠",
+    page_icon="📊",
     layout="wide",
     initial_sidebar_state="expanded",
 )
@@ -149,17 +164,8 @@ uploaded = st.sidebar.file_uploader("Upload the core loan dataset (CSV)", type=[
 validation_toggle = st.sidebar.checkbox("Validate upload schema", value=True)
 st.sidebar.caption("Use this area to trigger ingestion, refresh safely, and capture metadata.")
 if validation_toggle and uploaded is not None:
-    required = [
-        'loan_amount',
-        'appraised_value',
-        'borrower_income',
-        'monthly_debt',
-        'loan_status',
-        'interest_rate',
-        'principal_balance',
-    ]
     columns = normalize_columns(parse_uploaded_file(uploaded)).columns
-    missing = [col for col in required if col not in columns]
+    missing = [col for col in REQUIRED_COLUMNS if col not in columns]
     if missing:
         st.sidebar.error(f"Missing required columns: {', '.join(sorted(set(missing)))}")
 
@@ -169,26 +175,33 @@ if "ingestion_state" not in st.session_state:
     st.session_state["ingestion_state"] = {}
 if "last_upload" not in st.session_state:
     st.session_state["last_upload"] = None
+if "last_upload_signature" not in st.session_state:
+    st.session_state["last_upload_signature"] = None
 
 
-def ingest():
-    raw = parse_uploaded_file(uploaded)
+def should_ingest(signature: str | None) -> bool:
+    return signature is not None and signature != st.session_state.get("last_upload_signature")
+
+
+def ingest(uploaded_file, signature: str | None):
+    raw = parse_uploaded_file(uploaded_file)
     normalized = normalize_columns(raw)
-    numeric_columns = normalized.select_dtypes(include=["object"]).columns
     numeric_payload = normalized.copy()
     for col in numeric_columns:
-        numeric_payload[col] = safe_numeric(numeric_payload[col])
+        numeric_payload[col] = standardize_numeric(numeric_payload[col])
     st.session_state["loan_data"] = numeric_payload
     st.session_state["ingestion_state"] = define_ingestion_state(numeric_payload)
     st.session_state["last_upload"] = pd.Timestamp.now()
+    st.session_state["last_upload_signature"] = signature
 
 
-if uploaded is not None:
-    ingest()
+current_signature = get_upload_signature(uploaded)
+if should_ingest(current_signature):
+    ingest(uploaded, current_signature)
 
 if st.sidebar.button("Refresh ingestion", use_container_width=True):
-    if uploaded is not None and pd.Timestamp.now() != st.session_state.get("last_upload"):
-        ingest()
+    if should_ingest(current_signature):
+        ingest(uploaded, current_signature)
         st.sidebar.success("Ingestion refreshed.")
     else:
         st.sidebar.warning("Upload a new file before refreshing.")
@@ -202,65 +215,84 @@ loan_df = st.session_state["loan_data"]
 ing_state = st.session_state["ingestion_state"]
 st.markdown(f"- Rows: {ing_state['rows']}, Columns: {ing_state['columns']}")
 st.markdown(f"- Loan base validated: {ing_state['has_loan_base']}")
+if st.session_state["last_ingested_at"] is not None:
+    st.markdown(
+        f"- Last ingested at: {st.session_state['last_ingested_at'].strftime('%Y-%m-%d %H:%M:%S')}"
+    )
 
 st.markdown("## Data Quality Audit")
-quality_score = 100
-if ing_state["rows"] == 0 or ing_state["columns"] == 0:
-    quality_score = 0
-else:
-    quality_score -= loan_df.isna().mean().sum() * 10
-quality_score = max(0, min(100, quality_score))
+quality_score = calculate_quality_score(loan_df)
 st.progress(quality_score / 100)
 st.markdown("Critical tables scored, missing columns handled, and zeros penalized before KPI synthesis.")
 
+st.markdown("## Payer Coverage Scan")
+payer_column = select_payer_column(loan_df)
+if payer_column:
+    normalized_col = f"{payer_column}_normalized"
+    loan_df[normalized_col] = loan_df[payer_column].apply(normalize_text)
+    target_aliases = {
+        "Vicepresidencia de la Republica": [r"vice\s*presidencia", r"vicepresidencia de la republica"],
+        "Bimbo": [r"bimbo", r"grupo\s*bimbo", r"marinela"],
+        "EPA": [r"\bepa\b", r"almacenes\s*epa", r"ferreteria\s*epa"],
+        "Walmart": [r"walmart", r"walmart de mexico y centroamerica", r"walmart centroamerica"],
+        "Pricesmart": [r"prices?mart"],
+        "Nestle": [r"nestl[eé]", r"nestle el salvador"],
+        "Coca Cola": [r"coca\s*cola", r"femsa"],
+    }
+    coverage_rows = []
+    for target, patterns in target_aliases.items():
+        pattern = "|".join(patterns)
+        mask = loan_df[normalized_col].str.contains(pattern, regex=True, na=False)
+        exposure = loan_df.loc[mask, "principal_balance"].sum() if "principal_balance" in loan_df.columns else np.nan
+        coverage_rows.append(
+            {
+                "Target": target,
+                "Matches": int(mask.sum()),
+                "Outstanding Exposure": exposure,
+            }
+        )
+    coverage_df = pd.DataFrame(coverage_rows)
+    st.dataframe(coverage_df, hide_index=True)
+    missing = coverage_df.loc[coverage_df["Matches"] == 0, "Target"].tolist()
+    if missing:
+        st.info(f"No matches detected for: {', '.join(missing)}. Use normalized payer names to confirm coverage gaps.")
+else:
+    st.info("Add a payer/offtaker column (payer, payor, pagador, buyer, or debtor) to measure international coverage.")
+
 st.markdown("## KPI Calculations")
-loan_df["ltv_ratio"] = (loan_df["loan_amount"] / loan_df["appraised_value"]) * 100
-monthly_income = loan_df["borrower_income"] / 12
-loan_df["dti_ratio"] = np.where(
-    monthly_income > 0,
-    (loan_df["monthly_debt"] / monthly_income) * 100,
-    np.nan,
-)
-delinquent_statuses = ["30-59 days past due", "60-89 days past due", "90+ days past due"]
-delinquent_count = loan_df["loan_status"].isin(delinquent_statuses).sum()
-total_loans = len(loan_df)
-delinquency_rate = (delinquent_count / total_loans) * 100 if total_loans > 0 else 0
-total_principal = loan_df["principal_balance"].sum()
-weighted_interest = (loan_df["interest_rate"] * loan_df["principal_balance"]).sum()
-portfolio_yield = (weighted_interest / total_principal) * 100 if total_principal else 0
-loan_df["delinquency_rate"] = delinquency_rate
-st.markdown(f"- **Delinquency rate:** {delinquency_rate:.2f}%")
-st.markdown(f"- **Portfolio yield:** {portfolio_yield:.2f}%")
-st.markdown(f"- **Average LTV:** {loan_df['ltv_ratio'].mean():.1f}%")
-st.markdown(f"- **Average DTI:** {loan_df['dti_ratio'].mean():.1f}%")
-alerts = loan_df[loan_df["ltv_ratio"] > 90].assign(
+metrics, enriched_df = portfolio_kpis(loan_df)
+enriched_df["delinquency_rate"] = metrics["delinquency_rate"]
+loan_df = enriched_df
+st.markdown(f"- **Delinquency rate:** {metrics['delinquency_rate']:.2f}%")
+st.markdown(f"- **Portfolio yield:** {metrics['portfolio_yield']:.2f}%")
+st.markdown(f"- **Average LTV:** {metrics['average_ltv']:.1f}%")
+st.markdown(f"- **Average DTI:** {metrics['average_dti']:.1f}%")
+alerts = enriched_df[enriched_df["ltv_ratio"] > 90].assign(
     alert_type="High LTV",
     probability=lambda d: np.clip((d["ltv_ratio"] - 90) / 20, 0, 1),
 )
 st.dataframe(alerts[["alert_type", "ltv_ratio", "probability"]], hide_index=True)
 
 st.markdown("## Growth & Marketing Analysis")
-targets = {}
-targets["target_monthly_yield"] = st.number_input("Target monthly yield (%)", value=1.5)
-targets["target_active_loans"] = st.number_input("Target active loans", value=150)
+targets = {
+    "target_monthly_yield": st.number_input("Target monthly yield (%)", value=1.5),
+    "target_active_loans": st.number_input("Target active loans", value=150),
+}
 current_metrics = {
-    "current_yield": portfolio_yield,
-    "active_loans": total_loans,
+    "current_yield": metrics["portfolio_yield"],
+    "active_loans": len(enriched_df),
 }
 gap_yield = targets["target_monthly_yield"] - current_metrics["current_yield"]
 gap_loans = targets["target_active_loans"] - current_metrics["active_loans"]
 st.metric("Yield gap", f"{gap_yield:.2f}%")
 st.metric("Loan gap", f"{gap_loans:.0f}")
-monthly_projection = (
-    pd.DataFrame(
-        {
-            "month": pd.date_range(start=pd.Timestamp.now(), periods=6, freq="MS"),
-            "yield": np.linspace(current_metrics["current_yield"], targets["target_monthly_yield"], 6),
-            "loan_volume": np.linspace(current_metrics["active_loans"], targets["target_active_loans"], 6),
-        }
-    )
-    .assign(month=lambda d: d["month"].dt.strftime("%b %Y"))
-)
+monthly_projection = project_growth(
+    current_yield=current_metrics["current_yield"],
+    target_yield=targets["target_monthly_yield"],
+    current_loan_volume=current_metrics["active_loans"],
+    target_loan_volume=targets["target_active_loans"],
+    periods=6,
+).assign(month=lambda d: d["date"].dt.strftime("%b %Y"))
 fig_growth = px.line(
     monthly_projection,
     x="month",
@@ -290,8 +322,7 @@ else:
 st.markdown("## AI Integration & Narrative")
 needs_ai = all(key in os.environ for key in ("OPENAI_API_KEY", "GOOGLE_API_KEY"))
 summary = (
-    "AI integration available; run a prompt to synthesize KPIs." if needs_ai else
-    "Rule-based summary: focus on delinquency, growth, and alert signals to guide stakeholders."
+    "AI integration available; run a prompt to synthesize KPIs." if needs_ai else "Rule-based summary: focus on delinquency, growth, and alert signals to guide stakeholders."
 )
 st.markdown(summary)
 
