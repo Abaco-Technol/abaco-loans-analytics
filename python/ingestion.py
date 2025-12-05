@@ -15,16 +15,18 @@ class CascadeIngestion:
     def __init__(self, data_dir: str = 'data'):
         self.data_dir = Path(data_dir)
         self.data_dir.mkdir(parents=True, exist_ok=True)
-        self.run_id = datetime.utcnow().isoformat()
+        self.run_id = f"ingest_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        self.timestamp = datetime.now().isoformat()
         self.errors: List[Dict[str, Any]] = []
     
     def ingest_csv(self, filename: str) -> pd.DataFrame:
         """Ingest CSV file from Cascade Debt export."""
         filepath = self.data_dir / filename
+        self.timestamp = datetime.now().isoformat()
         try:
             df = pd.read_csv(filepath)
             df['_ingest_run_id'] = self.run_id
-            df['_ingest_timestamp'] = datetime.utcnow().isoformat()
+            df['_ingest_timestamp'] = self.timestamp
             logger.info(f'Ingested {len(df)} records from {filename}')
             return df
         except Exception as e:  # pylint: disable=broad-exception-caught
@@ -60,7 +62,7 @@ class CascadeIngestion:
         """Get ingestion summary with audit trail."""
         return {
             'run_id': self.run_id,
-            'timestamp': datetime.utcnow().isoformat(),
+            'timestamp': self.timestamp,
             'total_errors': len(self.errors),
             'errors': self.errors,
         }

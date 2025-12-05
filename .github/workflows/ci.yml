@@ -45,6 +45,9 @@ jobs:
       - name: Run tests with coverage
         run: |
           pytest --cov=python
+      - name: Fail if coverage below 90%
+        run: |
+          coverage report --fail-under=90
 
   sonar:
     runs-on: ubuntu-latest
