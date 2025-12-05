@@ -84,7 +84,7 @@ def portfolio_kpis(df: pd.DataFrame) -> Tuple[Dict[str, float], pd.DataFrame]:
     portfolio_yield = weighted_interest / total_principal if total_principal else 0.0
 
     average_ltv = (
-        enriched["ltv_ratio"].mean() if not enriched["ltv_ratio"].empty else 0.0
+        0.0 if enriched["ltv_ratio"].empty else enriched["ltv_ratio"].mean()
     )
     average_dti = float(
         np.nan_to_num(enriched["dti_ratio"].mean(skipna=True), nan=0.0)
