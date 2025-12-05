@@ -1,22 +1,5 @@
 # ABACO — Loan Analytics Platform
 
-## Fintech Factory Agentic Ecosystem
-
-State-of-the-art **zero-touch automation** platform for market-leading fintech operations. Combines 7 departmental intelligence stacks with 9 integrated agents for deterministic, production-ready KPI governance and stakeholder reporting.
-
-**Key Features**:
-- **Automated KPI Engine**: PAR_90, collection rates, portfolio health computed from base data (never upstream fields)
-- **Real-time Alerts**: Cascade > Slack/Email/Notion in <5 minutes via BigQuery + Python orchestration
-- **7 Departmental Stacks**: Risk, Compliance, Finance, Technology, Growth, Marketing, Sales
-- **9 Agents Integrated**: Codex, SonarQube, Black, Flake8, PyTest, CodeRabbit, Sourcery, MCP, Gap Resolver
-- **Multi-layer Governance**: Audit trails on every metric; run IDs, timestamps, data versions immutable
-- **Vibe Solutioning**: Rebuild from base, continuous validation, absolute traceability
-
-**Deployment Status**: Phase 1 Foundation (Week 1) ✅ Complete | Phase 2+ In Progress
-
-**Documentation**: See `DEPLOYMENT.md` for operations guide, `CONTEXT.md` for architecture, or `feat/fintech-factory-agentic-ecosystem` branch for full implementation.
-
-
 ABACO delivers an executive-grade analytics and governance stack for lending teams. The platform pairs a Next.js dashboard with Python risk pipelines, Azure deployment scripts, and traceable KPI governance.
 
 ## Stack map
@@ -24,7 +7,7 @@ ABACO delivers an executive-grade analytics and governance stack for lending tea
 - **apps/analytics**: Python scoring, stress testing, and KPI pipelines.
 - **infra/azure**: Azure infra-as-code and deployment scripts.
 - **data_samples**: Anonymized datasets for repeatable development and testing.
-- **Integrations**: Figma / Notion / Slack setup guide at `docs/integrations.md` (see `docs/integration-readiness.md` for service checks).
+- **Integrations**: Figma / Notion / Slack setup guide at `docs/integrations.md` (single source for env vars, setup, and service readiness).
 
 ## Observability, KPIs, and lineage
 - **KPI catalog**: Use `docs/KPI-Operating-Model.md` to define owners, formulas, and lineage links for every metric; keep PR and issue references for auditability.
@@ -45,8 +28,7 @@ ABACO delivers an executive-grade analytics and governance stack for lending tea
   `--unstable` is unnecessary in Deno 2.0; add specific `--unstable-*` flags only when required.
 - Web: see `apps/web` for Next.js dashboard setup.
 - Analytics: use `apps/analytics` pipelines for risk and KPI computation; keep formulas versioned and tested.
-- Infra: apply `infra/azure` scripts for environment provisioning; confirm `docs/integration-readiness.md` for service readiness and pre-checks.
-- Integrations: configure Figma, Notion, and Slack SDKs via `docs/integrations.md` (Node.js/TypeScript and Python examples, environment variables, and figma-export token export).
+- Infra: apply `infra/azure` scripts for environment provisioning; confirm readiness via `docs/integrations.md`.
 
 ## Essential knowledge base
 - `docs/Analytics-Vision.md`: Vision, Streamlit blueprint, and narrative alignment for KPIs and prompts.
@@ -57,4 +39,3 @@ ABACO delivers an executive-grade analytics and governance stack for lending tea
 - `docs/GitHub-Workflow-Runbook.md`: Branching strategy, quality gates, agent coordination, and merge standards for traceable releases.
 - `docs/MCP_CONFIGURATION.md`: Adding MCP servers via Codex CLI or `config.toml`, including Context7, Figma, Chrome DevTools, and running Codex as an MCP server.
 - `docs/Zencoder-Troubleshooting.md`: Remediation checklist for the VS Code Zencoder extension (`zencoder-cli ENOENT`).
-- `docs/integrations.md`: Figma, Notion, and Slack SDK setup guides with environment variables, CLI token export, and client snippets for Node.js/TypeScript and Python.
