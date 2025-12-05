@@ -46,7 +46,7 @@ def main() -> int:
 
     secret_hits = tracked_paths([".env.local", ".vercel"])
     if secret_hits:
-        issues.append("Secret-bearing files are tracked: " + ", ".join(secret_hits))
+        issues.append("Tracked secret-bearing files detected. Please review your git tracked files and update your .gitignore if necessary.")
 
     changes = working_tree_changes()
     if changes:
