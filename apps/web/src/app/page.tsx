@@ -71,6 +71,9 @@ const fallbackData: LandingPageData = {
   steps: fallbackSteps.map((item) => ({ ...item })),
 }
 
+const cloneFallbackData = (data: LandingPageData): LandingPageData =>
+  JSON.parse(JSON.stringify(data))
+
 async function getData(): Promise<LandingPageData> {
   if (!supabase || !isSupabaseConfigured) {
     logLandingPageDiagnostic({
@@ -78,7 +81,7 @@ async function getData(): Promise<LandingPageData> {
       supabaseConfigured: false,
       payload: fallbackData,
     })
-    return fallbackData
+    return cloneFallbackData(fallbackData)
   }
 
   const { data, error } = await supabase.from('landing_page_data').select('*').single()
@@ -90,7 +93,7 @@ async function getData(): Promise<LandingPageData> {
       payload: fallbackData,
       error: error ?? 'no data returned',
     })
-    return fallbackData
+    return cloneFallbackData(fallbackData)
   }
 
   const parsed = landingPageSchema.safeParse(data)
@@ -102,7 +105,7 @@ async function getData(): Promise<LandingPageData> {
       payload: fallbackData,
       error: parsed.error.flatten(),
     })
-    return fallbackData
+    return cloneFallbackData(fallbackData)
   }
 
   logLandingPageDiagnostic({

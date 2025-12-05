@@ -64,8 +64,7 @@ def plot_growth(current_yield: float, target_yield: float, current_volume: float
 def app_body(df: pd.DataFrame) -> None:
     st.write("Uploaded rows:", len(df))
 
-    missing = [col for col in REQUIRED_COLUMNS if col not in df.columns]
-    if missing:
+    if missing := [col for col in REQUIRED_COLUMNS if col not in df.columns]:
         st.error(f"Missing required columns: {', '.join(missing)}")
         return
 
