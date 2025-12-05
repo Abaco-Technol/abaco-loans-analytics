@@ -1,25 +1,4 @@
-<<<<<<< HEAD
-export type Metric = {
-  label: string
-  value: string
-}
-
-export type Product = {
-  title: string
-  detail: string
-}
-
-export type Step = {
-  label: string
-  title: string
-  copy: string
-}
-
-<<<<<<< HEAD
-export const metrics = [
-=======
 export const metrics: Metric[] = [
-=======
 export type Metric = Readonly<{
   label: string
   value: string
@@ -37,22 +16,18 @@ export type Step = Readonly<{
 }>
 
 export const metrics: ReadonlyArray<Metric> = [
->>>>>>> origin/main
->>>>>>> upstream/main
+ upstream/main
   { label: 'Approval uplift with governed risk', value: '+18%' },
   { label: 'Reduction in manual reviews', value: '42%' },
   { label: 'Portfolio coverage with audit trails', value: '100%' },
 ] as const satisfies readonly Metric[]
 
-<<<<<<< HEAD
-export const products = [
-=======
-<<<<<<< HEAD
 export const products: Product[] = [
-=======
+ upstream/main
+  
 export const products: ReadonlyArray<Product> = [
->>>>>>> origin/main
->>>>>>> upstream/main
+ origin/main
+ upstream/main
   {
     title: 'Portfolio Intelligence',
     detail:
@@ -70,29 +45,27 @@ export const products: ReadonlyArray<Product> = [
   },
 ] as const satisfies readonly Product[]
 
-<<<<<<< HEAD
 export const controls = [
-=======
-<<<<<<< HEAD
+export const controls = [
 export const controls: string[] = [
-=======
+ upstream/main
+
 export const controls: ReadonlyArray<string> = [
->>>>>>> origin/main
->>>>>>> upstream/main
+ origin/main
+ upstream/main
   'Segregated roles, approvals, and immutable audit logs for every change.',
   'Real-time monitoring of SLAs, risk thresholds, and operational KPIs.',
   'Encryption by default with least-privilege access across environments.',
 ] as const satisfies readonly string[]
 
-<<<<<<< HEAD
 export const steps = [
-=======
-<<<<<<< HEAD
+export const steps = [
 export const steps: Step[] = [
-=======
+ upstream/main
+
 export const steps: ReadonlyArray<Step> = [
->>>>>>> origin/main
->>>>>>> upstream/main
+  origin/main
+ upstream/main
   {
     label: '01',
     title: 'Unify data signals',
@@ -109,3 +82,17 @@ export const steps: ReadonlyArray<Step> = [
     copy: 'Track outcomes against revenue and risk KPIs, iterating with governed experiment loops.',
   },
 ] as const satisfies readonly Step[]
+
+export type MarketingContent = {
+  readonly metrics: readonly Metric[]
+  readonly products: readonly Product[]
+  readonly controls: readonly string[]
+  readonly steps: readonly Step[]
+}
+
+export const marketingContent: MarketingContent = {
+  metrics,
+  products,
+  controls,
+  steps,
+}
