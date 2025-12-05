@@ -58,3 +58,4 @@ deno run --allow-all main.ts
 
 If you see `Failed to spawn Zencoder process: ... zencoder-cli ENOENT` while working in VS Code, follow the remediation checklist in `docs/Zencoder-Troubleshooting.md` to reinstall the extension and restore the missing binary.
 - CI rerun
+- rerun CI
