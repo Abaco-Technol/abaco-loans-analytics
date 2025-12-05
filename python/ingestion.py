@@ -27,8 +27,8 @@ class CascadeIngestion:
             df['_ingest_timestamp'] = datetime.utcnow().isoformat()
             logger.info(f'Ingested {len(df)} records from {filename}')
             return df
-        except Exception as e:
-            error = {'file': filename, 'error': str(e), 'timestamp': datetime.utcnow().isoformat(), 'run_id': self.run_idd}
+        except Exception as e:  # pylint: disable=broad-exception-caught
+            error = {'file': filename, 'error': str(e), 'timestamp': datetime.utcnow().isoformat(), 'run_id': self.run_id}
             self.errors.append(error)
             logger.error(f'Failed to ingest {filename}: {e}')
             return pd.DataFrame()
@@ -47,7 +47,9 @@ class CascadeIngestion:
         if 'total_receivable_usd' in df.columns:
             try:
                 pd.to_numeric(df['total_receivable_usd'])
-except (ValueError, TypeError) as e:                validation_errors.appendf('total_receivable_usd column has non-numeric values': {str(e)}'        
+            except (ValueError, TypeError) as e:
+                validation_errors.append(f'total_receivable_usd column has non-numeric values: {str(e)}')
+        
         if validation_errors:
             logger.warning(f'Validation warnings: {validation_errors}')
         
