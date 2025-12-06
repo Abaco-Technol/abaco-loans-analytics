@@ -1,4 +1,3 @@
-import os
 import pandas as pd
 import pytest
 from python.ingestion import CascadeIngestion
