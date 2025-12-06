@@ -286,7 +286,7 @@ if payer_column:
     target_aliases = {
         "Vicepresidencia de la Republica": [r"vice\s*presidencia", r"vicepresidencia de la republica"],
         "Bimbo": [r"bimbo", r"grupo\s*bimbo", r"marinela"],
-        "EPA": [r"\\bepa\\b", r"almacenes\s*epa", r"ferreteria\s*epa"],
+        "EPA": [r"\bepa\b", r"almacenes\s*epa", r"ferreteria\s*epa"],
         "Walmart": [r"walmart", r"walmart de mexico y centroamerica", r"walmart centroamerica"],
         "Pricesmart": [r"prices?mart"],
         "Nestle": [r"nestl[eé]", r"nestle el salvador"],
