@@ -105,7 +105,7 @@ def select_payer_column(df: pd.DataFrame) -> str | None:
 
     # Fallback: use a safer, word-boundary-based regex on a normalized version
     # of the column name to reduce false positives (e.g. "repayment_period").
-    pattern = r"\b(payer|payor|pagador|offtaker|buyer|debtor)\b"
+    pattern = r"\b(" + "|".join(preferred) + r")\b"
     for col in df.columns:
         # Normalize: lowercase and replace non-alphanumerics with spaces so
         # that tokens are clearly separated for word-boundary matching.
