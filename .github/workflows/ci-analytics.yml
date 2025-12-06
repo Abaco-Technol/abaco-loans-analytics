@@ -76,9 +76,9 @@ jobs:
       - name: Tests and coverage
         run: |
           cd apps/analytics
-          pytest --cov=. --cov-report=xml:../coverage-python.xml
+          pytest --cov=. --cov-report=xml:../../coverage-python.xml
       - name: Upload coverage artifact
         uses: actions/upload-artifact@v5
         with:
           name: analytics-coverage
-          path: coverage-python.xml
+          path: apps/coverage-python.xml
