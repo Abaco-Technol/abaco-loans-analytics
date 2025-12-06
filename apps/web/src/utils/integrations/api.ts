@@ -4,7 +4,7 @@ export { supabaseConfigAvailable } from '@/utils/supabase/info'
 
 export type IntegrationPlatform = 'meta' | 'linkedin' | 'custom'
 
-const functionSlug = 'make-server-a7c39296'
+const functionSlug = process.env.NEXT_PUBLIC_SUPABASE_FUNCTION_SLUG || 'make-server-a7c39296'
 const integrationBaseUrl = `https://${projectId}.supabase.co/functions/v1/${functionSlug}/integrations`
 
 export const integrationEndpoints = {
