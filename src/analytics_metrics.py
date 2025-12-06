@@ -66,8 +66,8 @@ def portfolio_kpis(df: pd.DataFrame) -> Tuple[Dict[str, float], pd.DataFrame]:
     metrics = {
         "delinquency_rate": delinquency_rate,
         "portfolio_yield": portfolio_yield,
-        "average_ltv": 0.0 if work.empty else work["ltv_ratio"].mean(),
-        "average_dti": 0.0 if work.empty else work["dti_ratio"].mean(),
+        "average_ltv": np.nan_to_num(work["ltv_ratio"].mean(), nan=0.0),
+        "average_dti": np.nan_to_num(work["dti_ratio"].mean(), nan=0.0),
     }
     return metrics, work
 
