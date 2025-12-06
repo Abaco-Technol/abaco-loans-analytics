@@ -214,8 +214,7 @@ export default async function Home() {
           <p className={styles.eyebrow}>Performance cockpit</p>
           <h2 id="kpis-heading">Operational KPIs engineered for lenders</h2>
           <p className={styles.sectionCopy}>
-            Measure outcomes against revenue, risk, and liquidity targets with evidence for every
-            decision path.
+            Audit-ready calls for treasury, risk, operations, and growth teams—measure outcomes against revenue, risk, and liquidity targets with transparent evidence for every decision path.
           </p>
         </div>
         <div className={styles.cardGrid}>{landingData.metrics.map(renderMetric)}</div>
