@@ -23,9 +23,11 @@ def test_enrich_portfolio_adds_features():
 
 
 def test_enrich_portfolio_handles_missing_columns_gracefully():
-    df = pd.DataFrame([
-        {"customer": "Flux", "revenue": 120000},
-    ])
+    df = pd.DataFrame(
+        [
+            {"customer": "Flux", "revenue": 120000},
+        ]
+    )
 
     enriched = FeatureEngineer.enrich_portfolio(df)
 
