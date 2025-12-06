@@ -365,15 +365,29 @@ export default function Home() {
           <span className={styles.pillNeutral}>Champion / Challenger</span>
         </header>
         <div className={styles.collections}>
-          {collections.map((line) => (
-            <div key={line.bucket} className={styles.collectionRow}>
-              <div>
-                <p className={styles.stageName}>{line.bucket}</p>
-                <p className={styles.helper}>{line.action}</p>
+          {collections.map((line) => {
+            // Parse recovery rate and determine tone
+            const recoveryValue = parseFloat(line.recovery.replace('%', ''));
+            let recoveryTone: 'positive' | 'neutral' | 'negative';
+            if (recoveryValue >= 80) {
+              recoveryTone = 'positive';
+            } else if (recoveryValue >= 50) {
+              recoveryTone = 'neutral';
+            } else {
+              recoveryTone = 'negative';
+            }
+            return (
+              <div key={line.bucket} className={styles.collectionRow}>
+                <div>
+                  <p className={styles.stageName}>{line.bucket}</p>
+                  <p className={styles.helper}>{line.action}</p>
+                </div>
+                <span className={styles[`delta${recoveryTone.charAt(0).toUpperCase() + recoveryTone.slice(1)}`]}>
+                  {line.recovery}
+                </span>
               </div>
-              <span className={styles.deltaPositive}>{line.recovery}</span>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </section>
     </div>
