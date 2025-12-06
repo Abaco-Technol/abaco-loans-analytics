@@ -21,7 +21,6 @@ This one-pager helps executives, admins, and delivery leads quickly capture valu
 - **Analyst reports**: Jump directly to the Forrester Wave™ DevOps Platforms report for peer benchmarking (https://resources.github.com/whitepapers/forrester-wave-devops-platforms/).
 - **Docs deep dives**: Start at the Enterprise Cloud docs hub and use the left navigation for Security, Compliance, and Automation sections (https://docs.github.com/enterprise-cloud@latest).
 - **Admin onboarding**: Open the Enterprise admin guide to configure SSO/SCIM, policies, and audit logs during week 1 (https://docs.github.com/enterprise-cloud@latest/admin/).
-- **Adoption kits**: Use the adoption guides library to pull role-based checklists and rollout plans (https://resources.github.com/guides/).
 
 ## Trial-ready usage checklist (30 days)
 1. **Week 1** – Enable SSO/SCIM, configure branch protection, and invite pilot teams with starter repositories.
