@@ -29,7 +29,7 @@ const nextConfig: NextConfig = {
         ],
       },
     ]),
-  redirects: async () => await Promise.resolve([]),
+  redirects: async () => [],
   rewrites: async () =>
     await Promise.resolve({
       beforeFiles: [],
