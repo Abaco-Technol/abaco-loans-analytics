@@ -8,8 +8,6 @@ on:
     paths:
       - 'apps/web/**'
   pull_request:
-  workflow_dispatch:
-
 jobs:
   build:
     runs-on: ubuntu-latest
