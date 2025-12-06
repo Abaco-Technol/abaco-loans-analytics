@@ -386,7 +386,7 @@ export type UploadSeverity = 'error' | 'warning'
 export interface UploadIssue {
   row: number
   field: string
-  value: any
+  value: string | number | boolean | null
   message: string
   severity: UploadSeverity
 }
