@@ -225,7 +225,7 @@ function parseInput(input: string): BulkTokenItem[] {
       tokens.push({
         platform: normalizedPlatform,
         token: token ?? '',
-        accountId: accountId || undefined,
+        accountId: accountId,
         status: 'pending',
         attempts: 0,
       })
