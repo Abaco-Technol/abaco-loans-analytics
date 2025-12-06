@@ -48,7 +48,7 @@ export function processedAnalyticsToMarkdown(analytics: ProcessedAnalytics): str
     `## Roll-rate Cascade\n` +
     `| From | To | Percent |\n` +
     `|---|---|---|\n` +
-    `${rollRateSection || '| – | – | – |'}\n\n` +
+    `${rollRateSection || '| - | - | - |'}\n\n` +
     `## Growth Path\n` +
     `| Month | Yield | Loan Volume |\n` +
     `|---|---|---|\n` +
