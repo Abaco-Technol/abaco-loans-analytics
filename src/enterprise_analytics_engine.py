@@ -149,8 +149,6 @@ class LoanAnalyticsEngine:
         grouped = self.data.groupby("origination_quarter")
         rows = []
         for vintage, frame in grouped:
-            if not len(frame):
-                continue
             defaults = frame[frame["status"].str.lower().eq("defaulted")]
             rate = len(defaults) / len(frame) if len(frame) else float("nan")
             coverage = frame["principal"].sum()
