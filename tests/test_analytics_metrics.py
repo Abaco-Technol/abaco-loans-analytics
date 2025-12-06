@@ -118,7 +118,6 @@ def test_portfolio_kpis_dti_nan_when_income_non_positive():
     assert metrics["average_dti"] == 0.0
 
 
-
 def test_project_growth_builds_monotonic_path():
     projection = project_growth(1.0, 2.0, 100, 200, periods=4)
     assert len(projection) == 4
