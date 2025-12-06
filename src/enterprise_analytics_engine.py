@@ -180,7 +180,7 @@ class LoanAnalyticsEngine:
         grouped = self.data.groupby("origination_quarter")
         rows = []
         for vintage, frame in grouped:
-            if not len(frame):
+            if frame.empty:
                 continue
             defaults = frame[frame["status"].str.lower().eq("defaulted")]
             rate = len(defaults) / len(frame) if len(frame) else float("nan")
