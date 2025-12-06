@@ -139,7 +139,7 @@ export function processedAnalyticsToMarkdown(analytics: ProcessedAnalytics): str
     .join('\n')
 
   const growthSection = growthProjection
-    .map((point) => `| ${sanitizeMarkdownCell(point.label)} | ${formatPercent(point.yield)} | ${point.loanVolume.toLocaleString()} |`)
+    .map((point) => `| ${sanitizeMarkdownCell(point.label)} | ${Number.isFinite(point.yield) ? point.yield.toFixed(1) : '–'} | ${point.loanVolume.toLocaleString()} |`)
     .join('\n')
 
   const treemapTable = treemapSection || '| – | – | – |'
