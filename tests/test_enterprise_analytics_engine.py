@@ -41,7 +41,7 @@ def test_portfolio_kpis_compute_expected_values():
     kpis = engine.portfolio_kpis()
 
     assert kpis["currency"] == "EUR"
-    assert pytest.approx(kpis["total_outstanding"], rel=1e-6) == 150000
+    assert kpis["total_outstanding"] == pytest.approx(150000, rel=1e-6)
     assert pytest.approx(kpis["total_principal"], rel=1e-6) == 285000
     assert pytest.approx(kpis["weighted_interest_rate"], rel=1e-6) == 0.104
     assert pytest.approx(kpis["non_performing_loan_ratio"], rel=1e-6) == 0
