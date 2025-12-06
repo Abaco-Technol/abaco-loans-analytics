@@ -84,6 +84,9 @@ class LoanAnalyticsEngine:
             | frame["status"].str.lower().eq("defaulted")
         )
         frame["origination_quarter"] = frame["origination_date"].dt.to_period("Q")
+        # Exposure at Default (EAD) is set to the maximum of outstanding principal and charge-off amount.
+        # This ensures that EAD reflects the highest possible exposure, as charge-off amounts may include
+        # accrued interest or fees that exceed the principal. Using max captures the true risk exposure.
         frame["exposure_at_default"] = frame[["outstanding_principal", "charge_off_amount"]].max(axis=1)
         return frame
 
