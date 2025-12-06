@@ -47,7 +47,7 @@ def test_portfolio_kpis_compute_expected_values():
     assert pytest.approx(kpis["non_performing_loan_ratio"], rel=1e-6) == 0.2
     assert pytest.approx(kpis["default_rate"], rel=1e-6) == 0.25
     assert pytest.approx(kpis["loss_given_default"], rel=1e-6) == 0.8
-    assert pytest.approx(kpis["prepayment_rate"], rel=1e-6) == pytest.approx(35000 / 285000)
+    assert kpis["prepayment_rate"] == pytest.approx(35000 / 285000, rel=1e-6)
     assert kpis["repayment_velocity"] > 1
 
 
