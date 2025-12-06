@@ -285,7 +285,7 @@ export function IntegrationSettings() {
             </button>
           </div>
           <p className="text-[#9EA9B3]">
-            Connect your social media accounts to automatically populate Deck 2 with real-time data
+            Connect your social media accounts to automatically populate your analytics dashboard (Deck 2) with real-time data.
           </p>
           {!supabaseConfigAvailable && (
             <div className="mt-3 rounded-lg border border-amber-300/40 bg-amber-300/10 p-3 text-sm text-amber-50">
