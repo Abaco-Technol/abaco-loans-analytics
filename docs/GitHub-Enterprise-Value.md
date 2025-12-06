@@ -18,7 +18,6 @@ This one-pager helps executives, admins, and delivery leads quickly capture valu
 - **What’s new**: Track recent releases and “See what’s new” updates to highlight immediate wins during the evaluation (https://github.blog/changelog/ or the "See what's new" area in GitHub Resources).
 
 ## Navigation cheat sheet (fast paths)
-- **Analyst reports**: Jump directly to the Forrester Wave™ DevOps Platforms report for peer benchmarking (https://resources.github.com/whitepapers/forrester-wave-devops-platforms/).
 - **Docs deep dives**: Start at the Enterprise Cloud docs hub and use the left navigation for Security, Compliance, and Automation sections (https://docs.github.com/enterprise-cloud@latest).
 - **Admin onboarding**: Open the Enterprise admin guide to configure SSO/SCIM, policies, and audit logs during week 1 (https://docs.github.com/enterprise-cloud@latest/admin/).
 
