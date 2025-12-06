@@ -217,11 +217,10 @@ function parseInput(input: string): BulkTokenItem[] {
 
   return rows.reduce<BulkTokenItem[]>((acc, parts) => {
     const [rawPlatform, token, accountId] = parts
-    const normalizedPlatform = PLATFORMS.find(
-      (platform) => platform === (rawPlatform?.toLowerCase() as Platform | undefined)
-    )
+    const normalizedPlatform = rawPlatform?.toLowerCase() as Platform
+    const isValidPlatform = PLATFORMS.includes(normalizedPlatform)
 
-    if (!normalizedPlatform || !token || !accountId) {
+    if (!isValidPlatform || !token || !accountId) {
       return acc
     }
 
