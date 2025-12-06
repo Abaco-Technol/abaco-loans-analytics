@@ -345,7 +345,7 @@ export default function Home() {
                   <p className={styles.helper}>{control.note}</p>
                 </div>
                 <div className={styles.controlMeta}>
-                  <span className={styles.helper}>{control.owner}</span>
+                  <span className={styles.stageName}>{control.owner}</span>
                   <span className={`${styles.status} ${styles[control.health]}`}>
                     {control.status}
                   </span>
