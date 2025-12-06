@@ -223,7 +223,7 @@ export function BulkTokenInput({ onComplete }: { onComplete: () => void }) {
         {progress.length > 0 && (
           <div className="rounded-lg bg-[#0C2742]/40 p-4">
             {progress.map((msg, index) => (
-              <div key={msg + index.toString()} className="flex items-center gap-2 text-sm">
+              <div key={index} className="flex items-center gap-2 text-sm">
                 {msg.startsWith('✅') ? (
                   <Icon.Check />
                 ) : msg.startsWith('❌') ? (
