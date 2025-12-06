@@ -98,6 +98,7 @@ def test_project_growth_formats_month_labels():
 def test_project_growth_supports_decreasing_targets():
     projection = project_growth(2.0, 1.0, 200, 100, periods=3)
     assert projection["yield"].is_monotonic_decreasing
+    assert projection["loan_volume"].is_monotonic_decreasing
 
 
 def test_calculate_quality_score_handles_empty_df():
