@@ -62,7 +62,20 @@ class LoanAnalyticsEngine:
             "recoveries",
             "paid_principal",
         ]
-        for col in numeric_cols:
+        # Validate 'principal' and 'interest_rate' strictly
+        for col in ["principal", "interest_rate"]:
+            frame[col] = pd.to_numeric(frame[col], errors="coerce")
+            if frame[col].isna().any():
+                raise ValueError(f"{col} contains invalid or missing values")
+        # For other numeric columns, coerce invalids to 0
+        for col in [
+            "term_months",
+            "outstanding_principal",
+            "days_in_arrears",
+            "charge_off_amount",
+            "recoveries",
+            "paid_principal",
+        ]:
             frame[col] = pd.to_numeric(frame[col], errors="coerce").fillna(0)
 
         frame["status"] = frame["status"].fillna("").astype(str)
