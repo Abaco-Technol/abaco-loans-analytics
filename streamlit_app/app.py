@@ -100,9 +100,10 @@ def render_dashboard() -> None:
         .reset_index()
         .rename(columns={"index": "dpd_bucket"})
     )
-    segment_distribution = (
-        df.get("segment", pd.Series(dtype=str)).value_counts().rename("customers").reset_index().rename(columns={"index": "segment"})
-    )
+    segment_series = df.get("segment", pd.Series(dtype=str))
+    segment_counts = segment_series.value_counts()
+    segment_counts = segment_counts.rename("customers")
+    segment_distribution = segment_counts.reset_index().rename(columns={"index": "segment"})
 
     col_dpd, col_segment = st.columns(2)
     col_dpd.bar_chart(data=dpd_distribution.set_index("dpd_bucket"))
