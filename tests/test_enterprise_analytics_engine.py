@@ -79,5 +79,9 @@ def test_cashflow_curve_generates_cumulative_view():
 
     assert "cumulative_cashflow" in curve.columns
     assert len(curve) == 3
-    expected_cumulative = [-70000, -200000, -250000]
+    # Recalculate expected cumulative cashflow based on sample_frame data:
+    # Q4 2022: origination 70000, paid_principal 0 => cashflow = -70000
+    # Q1 2023: origination 200000, paid_principal 0 => cashflow = -200000, cumulative = -70000 + -200000 = -270000
+    # Q2 2023: origination 15000, paid_principal 35000 => cashflow = -15000 + 35000 = 20000, cumulative = -270000 + 20000 = -250000
+    expected_cumulative = [-70000, -270000, -250000]
     assert curve["cumulative_cashflow"].tolist() == expected_cumulative
