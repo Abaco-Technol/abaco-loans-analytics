@@ -15,7 +15,7 @@ async function getData(): Promise<LandingPageData> {
 
   const { data, error } = await supabase.from('landing_page_data').select().single()
 
-  const typedData = (data as unknown as LandingPageData | null) ?? null
+  const typedData = data as LandingPageData | null
 
   if (error || !typedData) {
     console.error('Error fetching landing page data:', error)
