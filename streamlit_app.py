@@ -6,7 +6,7 @@ import pandas as pd
 import plotly.express as px
 import streamlit as st
 
-from streamlit_ingestion import coerce_numeric_columns, normalize_columns, safe_numeric
+from streamlit_ingestion import coerce_numeric_columns, normalize_columns
 
 ABACO_THEME = {
     "colors": {
