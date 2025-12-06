@@ -33,7 +33,7 @@ export const isSupabaseConfigured =
 
 let supabaseClient: SupabaseClient<Database> | null = null
 
-if (isSupabaseConfigured && supabaseUrl && supabaseAnonKey) {
+if (isSupabaseConfigured) {
   supabaseClient = createClient<Database>(supabaseUrl, supabaseAnonKey)
 }
 
