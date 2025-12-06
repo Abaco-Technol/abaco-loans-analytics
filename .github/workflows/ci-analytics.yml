@@ -45,6 +45,19 @@ jobs:
       - name: Validate
         run: |
           python -c "import pandas as pd; print('Environment ready. Pandas version:', pd.__version__)"
+      - name: Zencoder Automated Code Review
+        run: |
+          gem install zencoder-cli
+          zencoder setup # Add API key setup here if needed
+          # Run code review on apps/analytics/
+          zencoder jobs:create '{"input": "apps/analytics/", "output": "zencoder-review.json", "type": "code_review"}'
+          cat zencoder-review.json
+      - name: Zencoder Code Review
+        run: |
+          gem install zencoder-cli
+          zencoder setup # Add API key setup here if needed
+          # Example: Run a Zencoder job or code review (replace with your actual command)
+          zencoder jobs:create '{"input": "apps/analytics/", "output": "zencoder-output.json"}'
   analytics-push:
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
