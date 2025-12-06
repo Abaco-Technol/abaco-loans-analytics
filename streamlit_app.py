@@ -104,9 +104,13 @@ def safe_numeric(series: pd.Series) -> pd.Series:
 def compute_upload_signature(uploaded_file) -> str | None:
     if uploaded_file is None:
         return None
-    if hasattr(uploaded_file, "seek"):
+    if hasattr(uploaded_file, "seek") and hasattr(uploaded_file, "tell"):
+        current_position = uploaded_file.tell()
         uploaded_file.seek(0)
-    file_bytes = uploaded_file.getvalue()
+        file_bytes = uploaded_file.getvalue()
+        uploaded_file.seek(current_position)
+    else:
+        file_bytes = uploaded_file.getvalue()
     digest = hashlib.sha256(file_bytes).hexdigest()
     return f"{uploaded_file.name}:{uploaded_file.size}:{digest}"
 
