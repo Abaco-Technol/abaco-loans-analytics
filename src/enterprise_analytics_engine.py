@@ -72,7 +72,7 @@ class LoanAnalyticsEngine:
             | frame["status"].str.lower().eq("defaulted")
         )
         frame["origination_quarter"] = frame["origination_date"].dt.to_period("Q")
-        frame["exposure_at_default"] = frame[["outstanding_principal", "charge_off_amount"]].max(axis=1)
+        frame["exposure_at_default"] = frame["outstanding_principal"]
         return frame
 
     def portfolio_kpis(self) -> dict:
