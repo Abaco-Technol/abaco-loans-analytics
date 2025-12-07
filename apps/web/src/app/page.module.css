@@ -322,16 +322,11 @@
 }
 
 .card {
-<<<<<<< HEAD
   background: linear-gradient(
     160deg,
     color-mix(in srgb, var(--surface-subtle), #fff 20%),
     color-mix(in srgb, var(--surface-subtle), #000 20%)
   );
-=======
-  background: linear-gradient(160deg, #111111, #060606);
-  background: linear-gradient(160deg, color-mix(in srgb, var(--surface-subtle) 80%, white), color-mix(in srgb, var(--surface-subtle) 80%, black));
->>>>>>> upstream/main
   border: 1px solid var(--border-subtle);
   border-radius: 16px;
   padding: 20px;
