@@ -464,7 +464,7 @@ export function IntegrationSettings() {
             {tokens.linkedin.connected ? (
               <div className="flex flex-col items-center justify-center gap-2">
                 <div className="mb-2 flex items-center gap-2">
-                  <Icon.CheckCircle className="text-green-400" />
+                  <Icon.Check className="text-green-400" />
                   <span className="text-white">
                     Connected{tokens.linkedin.accountName ? ` as ${tokens.linkedin.accountName}` : ''}
                   </span>
