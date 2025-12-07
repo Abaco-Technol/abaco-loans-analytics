@@ -534,7 +534,7 @@ export function IntegrationSettings() {
             <div>
               <h4 className="mb-2 font-medium text-white">Need Help?</h4>
               <p className="mb-3 text-sm text-[#9EA9B3]">
-                Follow the <strong>META_INTEGRATION_GUIDE.md</strong> to get your access tokens.
+                Follow the <a href="https://github.com/your-org/your-repo/blob/main/META_INTEGRATION_GUIDE.md" target="_blank" rel="noopener noreferrer" className="font-bold underline">META_INTEGRATION_GUIDE.md</a> to get your access tokens.
               </p>
               <ul className="list-inside list-disc space-y-1 text-sm text-[#9EA9B3]">
                 <li>Meta tokens expire after 45 days (we&apos;ll remind you)</li>
