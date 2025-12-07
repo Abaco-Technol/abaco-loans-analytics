@@ -48,7 +48,7 @@ class LoanAnalyticsEngine:
             invalid_rows = frame[frame["origination_date"].isna()]
             raise ValueError(
                 f"Invalid origination_date values found in {len(invalid_rows)} row(s). "
-                f"Rows with invalid dates: {invalid_rows.index.tolist()}"
+                f"Rows with invalid dates (indices: {invalid_rows.index.tolist()}): {invalid_rows['origination_date'].tolist()}"
             )
         # Coerce numeric columns but handle non-additive vs additive fields differently:
         # - Keep NaNs for non-additive / descriptive fields to surface data quality issues.
