@@ -128,9 +128,8 @@ class LoanAnalyticsEngine:
         return losses / exposure
 
     def _repayment_velocity(self, portfolio: pd.DataFrame) -> float:
-        active_terms = portfolio["term_months"].replace(0, np.nan)
-        scheduled_principal = portfolio["principal"] / active_terms
-        scheduled_principal = scheduled_principal.replace([np.inf, -np.inf], np.nan).fillna(0)
+        mask = portfolio["term_months"] > 0
+        scheduled_principal = portfolio.loc[mask, "principal"] / portfolio.loc[mask, "term_months"]
         scheduled_total = scheduled_principal.sum()
         if not scheduled_total:
             return float("nan")
