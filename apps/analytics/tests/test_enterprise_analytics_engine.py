@@ -66,6 +66,8 @@ class LoanAnalyticsEngineTests(unittest.TestCase):
         self.assertAlmostEqual(results["average_ltv_ratio_percent"], 103.3333, places=3)
         # The expected value of 16.0 for average DTI excludes the NaN value from the third loan entry (zero income).
         # The average is computed only over loans with non-zero income.
+        dti = self.engine.compute_debt_to_income()
+        self.assertEqual(pd.Series(dti).notna().sum(), 2)
         self.assertAlmostEqual(results["average_dti_ratio_percent"], 16.0, places=1)
 
 
