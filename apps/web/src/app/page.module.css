@@ -428,15 +428,7 @@
 
 .auditBox {
   background:
-<<<<<<< HEAD
-    radial-gradient(
-      circle at 20% 20%,
-      color-mix(in srgb, var(--color-accent-green), transparent 84%),
-      transparent 40%
-    ),
-=======
     radial-gradient(circle at 20% 20%, rgba(34, 197, 94, 0.16), transparent 40%),
->>>>>>> upstream/main
     var(--surface-interactive);
   border: 1px solid #363636;
   border-radius: 16px;
