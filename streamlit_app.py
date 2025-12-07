@@ -171,7 +171,13 @@ if "last_upload" not in st.session_state:
 def ingest():
     raw = parse_uploaded_file(uploaded)
     normalized = normalize_columns(raw)
-    numeric_columns = normalized.select_dtypes(include=["object"]).columns
+    # Only select object columns that contain currency symbols or comma separators
+    candidate_columns = normalized.select_dtypes(include=["object"]).columns
+    pattern = re.compile(r"[\$,]")
+    numeric_columns = [
+        col for col in candidate_columns
+        if normalized[col].astype(str).str.contains(pattern).any()
+    ]
     numeric_payload = normalized.copy()
     for col in numeric_columns:
         numeric_payload[col] = standardize_numeric(numeric_payload[col])
