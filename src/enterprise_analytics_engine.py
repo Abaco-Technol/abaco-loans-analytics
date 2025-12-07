@@ -79,7 +79,8 @@ class LoanAnalyticsEngine:
         # accrued interest or fees that exceed the principal. Using max captures the true risk exposure.
         default_mask = frame["status"].str.lower() == "defaulted"
         frame["exposure_at_default"] = 0.0
-        frame.loc[default_mask, "exposure_at_default"] = frame.loc[default_mask, ["outstanding_principal", "charge_off_amount"]].max(axis=1)
+        ead_values = frame.loc[default_mask, ["outstanding_principal", "charge_off_amount"]].max(axis=1)
+        frame.loc[default_mask, "exposure_at_default"] = ead_values
         return frame
 
     def portfolio_kpis(self) -> dict:
