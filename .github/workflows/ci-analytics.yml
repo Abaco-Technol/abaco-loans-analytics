@@ -45,15 +45,12 @@ jobs:
       - name: Validate
         run: |
           python -c "import pandas as pd; print('Environment ready. Pandas version:', pd.__version__)"
-      - name: Setup Zencoder CLI
+      - name: Install pylint
         run: |
-          gem install zencoder-cli
-          zencoder setup # Add API key setup here if needed
-      - name: Zencoder Automated Code Review
+          pip install pylint
+      - name: Run pylint code analysis
         run: |
-          # Run code review on apps/analytics/
-          zencoder jobs:create '{"input": "apps/analytics/", "output": "zencoder-review.json", "type": "code_review"}'
-          cat zencoder-review.json
+          pylint apps/analytics
   analytics-push:
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
