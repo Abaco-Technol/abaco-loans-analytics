@@ -98,7 +98,6 @@ def render_dashboard() -> None:
         .reindex(FeatureEngineer.DPD_LABELS, fill_value=0)
         .rename("share")
         .reset_index()
-        .rename(columns={"index": "dpd_bucket"})
     )
     segment_series = df.get("segment", pd.Series(dtype=str))
     segment_counts = segment_series.value_counts()
