@@ -20,7 +20,7 @@ def normalize_columns(df: pd.DataFrame) -> pd.DataFrame:
 def safe_numeric(series: pd.Series) -> pd.Series:
     cleaned = (
         series.astype(str)
-        .str.replace(r"[₡$€,,%]", "", regex=True)
+        .str.replace(r"[₡$€,%]", "", regex=True)
         .replace("", np.nan)
     )
     return pd.to_numeric(cleaned, errors="coerce")
