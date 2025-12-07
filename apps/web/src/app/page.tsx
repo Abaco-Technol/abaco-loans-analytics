@@ -490,11 +490,7 @@ export default async function Home() {
         </div>
       </section>
 
-<<<<<<< HEAD
       <section id="demo" aria-labelledby="playbook-heading" className={styles.section}>
-=======
-      <section id="demo" className={styles.section} aria-labelledby="playbook-heading">
->>>>>>> origin/main
         <div className={styles.sectionHeader}>
           <p className={styles.eyebrow}>Delivery playbook</p>
           <h2 id="playbook-heading">From data to decisions in weeks</h2>
