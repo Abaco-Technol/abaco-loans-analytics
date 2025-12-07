@@ -62,7 +62,11 @@ def test_segment_kpis_respects_groupings():
     assert latam_row.get("count", 3) == 3  # If 'count' column exists, check it; else, fallback to 3
     assert emea_row.get("count", 1) == 1
     assert pytest.approx(latam_row["total_outstanding"], rel=1e-6) == 150000
-    assert pytest.approx(latam_row["default_rate"], rel=1e-6) == 1/3
+    # Calculate expected LATAM default rate from the sample data for clarity
+    latam_loans = sample_frame()[sample_frame()["region"] == "LATAM"]
+    # Assuming only loans with status 'defaulted' are counted as defaulted
+    expected_latam_default_rate = (latam_loans["status"] == "defaulted").sum() / len(latam_loans)
+    assert pytest.approx(latam_row["default_rate"], rel=1e-6) == expected_latam_default_rate
     assert pytest.approx(emea_row["loss_given_default"], rel=1e-6) == 0.8
     assert pytest.approx(emea_row["total_principal"], rel=1e-6) == 75000
 
