@@ -237,6 +237,27 @@ class LoanAnalyticsEngine:
         return pd.DataFrame(rows)
 
     def vintage_default_table(self) -> pd.DataFrame:
+        """
+        Perform a vintage analysis of loan defaults by origination quarter.
+
+        A vintage analysis groups loans based on the period (quarter) in which they were originated,
+        allowing comparison of performance across different cohorts. For each origination quarter,
+        this method calculates:
+
+        - default_rate: The proportion of loans originated in that quarter that have defaulted.
+        - principal_at_origination: The total principal amount of loans originated in that quarter.
+
+        Loans are grouped by the 'origination_quarter' column, which should represent the year and quarter
+        of origination (e.g., '2022Q1'). The returned DataFrame contains one row per vintage with the following columns:
+
+            - origination_quarter: The quarter in which the loans were originated.
+            - default_rate: Fraction of loans defaulted in that vintage.
+            - principal_at_origination: Total principal for that vintage.
+
+        Returns:
+            pd.DataFrame: Table with columns ['origination_quarter', 'default_rate', 'principal_at_origination'],
+            sorted by origination_quarter.
+        """
         grouped = self.data.groupby("origination_quarter")
         rows = []
         for vintage, frame in grouped:
