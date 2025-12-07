@@ -177,8 +177,8 @@ def ingest():
     numeric_columns = []
     for col in candidate_columns:
         # Sample up to 10 non-null values for efficiency
-        sample = normalized[col].dropna().head(10).astype(str)
-        if sample.str.contains(pattern).any():
+        sample = normalized[col].dropna().head(10)
+        if sample.str.contains(pattern, na=False).any():
             numeric_columns.append(col)
     numeric_payload = normalized.copy()
     for col in numeric_columns:
