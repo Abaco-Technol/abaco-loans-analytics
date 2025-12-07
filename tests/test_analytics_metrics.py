@@ -27,7 +27,7 @@ def test_standardize_numeric_handles_symbols():
     assert pd.isna(cleaned.iloc[3])
 
 
-def test_calculate_quality_score_rewards_complete_data():
+def test_calculate_quality_score_returns_100_for_complete_data():
     df = sample_df()
     assert calculate_quality_score(df) == 100
 
