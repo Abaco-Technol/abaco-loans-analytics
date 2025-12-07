@@ -129,7 +129,11 @@ class LoanAnalyticsEngine:
 
     def _repayment_velocity(self, portfolio: pd.DataFrame) -> float:
         if portfolio["term_months"].isna().any():
-            raise ValueError("Missing values detected in 'term_months'. All loans must have a non-null term for repayment velocity calculation.")
+            missing_ids = portfolio.loc[portfolio["term_months"].isna(), "loan_id"].tolist()
+            raise ValueError(
+                f"Missing values detected in 'term_months' for loan_id(s): {missing_ids}. "
+                "All loans must have a non-null term for repayment velocity calculation."
+            )
         mask = portfolio["term_months"] > 0
         scheduled_principal = portfolio.loc[mask, "principal"] / portfolio.loc[mask, "term_months"]
         scheduled_total = scheduled_principal.sum()
