@@ -51,8 +51,15 @@ export function BulkTokenInput({ onComplete }: { onComplete: () => void }) {
 
   const hasTokens = tokens.metaToken || tokens.linkedinToken || tokens.customToken
 
+  // Map IntegrationPlatform values to TokenInputs keys
+  const platformTokenKeyMap: Record<IntegrationPlatform, keyof TokenInputs> = {
+    meta: 'metaToken',
+    linkedin: 'linkedinToken',
+    custom: 'customToken',
+  }
+
   const connectPlatform = async (platform: IntegrationPlatform) => {
-    const tokenKey = `${platform}Token` as const
+    const tokenKey = platformTokenKeyMap[platform]
     const token = tokens[tokenKey]
     if (!token) return false
 
