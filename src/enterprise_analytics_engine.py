@@ -122,6 +122,8 @@ class LoanAnalyticsEngine:
         exposure = defaults["exposure_at_default"].sum()
         if not exposure:
             return float("nan")
+        # Net losses are clipped at zero: if recoveries exceed charge-offs, the excess is ignored.
+        # This is intentional for LGD calculation, as negative losses (net gains) are not considered.
         losses = (defaults["charge_off_amount"] - defaults["recoveries"]).clip(lower=0).sum()
         return losses / exposure
 
