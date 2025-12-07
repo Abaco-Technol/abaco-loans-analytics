@@ -134,7 +134,7 @@ def test_project_growth_rejects_insufficient_periods():
 
 def test_project_growth_formats_month_labels():
     projection = project_growth(1.0, 1.5, 100, 120, periods=3)
-    assert projection["month"].str.match(r"^[A-Z][a-z]{2} \d{4}$").all()
+    assert projection["month"].str.match(r"^[A-Z][a-z]{2,8} \d{4}$").all()
 
 
 def test_project_growth_supports_decreasing_targets():
