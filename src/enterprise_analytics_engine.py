@@ -70,7 +70,7 @@ class LoanAnalyticsEngine:
             # For critical fields, do not silently fill NAs; raise an error instead.
             if col in ("principal", "outstanding_principal"):
                 if coerced.isna().any():
-                    raise ValueError(f"Column '{col}' contains missing (NA) values, which is not allowed.")
+                    raise ValueError(f"Column '{col}' contains missing (NA) values at indices {frame[coerced.isna()].index.tolist()}, which is not allowed.")
                 frame[col] = coerced
             else:
                 # For non-critical fields, missing values are filled with zero.
