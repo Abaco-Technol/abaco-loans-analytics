@@ -62,12 +62,8 @@ def portfolio_kpis(df: pd.DataFrame) -> Tuple[Dict[str, float], pd.DataFrame]:
     weighted_interest = (work["interest_rate"] * work["principal_balance"]).sum()
     portfolio_yield = (weighted_interest / total_principal) * 100 if total_principal else 0.0
 
-    if work.empty:
-        average_ltv = 0.0
-        average_dti = 0.0
-    else:
-        average_ltv = float(np.nan_to_num(work["ltv_ratio"].mean(), nan=0.0))
-        average_dti = float(np.nan_to_num(work["dti_ratio"].mean(), nan=0.0))
+    average_ltv = float(np.nan_to_num(work["ltv_ratio"].mean(), nan=0.0))
+    average_dti = float(np.nan_to_num(work["dti_ratio"].mean(), nan=0.0))
 
     metrics = {
         "delinquency_rate": delinquency_rate,
