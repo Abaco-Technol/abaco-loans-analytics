@@ -74,8 +74,8 @@ def portfolio_kpis(df: pd.DataFrame) -> Tuple[Dict[str, float], pd.DataFrame]:
 def project_growth(
     current_yield: float,
     target_yield: float,
-    current_loans: float,
-    target_loans: float,
+    current_loans: int,
+    target_loans: int,
     periods: int = 6,
     start_date: pd.Timestamp = None,
 ) -> pd.DataFrame:
