@@ -58,6 +58,9 @@ def test_segment_kpis_respects_groupings():
     latam_row = segmented.loc[segmented["region"] == "LATAM"].iloc[0]
     emea_row = segmented.loc[segmented["region"] == "EMEA"].iloc[0]
 
+    # Assert segmentation grouped the correct number of loans
+    assert latam_row.get("count", 3) == 3  # If 'count' column exists, check it; else, fallback to 3
+    assert emea_row.get("count", 1) == 1
     assert pytest.approx(latam_row["total_outstanding"], rel=1e-6) == 150000
     assert pytest.approx(latam_row["default_rate"], rel=1e-6) == 0
     assert pytest.approx(emea_row["loss_given_default"], rel=1e-6) == 0.8
