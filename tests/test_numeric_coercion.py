@@ -2,18 +2,7 @@ import pandas as pd
 from pandas.api import types as ptypes
 
 from streamlit_ingestion import coerce_numeric_columns
-
-
-REQUIRED_NUMERIC_COLUMNS = {
-    "loan_amount",
-    "appraised_value",
-    "borrower_income",
-    "monthly_debt",
-    "interest_rate",
-    "principal_balance",
-}
-
-
+from streamlit_app import REQUIRED_NUMERIC_COLUMNS
 def test_required_numeric_columns_coerced_when_blank():
     df = pd.DataFrame({"loan_amount": ["", " "]})
 
