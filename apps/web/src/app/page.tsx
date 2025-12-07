@@ -100,7 +100,7 @@ function cloneFallback(): LandingPageData {
 }
 
 async function getData(): Promise<LandingPageData> {
-  if (!supabase || !isSupabaseConfigured) {
+  if (!isSupabaseConfigured) {
     logLandingPageDiagnostic({
       status: 'missing-config',
       supabaseConfigured: false,
