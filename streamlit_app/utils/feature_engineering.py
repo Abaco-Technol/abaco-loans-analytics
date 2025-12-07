@@ -95,7 +95,14 @@ class FeatureEngineer:
         if "dpd" in enriched.columns:
             enriched["dpd_bucket"] = enriched["dpd"].apply(cls.bucket_dpd)
 
-        enriched["segment"] = enriched.apply(
-            lambda row: cls.calculate_segmentation({"revenue": row.get("revenue", 0)}), axis=1
-        )
+        # Vectorized segmentation based on revenue
+        revenue = enriched["revenue"].fillna(0)
+        thresholds = cls.SEGMENTATION_THRESHOLDS
+        conditions = [
+            revenue >= thresholds["platinum"],
+            revenue >= thresholds["gold"],
+            revenue >= thresholds["silver"],
+        ]
+        choices = ["platinum", "gold", "silver"]
+        enriched["segment"] = np.select(conditions, choices, default="starter")
         return enriched
