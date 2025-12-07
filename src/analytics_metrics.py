@@ -6,14 +6,13 @@ import numpy as np
 import pandas as pd
 
 
-CURRENCY_SYMBOLS = r"[₡$€£¥₽%]"
+CURRENCY_SYMBOLS = r"[₡$€£¥₽%,]"
 
 
 def standardize_numeric(series: pd.Series) -> pd.Series:
     cleaned = (
         series.astype(str)
         .str.replace(CURRENCY_SYMBOLS, "", regex=True)
-        .str.replace(",", "", regex=False)
         .replace({"": np.nan, "nan": np.nan})
     )
     return pd.to_numeric(cleaned, errors="coerce")
