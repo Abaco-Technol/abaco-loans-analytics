@@ -44,8 +44,9 @@ class LoanAnalyticsEngine:
             raise ValueError(f"Missing required columns: {', '.join(sorted(missing))}")
 
         frame["origination_date"] = pd.to_datetime(frame["origination_date"], errors="coerce")
-        if frame["origination_date"].isna().any():
-            invalid_rows = frame[frame["origination_date"].isna()]
+        invalid_mask = frame["origination_date"].isna()
+        if invalid_mask.any():
+            invalid_rows = frame[invalid_mask]
             raise ValueError(
                 f"Invalid origination_date values found in {len(invalid_rows)} row(s). "
                 f"Rows with invalid dates (indices: {invalid_rows.index.tolist()}): {invalid_rows['origination_date'].tolist()}"
