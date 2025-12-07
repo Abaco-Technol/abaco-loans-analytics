@@ -151,9 +151,9 @@ class LoanAnalyticsEngine:
             float: Repayment velocity, or NaN if not computable.
         """
         # Replace zero term loans with NaN to avoid division by zero
-        active_terms = portfolio["term_months"].replace(0, np.nan)
+        adjusted_terms = portfolio["term_months"].replace(0, np.nan)
         # Calculate scheduled principal per loan
-        scheduled_principal = portfolio["principal"] / active_terms
+        scheduled_principal = portfolio["principal"] / adjusted_terms
         # Replace infinite and NaN values (from division by zero or missing data) with 0
         scheduled_principal = scheduled_principal.replace([np.inf, -np.inf], np.nan).fillna(0)
         scheduled_total = scheduled_principal.sum()
