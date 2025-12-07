@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 
 
-CURRENCY_SYMBOLS = r"[₡$€£¥₽%,]"
+CURRENCY_SYMBOLS = r"[₡$€£¥₽,]"
 
 
 def standardize_numeric(series: pd.Series) -> pd.Series:
