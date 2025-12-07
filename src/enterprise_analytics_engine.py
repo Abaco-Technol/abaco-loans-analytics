@@ -221,6 +221,8 @@ class LoanAnalyticsEngine:
         rows = []
         for keys, frame in grouped:
             metrics = self._portfolio_kpis_from_frame(frame.reset_index(drop=True))
+            # Pandas groupby returns a scalar for single-column grouping and a tuple for multi-column grouping.
+            # Normalize to tuple so that zip(segment_by, keys) works for both cases.
             if not isinstance(keys, tuple):
                 keys = (keys,)
             rows.append({**dict(zip(segment_by, keys)), **metrics})
