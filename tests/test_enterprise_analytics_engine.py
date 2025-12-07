@@ -82,9 +82,13 @@ def test_cashflow_curve_generates_cumulative_view():
 
     assert "cumulative_cashflow" in curve.columns
     assert len(curve) == 3
-    # Recalculate expected cumulative cashflow based on sample_frame data:
-    # Q4 2022: origination 75000, paid_principal 5000 => cashflow = -75000 + 5000 = -70000
-    # Q1 2023: origination 150000, paid_principal 20000 => cashflow = -150000 + 20000 = -130000, cumulative = -70000 + -130000 = -200000
-    # Q2 2023: origination 60000, paid_principal 10000 => cashflow = -60000 + 10000 = -50000, cumulative = -200000 + -50000 = -250000
-    expected_cumulative = [-70000, -200000, -250000]
+    # Compute expected cumulative cashflow programmatically from sample_frame data:
+    df = sample_frame().copy()
+    df["origination_quarter"] = pd.to_datetime(df["origination_date"]).dt.to_period("Q")
+    grouped = df.groupby("origination_quarter").agg(
+        origination_sum=("principal", "sum"),
+        paid_principal_sum=("paid_principal", "sum"),
+    ).sort_index()
+    net_cashflow = grouped["paid_principal_sum"] - grouped["origination_sum"]
+    expected_cumulative = net_cashflow.cumsum().tolist()
     assert curve["cumulative_cashflow"].tolist() == expected_cumulative
