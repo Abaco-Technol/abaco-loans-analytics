@@ -246,7 +246,7 @@ if payer_column:
     for target, patterns in target_aliases.items():
         pattern = "|".join(patterns)
         mask = loan_df[normalized_col].str.contains(pattern, regex=True, na=False)
-        exposure = loan_df.loc[mask, "principal_balance"].sum() if "principal_balance" in loan_df.columns else np.nan
+        exposure = loan_df.loc[mask, "principal_balance"].sum() if "principal_balance" in loan_df.columns else float('nan')
         coverage_rows.append(
             {
                 "Target": target,
