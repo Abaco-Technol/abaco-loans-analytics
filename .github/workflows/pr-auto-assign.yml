@@ -19,7 +19,8 @@ jobs:
             const repo = context.repo;
 
             const desiredAssignees = ['codex'];
-            const desiredReviewers = ['sonarqube', 'coderabbit', 'sourcery'];
+            // Replace with actual GitHub usernames of team members
+            const desiredReviewers = ['alice', 'bob', 'carol'];
 
             const { data: pull } = await github.rest.pulls.get({
               ...repo,
