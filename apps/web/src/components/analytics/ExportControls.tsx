@@ -54,7 +54,10 @@ export function ExportControls({ analytics }: Props) {
           onClick={() =>
             download('analytics.json', processedAnalyticsToJSON(analytics), 'application/json')
           }
+<<<<<<< HEAD
+=======
           disabled={!hasLoans}
+>>>>>>> origin/main
         >
           Download JSON
         </button>
@@ -62,9 +65,18 @@ export function ExportControls({ analytics }: Props) {
           className={styles.secondaryButton}
           type="button"
           onClick={() =>
+<<<<<<< HEAD
+            download(
+              'analytics.md',
+              processedAnalyticsToMarkdown(analytics),
+              'text/markdown'
+            )
+          }
+=======
             download('analytics.md', processedAnalyticsToMarkdown(analytics), 'text/markdown')
           }
           disabled={!hasLoans}
+>>>>>>> origin/main
         >
           Download Markdown
         </button>

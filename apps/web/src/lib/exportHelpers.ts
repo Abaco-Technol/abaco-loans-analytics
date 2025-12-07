@@ -17,7 +17,11 @@ const loanHeaders: Array<keyof LoanRowWithLtv> = [
 function escapeCsvValue(value: string): string {
   // Escape values containing quotes, commas, or any line breaks (CR, LF, or CRLF)
   if (/[",\r\n]/.test(value)) {
+<<<<<<< HEAD
+    return `"${value.replace(/"/g, '""')}"`
+=======
     return `"${value.replaceAll('"', '""')}"`
+>>>>>>> origin/main
   }
   return value
 }
@@ -117,6 +121,8 @@ export function processedAnalyticsToMarkdown(analytics: ProcessedAnalytics): str
     '## Growth projection',
     growthTable,
   ].join('\n')
+<<<<<<< HEAD
+=======
 }
 
 export function processedAnalyticsToMarkdown(analytics: ProcessedAnalytics): string {
@@ -174,4 +180,5 @@ export function processedAnalyticsToMarkdown(analytics: ProcessedAnalytics): str
     `|---|---|---|\n` +
     `${growthTable}`
   )
+>>>>>>> origin/main
 }

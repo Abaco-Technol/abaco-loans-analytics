@@ -1,14 +1,38 @@
+<<<<<<< HEAD
 name: codeql
 
 on:
+=======
+
+name: codeql
+
+on:
+  workflow_dispatch:
+>>>>>>> origin/main
   push:
     branches: ["main"]
   pull_request:
     branches: ["main"]
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
   schedule:
     - cron: "0 3 * * 1"
+>>>>>>> origin/main
   workflow_dispatch:
 
+<<<<<<< HEAD
+concurrency:
+  group: codeql-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+=======
+  schedule:
+    - cron: "0 3 * * 1"
+
+>>>>>>> origin/main
+=======
+>>>>>>> origin/main
 permissions:
   actions: read
   contents: read
@@ -26,13 +50,42 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+<<<<<<< HEAD
+<<<<<<< HEAD
+        language: ["javascript", "python", "csharp"]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Detect C# projects
+        id: detect_csharp
+        run: |
+          has_csharp=$(python - <<'PY'
+import pathlib
+
+root = pathlib.Path('.')
+has_projects = any(root.rglob('*.csproj')) or any(root.rglob('*.sln'))
+print('true' if has_projects else 'false')
+PY
+)
+          echo "has_csharp=${has_csharp}" >> "$GITHUB_OUTPUT"
+
+      - name: Set up .NET
+        if: matrix.language == 'csharp' && steps.detect_csharp.outputs.has_csharp == 'true'
+        uses: actions/setup-dotnet@v4
+=======
         language: ["javascript", "python"]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+>>>>>>> origin/main
         with:
           fetch-depth: 0
 
+<<<<<<< HEAD
+      - name: Set up CodeQL
+        if: matrix.language != 'csharp' || steps.detect_csharp.outputs.has_csharp == 'true'
+=======
       - name: Setup Node.js
         if: matrix.language == 'javascript'
         uses: actions/setup-node@v4
@@ -46,11 +99,41 @@ jobs:
           python-version: "3.11"
 
       - name: Initialize CodeQL
+>>>>>>> origin/main
         uses: github/codeql-action/init@v3
+=======
+        language: ["javascript", "python"]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Set up CodeQL
+        uses: github/codeql-action/init@v3.31.5
+>>>>>>> origin/main
         with:
           languages: ${{ matrix.language }}
 
       - name: Autobuild
+<<<<<<< HEAD
+<<<<<<< HEAD
+        if: matrix.language != 'csharp' || steps.detect_csharp.outputs.has_csharp == 'true'
+        uses: github/codeql-action/autobuild@v3
+
+      - name: Perform CodeQL Analysis
+        if: matrix.language != 'csharp' || steps.detect_csharp.outputs.has_csharp == 'true'
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:${{ matrix.language }}"
+=======
+        uses: github/codeql-action/autobuild@v3.31.5
+
+      - name: Perform CodeQL Analysis (no upload while default setup is active)
+        uses: github/codeql-action/analyze@v3.31.5
+        with:
+          category: "/language:${{ matrix.language }}"
+          upload: false
+>>>>>>> origin/main
+=======
         uses: github/codeql-action/autobuild@v3
 
       - name: Perform CodeQL Analysis
@@ -152,3 +235,4 @@ jobs:
           done
           echo "✅ All files include traceability, auditability, and collaboration comments"
           echo "File-by-file audit and traceability checks passed."
+>>>>>>> origin/main

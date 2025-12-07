@@ -1,4 +1,23 @@
+<<<<<<< HEAD
+<<<<<<< HEAD
 import Link from 'next/link'
+import { controls, metrics, products, steps } from './data'
+import styles from './page.module.css'
+=======
+import type { PostgrestSingleResponse } from '@supabase/supabase-js'
+import Link from 'next/link'
+import { z } from 'zod'
+import {
+  controls as fallbackControls,
+  metrics as fallbackMetrics,
+  products as fallbackProducts,
+  steps as fallbackSteps,
+} from './data'
+import styles from './page.module.css'
+<<<<<<< HEAD
+=======
+import Link from 'next/link'
+>>>>>>> origin/main
 import { isSupabaseConfigured, supabase } from '../lib/supabaseClient'
 import { logLandingPageDiagnostic } from '../lib/landingPageDiagnostics'
 import {
@@ -79,13 +98,87 @@ async function getData(): Promise<LandingPageData> {
     supabaseConfigured: true,
     payload,
   })
+<<<<<<< HEAD
+=======
+import { supabase } from '../lib/supabaseClient'
+import type { LandingPageData } from '../types/landingPage'
+import { AnalyticsDashboard } from '@/components/analytics/AnalyticsDashboard'
+
+const landingPageSchema = z.object({
+  metrics: z.array(
+    z.object({
+      label: z.string().min(1),
+      value: z.string().min(1),
+    })
+  ),
+  products: z.array(
+    z.object({
+      title: z.string().min(1),
+      detail: z.string().min(1),
+    })
+  ),
+  controls: z.array(z.string().min(1)),
+  steps: z.array(
+    z.object({
+      label: z.string().min(1),
+      title: z.string().min(1),
+      copy: z.string().min(1),
+    })
+  ),
+})
+
+const fallbackData: LandingPageData = {
+  metrics: fallbackMetrics,
+  products: fallbackProducts,
+  controls: fallbackControls,
+  steps: fallbackSteps,
+}
+
+function cloneFallback(): LandingPageData {
+  return {
+    metrics: fallbackData.metrics.map((item) => ({ ...item })),
+    products: fallbackData.products.map((item) => ({ ...item })),
+    controls: [...fallbackData.controls],
+    steps: fallbackData.steps.map((item) => ({ ...item })),
+  }
+}
+
+async function getData(): Promise<LandingPageData> {
+  if (!supabase) {
+    return cloneFallback()
+  }
+
+  const { data, error }: PostgrestSingleResponse<LandingPageData> = await supabase
+    .from('landing_page_data')
+    .select()
+    .single()
+
+  if (error || !data) {
+    console.error('Error fetching landing page data:', error)
+    return cloneFallback()
+  }
+
+  const parsed = landingPageSchema.safeParse(data)
+  if (!parsed.success) {
+    console.error('Invalid landing page payload received:', parsed.error.flatten())
+    return cloneFallback()
+  }
+
+>>>>>>> origin/main
+  return parsed.data
+=======
   return payload
+>>>>>>> origin/main
 }
 
 export default async function Home() {
   const { metrics, products, controls, steps } = await getData()
+>>>>>>> origin/main
 
   return (
+<<<<<<< HEAD
+    <div className={styles.page}>
+=======
     <div className={styles.page} id="main-content">
       <nav className={styles.nav} aria-label="Primary">
         <div className={styles.brand}>Abaco Loans Analytics</div>
@@ -108,6 +201,7 @@ export default async function Home() {
         </Link>
       </nav>
 
+>>>>>>> origin/main
       <header className={styles.hero}>
         <div className={styles.pill}>Growth & Risk Intelligence</div>
         <h1>Abaco Loans Analytics</h1>
@@ -121,6 +215,9 @@ export default async function Home() {
           </Link>
           <Link href="#products" className={styles.secondaryButton}>
             Explore products
+          </Link>
+          <Link href="/settings" className={styles.secondaryButton}>
+            Open settings
           </Link>
         </div>
         <div className={styles.metrics}>

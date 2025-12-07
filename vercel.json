@@ -1,4 +1,18 @@
 {
+<<<<<<< HEAD
+<<<<<<< HEAD
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "version": 3,
+  "framework": "nextjs",
+  "installCommand": "npm install",
+  "buildCommand": "cd apps/web && npm run build",
+  "outputDirectory": "apps/web/.next"
+=======
+  "buildCommand": "cd apps/web && npm run build",
+  "outputDirectory": "apps/web/.next",
+  "installCommand": "npm install"
+>>>>>>> c18a8d46 (Fix: Modernize vercel.json configuration)
+=======
   "version": 2,
   "builds": [
     { "src": "apps/web/package.json", "use": "@vercel/next" }
@@ -6,4 +20,5 @@
   "routes": [
     { "src": "/(.*)", "dest": "/apps/web/$1" }
   ]
+>>>>>>> origin/main
 }

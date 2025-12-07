@@ -1,8 +1,23 @@
+<<<<<<< HEAD
+<<<<<<< HEAD
+gemini-cli/
+.DS_Store
+apps/.DS_Store
+
+# Local development tools and artifacts
+.venv/
+.vscode/
+=======
+# Gradle
+.gradle/
+build/
+=======
 # Gradle
 .gradle/
 build/
 **/.gradle/
 **/build/
+>>>>>>> origin/main
 
 # Node / JavaScript
 node_modules/
@@ -30,7 +45,20 @@ Thumbs.db
 
 # Project-specific artifacts
 apps/.DS_Store
+<<<<<<< HEAD
+>>>>>>> upstream/main
+nvm/
+
+# Node build outputs
+node_modules/
+.next/
+
+# Gradle build outputs
+**/.gradle/
+**/build/
+=======
 abaco-loans-analytics/figma-financial-dashboard/node_modules/
+>>>>>>> origin/main
 
 # Local repository clones
 abaco-loans-analytics/
@@ -42,5 +70,8 @@ gemini-cli/
 .env.local
 .env*.local
 .vercel/
+<<<<<<< HEAD
+=======
 eslint.config.js
 .vercel
+>>>>>>> origin/main

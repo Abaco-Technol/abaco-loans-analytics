@@ -2,6 +2,16 @@ const nextConfig = {
   typescript: {
     tsconfigPath: './tsconfig.json',
   },
+<<<<<<< HEAD:apps/web/next.config.ts
+  experimental: {
+    turbopackUseSystemTlsCerts: true,
+  },
+  turbopack: {
+    root: __dirname,
+  },
+  // eslint-disable-next-line @typescript-eslint/require-await
+=======
+>>>>>>> origin/main:apps/web/next.config.js
   headers: async () => [
     {
       source: '/:path*',
@@ -25,7 +35,13 @@ const nextConfig = {
       ],
     },
   ],
+<<<<<<< HEAD:apps/web/next.config.ts
+  // eslint-disable-next-line @typescript-eslint/require-await
   redirects: async () => [],
+  // eslint-disable-next-line @typescript-eslint/require-await
+=======
+  redirects: async () => [],
+>>>>>>> origin/main:apps/web/next.config.js
   rewrites: async () => ({
     beforeFiles: [],
     afterFiles: [],
