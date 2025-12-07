@@ -99,7 +99,14 @@ def test_vintage_default_table_orders_by_quarter():
     engine = LoanAnalyticsEngine(sample_frame())
     vintages = engine.vintage_default_table()
 
-    assert list(vintages["origination_quarter"]) == [pd.Period("2022Q4"), pd.Period("2023Q1"), pd.Period("2023Q2")]
+    expected_quarters = (
+        pd.to_datetime(sample_frame()["origination_date"])
+        .dt.to_period("Q")
+        .drop_duplicates()
+        .sort_values()
+        .tolist()
+    )
+    assert list(vintages["origination_quarter"]) == expected_quarters
     assert vintages.loc[vintages["origination_quarter"] == pd.Period("2022Q4"), "default_rate"].iloc[0] == 1
     assert vintages.loc[vintages["origination_quarter"] == pd.Period("2023Q1"), "default_rate"].iloc[0] == 0
 
