@@ -43,13 +43,15 @@ class LoanAnalyticsEngine:
         ]:
             raise ValueError(f"Missing required columns: {', '.join(sorted(missing))}")
 
+        orig_origination_date = frame["origination_date"].copy()
         frame["origination_date"] = pd.to_datetime(frame["origination_date"], errors="coerce")
         invalid_mask = frame["origination_date"].isna()
         if invalid_mask.any():
             invalid_rows = frame[invalid_mask]
+            original_invalid_values = orig_origination_date[invalid_mask].tolist()
             raise ValueError(
                 f"Invalid origination_date values found in {len(invalid_rows)} row(s). "
-                f"Rows with invalid dates (indices: {invalid_rows.index.tolist()}): {invalid_rows['origination_date'].tolist()}"
+                f"Rows with invalid dates (indices: {invalid_rows.index.tolist()}): {original_invalid_values}"
             )
         # Coerce numeric columns but handle non-additive vs additive fields differently:
         # - Keep NaNs for non-additive / descriptive fields to surface data quality issues.
