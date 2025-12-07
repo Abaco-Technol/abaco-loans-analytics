@@ -45,8 +45,7 @@ class LoanAnalyticsEngineTests(unittest.TestCase):
     def test_compute_debt_to_income_handles_zero_income(self):
         dti = self.engine.compute_debt_to_income()
         expected = np.array([12.0, 20.0, np.nan])
-        np.testing.assert_allclose(dti[:2], expected[:2])
-        self.assertTrue(np.isnan(dti[2]))
+        pd.testing.assert_series_equal(pd.Series(dti), pd.Series(expected), check_dtype=False)
 
     def test_compute_delinquency_rate(self):
         delinquency_rate = self.engine.compute_delinquency_rate()
