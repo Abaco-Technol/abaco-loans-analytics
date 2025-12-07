@@ -43,6 +43,7 @@ function parseCsvLine(line: string): string[] {
         i += 1
         continue
       } else {
+        // Toggle quote state for opening/closing quotes
         inQuotes = !inQuotes
       }
     } else if (char === ',' && !inQuotes) {
