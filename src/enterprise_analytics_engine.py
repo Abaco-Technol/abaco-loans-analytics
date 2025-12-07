@@ -133,12 +133,33 @@ class LoanAnalyticsEngine:
         return losses / exposure
 
     def _repayment_velocity(self, portfolio: pd.DataFrame) -> float:
+        """
+        Calculate the repayment velocity for a loan portfolio.
+
+        Repayment velocity is defined as the ratio of total paid principal to the total scheduled principal
+        (i.e., the sum of expected principal payments based on original terms).
+
+        Edge case handling:
+        - Loans with a term of 0 months are replaced with NaN to avoid division by zero.
+        - Division by zero or missing values may result in infinite or NaN scheduled principal; these are replaced with 0.
+        - If the total scheduled principal is zero (e.g., all loans have zero term), the function returns NaN.
+
+        Args:
+            portfolio (pd.DataFrame): DataFrame containing loan data.
+
+        Returns:
+            float: Repayment velocity, or NaN if not computable.
+        """
+        # Replace zero term loans with NaN to avoid division by zero
         active_terms = portfolio["term_months"].replace(0, np.nan)
+        # Calculate scheduled principal per loan
         scheduled_principal = portfolio["principal"] / active_terms
+        # Replace infinite and NaN values (from division by zero or missing data) with 0
         scheduled_principal = scheduled_principal.replace([np.inf, -np.inf], np.nan).fillna(0)
         scheduled_total = scheduled_principal.sum()
         if not scheduled_total:
             return float("nan")
+        # Repayment velocity: total paid principal divided by total scheduled principal
         return portfolio["paid_principal"].sum() / scheduled_total
 
     def segment_kpis(self, segment_by: List[str]) -> pd.DataFrame:
