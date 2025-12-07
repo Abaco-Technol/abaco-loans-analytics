@@ -3,8 +3,8 @@ import type { ProcessedAnalytics } from '@/types/analytics'
 const sanitizeMarkdownCell = (value: string): string =>
   value
     .replace(/[\r\n]+/g, ' ')
-    .replace(/[|`]/g, (match) => `\\${match}`)
     .replace(/\\/g, '\\\\')
+    .replace(/[|`]/g, (match) => `\\${match}`)
 
 const formatPercentage = (value: number, digits = 1): string => `${value.toFixed(digits)}%`
 
