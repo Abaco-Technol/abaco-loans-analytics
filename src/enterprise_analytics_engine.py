@@ -91,6 +91,31 @@ class LoanAnalyticsEngine:
         return frame
 
     def portfolio_kpis(self) -> dict:
+        """
+        Compute and return key performance indicators (KPIs) for the loan portfolio.
+
+        Returns:
+            dict: A dictionary with the following keys:
+                - currency (str): The currency of the portfolio, as specified in config.
+                - total_outstanding (float): Total outstanding principal across all loans.
+                - total_principal (float): Total original principal across all loans.
+                - weighted_interest_rate (float): Weighted average interest rate, using outstanding principal as weights if available, otherwise original principal.
+                - non_performing_loan_ratio (float): Ratio of outstanding principal in non-performing loans (arrears or defaulted) to total outstanding principal.
+                - default_rate (float): Fraction of loans currently in default status.
+                - loss_given_default (float): Average loss given default, calculated as (charge_off_amount - recoveries) / exposure_at_default for defaulted loans.
+                - prepayment_rate (float): Ratio of total paid principal to total original principal, indicating early repayments.
+                - repayment_velocity (float): Average monthly principal repayment rate, as computed by _repayment_velocity().
+
+        Calculation details:
+            - Weighted interest rate: np.average(interest_rate, weights=outstanding_principal or principal)
+            - Non-performing loan ratio: sum(outstanding_principal for loans in arrears or defaulted) / total_outstanding
+            - Default rate: number of defaulted loans / total number of loans
+            - Loss given default: see _loss_given_default() for details
+            - Prepayment rate: sum(paid_principal) / sum(principal)
+            - Repayment velocity: see _repayment_velocity() for details
+
+        Returns NaN for metrics if required data is missing or zero.
+        """
         portfolio = self.data
         total_outstanding = portfolio["outstanding_principal"].sum()
         total_principal = portfolio["principal"].sum()
