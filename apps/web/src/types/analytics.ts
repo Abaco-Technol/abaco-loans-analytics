@@ -210,7 +210,7 @@ export interface RollRateSummary {
 }
 
 export interface GrowthPathPoint {
-  month: ISODateString
+  date: ISODateString
   label: string
   actualAUM: number
   projectedAUM?: number
