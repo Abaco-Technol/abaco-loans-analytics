@@ -234,7 +234,7 @@ if payer_column:
     normalized_col = f"{payer_column}_normalized"
     loan_df[normalized_col] = loan_df[payer_column].apply(normalize_text)
     target_aliases = {
-        "Vicepresidencia de la República": [r"vice\s*presidencia", r"vicepresidencia de la republica"],
+        "Vicepresidencia de la Republica": [r"vice\s*presidencia", r"vicepresidencia de la republica"],
         "Bimbo": [r"bimbo", r"grupo\s*bimbo", r"marinela"],
         "EPA": [r"\bepa\b", r"almacenes\s*epa", r"ferreteria\s*epa"],
         "Walmart": [r"walmart", r"walmart de mexico y centroamerica", r"walmart centroamerica"],
