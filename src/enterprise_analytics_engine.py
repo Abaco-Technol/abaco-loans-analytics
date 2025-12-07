@@ -48,13 +48,13 @@ class LoanAnalyticsEngine:
         # Coerce numeric columns but handle non-additive vs additive fields differently:
         # - Keep NaNs for non-additive / descriptive fields to surface data quality issues.
         # - Use fillna(0) only for additive measures where treating missing as zero is appropriate.
-        non_additive_numeric_cols: Iterable[str] = [
+        non_additive_numeric_cols: Sequence[str] = [
             "principal",
             "interest_rate",
             "term_months",
             "days_in_arrears",
         ]
-        additive_numeric_cols: Iterable[str] = [
+        additive_numeric_cols: Sequence[str] = [
             "outstanding_principal",
             "charge_off_amount",
             "recoveries",
