@@ -210,7 +210,7 @@ def test_portfolio_kpis_handles_empty_frame(sample_df):
     assert enriched.empty
 
 
-def test_portfolio_kpis_missing_column_raises():
-    df = sample_df()
+def test_portfolio_kpis_missing_column_raises(sample_df):
+    df = sample_df
     with pytest.raises(ValueError, match="Missing required columns: loan_amount"):
         portfolio_kpis(df.drop(columns=["loan_amount"]))
