@@ -81,7 +81,7 @@ def project_growth(
     current_loans: float,
     target_loans: float,
     periods: int = 6,
-    start_date: "pd.Timestamp | None" = None,
+    start_date: pd.Timestamp | None = None,
 ) -> pd.DataFrame:
     if periods < 2:
         raise ValueError("periods must be at least 2 to create a projection range")
