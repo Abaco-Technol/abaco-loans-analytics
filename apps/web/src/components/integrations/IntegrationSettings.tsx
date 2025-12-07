@@ -537,7 +537,7 @@ export function IntegrationSettings() {
                 Follow the <strong>META_INTEGRATION_GUIDE.md</strong> to get your access tokens.
               </p>
               <ul className="list-inside list-disc space-y-1 text-sm text-[#9EA9B3]">
-                <li>Meta tokens expire after 60 days (we&apos;ll remind you)</li>
+                <li>Meta tokens expire after 45 days (we&apos;ll remind you)</li>
                 <li>Data syncs automatically every hour</li>
                 <li>Manual sync available anytime</li>
                 <li>All tokens stored securely server-side</li>
