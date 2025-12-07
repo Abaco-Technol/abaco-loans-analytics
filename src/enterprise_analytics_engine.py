@@ -51,7 +51,7 @@ class LoanAnalyticsEngine:
         )
         if frame["origination_date"].isna().any():
             raise ValueError("origination_date contains invalid or missing values")
-        numeric_cols: Iterable[str] = [
+        numeric_cols: List[str] = [
             "principal",
             "interest_rate",
             "term_months",
