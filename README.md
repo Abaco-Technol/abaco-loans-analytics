@@ -8,19 +8,15 @@ ABACO delivers an executive-grade analytics and governance stack for lending tea
 - **infra/azure**: Azure infra-as-code and deployment scripts.
 - **data_samples**: Anonymized datasets for repeatable development and testing.
 
-<<<<<<< HEAD
 - Azure SQL / Cosmos / Storage
 - Supabase
 - Vercel
 - OpenAI / Gemini / Claude
 - SonarCloud
 - GitHub Actions
-<<<<<<< HEAD
 - Figma / Notion / Slack (ver [guía de integraciones](docs/integrations.md))
-=======
-Consulta `docs/integration-readiness.md` para verificar el estado de cada integración y las comprobaciones previas que
-debes ejecutar antes de usarlas.
-=======
+
+Consulta `docs/integration-readiness.md` para verificar el estado de cada integración y las comprobaciones previas que debes ejecutar antes de usarlas.
 ## Observability, KPIs, and lineage
 - **KPI catalog**: Use `docs/KPI-Operating-Model.md` to define owners, formulas, and lineage links for every metric; keep PR and issue references for auditability.
 - **Dashboards**: Ensure every visualization lists source tables, refresh timestamp, and on-call owner. Target vs. actual, sparkline trends, and SLA badges should be present on executive views.
