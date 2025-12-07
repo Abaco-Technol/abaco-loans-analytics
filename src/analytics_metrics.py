@@ -81,10 +81,13 @@ def project_growth(
     current_loans: float,
     target_loans: float,
     periods: int = 6,
+    start_date: "pd.Timestamp | None" = None,
 ) -> pd.DataFrame:
     if periods < 2:
         raise ValueError("periods must be at least 2 to create a projection range")
-    months = pd.date_range(start=pd.Timestamp.now().normalize(), periods=periods, freq="MS")
+    if start_date is None:
+        start_date = pd.Timestamp.now().normalize()
+    months = pd.date_range(start=start_date, periods=periods, freq="MS")
     projection = pd.DataFrame(
         {
             "month": months,
