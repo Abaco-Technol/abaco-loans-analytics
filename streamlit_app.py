@@ -110,7 +110,7 @@ def select_payer_column(df: pd.DataFrame) -> str | None:
         # Normalize: lowercase and replace non-alphanumerics with spaces so
         # that tokens are clearly separated for word-boundary matching.
         normalized_col = re.sub(r"[^0-9a-zA-Z]+", " ", col).lower()
-        if re.search(pattern, normalized_col, re.IGNORECASE):
+        if re.search(pattern, normalized_col):
             return col
 
     return None
