@@ -93,7 +93,7 @@ def render_dashboard() -> None:
 
     st.subheader("DPD Distribution & Segmentation")
     dpd_distribution = (
-        df.get("dpd_bucket", pd.Series(dtype=str))
+        df.get("dpd_bucket", pd.Series([], index=df.index, dtype=str))
         .value_counts(normalize=True)
         .reindex(FeatureEngineer.DPD_LABELS, fill_value=0)
         .rename("share")
