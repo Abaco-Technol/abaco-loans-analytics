@@ -5,7 +5,8 @@ from typing import Dict, List, Optional, Protocol, runtime_checkable
 
 @runtime_checkable
 class KPIExporter(Protocol):
-    def upload_metrics(self, metrics: Dict[str, float], blob_name: Optional[str] = None) -> str: ...
+    def upload_metrics(self, metrics: Dict[str, float], blob_name: Optional[str] = None) -> str:
+        ...
 
 
 class LoanAnalyticsEngine:
