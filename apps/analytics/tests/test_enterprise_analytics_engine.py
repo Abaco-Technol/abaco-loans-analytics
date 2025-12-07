@@ -65,7 +65,7 @@ class LoanAnalyticsEngineTests(unittest.TestCase):
         self.assertAlmostEqual(results["portfolio_yield_percent"], 6.1058, places=3)
         self.assertAlmostEqual(results["average_ltv_ratio_percent"], 103.3333, places=3)
         # The expected value of 16.0 for average DTI excludes the NaN value from the third loan entry (zero income).
-        # The average is computed only over loans with nonzero income.
+        # The average is computed only over loans with non-zero income.
         self.assertAlmostEqual(results["average_dti_ratio_percent"], 16.0, places=1)
 
 
