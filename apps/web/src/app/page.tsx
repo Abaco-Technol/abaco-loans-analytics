@@ -24,10 +24,10 @@ const FALLBACK_DATA: LandingPageData = {
 }
 
 const mergeWithFallback = (payload: LandingPageData): LandingPageData => ({
-  metrics: payload.metrics.length ? payload.metrics : FALLBACK_DATA.metrics,
-  products: payload.products.length ? payload.products : FALLBACK_DATA.products,
-  controls: payload.controls.length ? payload.controls : FALLBACK_DATA.controls,
-  steps: payload.steps.length ? payload.steps : FALLBACK_DATA.steps,
+  metrics: payload.metrics?.length ? payload.metrics : FALLBACK_DATA.metrics,
+  products: payload.products?.length ? payload.products : FALLBACK_DATA.products,
+  controls: payload.controls?.length ? payload.controls : FALLBACK_DATA.controls,
+  steps: payload.steps?.length ? payload.steps : FALLBACK_DATA.steps,
 })
 
 async function getData(): Promise<LandingPageData> {
