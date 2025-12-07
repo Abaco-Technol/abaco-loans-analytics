@@ -1,8 +1,9 @@
 import pandas as pd
-
+import pytest
 from src.analytics_metrics import calculate_quality_score, portfolio_kpis, project_growth, standardize_numeric
 
 
+@pytest.fixture
 def sample_df():
     return pd.DataFrame(
         {
