@@ -273,6 +273,29 @@ if "last_ingested_at" not in st.session_state:
 
 
 def ingest(uploaded_file, signature: str | None):
+    """
+    Ingests an uploaded file, processes and normalizes its data, and updates Streamlit session state.
+
+    Parameters
+    ----------
+    uploaded_file : file-like object
+        The uploaded CSV file to be ingested and processed.
+    signature : str or None
+        A unique signature for the uploaded file, used to track ingestion state.
+
+    Side Effects
+    ------------
+    Updates the following keys in st.session_state:
+        - "loan_data": pd.DataFrame containing the processed and normalized data.
+        - "ingestion_state": dict with ingestion metadata/state.
+        - "last_upload_signature": str or None, the signature of the last ingested file.
+        - "last_ingested_at": pd.Timestamp, the time of ingestion.
+
+    Returns
+    -------
+    None
+        This function does not return a value; it updates st.session_state in place.
+    """
     raw = parse_uploaded_file(uploaded_file)
     normalized = normalize_columns(raw)
     numeric_columns = normalized.select_dtypes(include=["object"]).columns
