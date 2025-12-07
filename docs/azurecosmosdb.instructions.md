@@ -43,3 +43,24 @@ This project treats Cosmos DB as a regulated data store. Use the steps below to 
 - Document recovery time objective (RTO) and recovery point objective (RPO) per collection.
 
 Following this checklist keeps Cosmos usage compliant, cost-aware, and resilient for analytics workloads.
+
+## Data Modeling Best Practices
+- Model around access patterns; co-locate entities that are read together.
+- Keep items < 1 MB and avoid cross-partition fan-out.
+
+## Recommended Use Cases for Azure Cosmos DB
+- Multi-tenant operational analytics with low-latency reads/writes.
+- Time-series telemetry with TTL for hot/cold separation.
+
+## Partition Key Choice
+- Prefer high-cardinality, even-distribution keys (tenantId/accountId) and include them in point reads and writes.
+
+## SDK Best Practices
+- Use the v4 SDK with gateway mode only for restricted networks; otherwise prefer direct mode.
+- Enable retry policies and tune connection pool for bulk ingestion jobs.
+
+## Developer Tooling Instructions
+- Use the Cosmos DB emulator for local tests; run integration suites against a dev account before production.
+
+## Additional Guidelines
+- Enforce TTL on transient containers, monitor 429s, and cap autoscale RU to control cost.
