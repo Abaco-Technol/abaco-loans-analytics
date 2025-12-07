@@ -1,4 +1,5 @@
 {
+  "_note": "The installCommand uses 'npm ci', which requires 'apps/web/package-lock.json' to be present and up-to-date. Ensure this file is committed and synchronized with package.json.",
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "nextjs",
   "installCommand": "cd apps/web && npm ci",
