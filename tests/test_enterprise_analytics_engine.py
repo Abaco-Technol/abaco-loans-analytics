@@ -103,7 +103,7 @@ def test_cashflow_curve_generates_cumulative_view():
     assert len(curve) == 3
     # Cumulative cashflow values are derived as follows, based on sample_frame():
     # Q4 2022: 5000 repaid - 75000 funded = -70000
-    # Q1 2023: (8000 + 12000) repaid - 150000 funded = 20000 repaid - 150000 funded = -130000; cumulative: -70000 + (-130000) = -200000
+    # Q1 2023: (8000 + 12000) repaid - 150000 funded = -130000; cumulative: -70000 + (-130000) = -200000
     # Q2 2023: 25000 repaid - 50000 funded = -25000; cumulative: -200000 + (-25000) = -250000
     # Therefore, expected_cumulative = [-70000, -200000, -250000]
     expected_cumulative = [-70000, -200000, -250000]
