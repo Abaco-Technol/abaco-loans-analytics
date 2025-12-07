@@ -96,8 +96,6 @@ def compute_upload_signature(uploaded_file) -> str | None:
 
 
 def normalize_text(value: str) -> str:
-    if not isinstance(value, str):
-        return ""
     normalized = unicodedata.normalize("NFKD", value)
     stripped = ''.join(ch for ch in normalized if not unicodedata.combining(ch))
     cleaned = re.sub(r"[^a-z0-9]+", " ", stripped.lower()).strip()
