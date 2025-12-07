@@ -97,7 +97,7 @@ class LoanAnalyticsEngine:
         default_mask = portfolio["status"].str.lower().eq("defaulted")
         defaults = portfolio[default_mask]
         npl_outstanding = portfolio.loc[portfolio["arrears_flag"], "outstanding_principal"].sum()
-        npl_ratio = npl_outstanding / total_outstanding if total_outstanding else float("nan")
+        npl_ratio = npl_outstanding / total_outstanding if total_outstanding else 0.0
         default_rate = len(defaults) / len(portfolio) if len(portfolio) else float("nan")
 
         lgd = self._loss_given_default(defaults)
