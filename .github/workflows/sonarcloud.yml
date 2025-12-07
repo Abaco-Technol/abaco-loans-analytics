@@ -15,7 +15,6 @@ jobs:
     # Both 'contents: read' (for repository access) and 'pull-requests: write' (for PR decoration) are required for SonarCloud PR decoration.
     permissions:
       contents: read         # Required to read repository contents
-      pull-requests: write  # Required for SonarCloud to decorate PRs
     runs-on: ubuntu-latest
 
     steps:
