@@ -30,7 +30,7 @@ class CascadeIngestion:
             logger.info(f'Ingested {len(df)} records from {filename}')
             return df
         except Exception as e:  # pylint: disable=broad-exception-caught
-            error = {'file': filename, 'error': str(e), 'timestamp': datetime.utcnow().isoformat(), 'run_id': self.run_id}
+            error = {'file': filename, 'error': str(e), 'timestamp': datetime.now().isoformat(), 'run_id': self.run_id}
             self.errors.append(error)
             logger.error(f'Failed to ingest {filename}: {e}')
             return pd.DataFrame()
