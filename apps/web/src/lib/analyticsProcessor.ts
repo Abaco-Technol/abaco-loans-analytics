@@ -40,7 +40,7 @@ function parseCsvLine(line: string): string[] {
       if (inQuotes && line[i + 1] === '"') {
         current += '"'
         // Skip the next quote by incrementing i, then continue to avoid double increment
-        i++
+        i += 1
         continue
       } else {
         inQuotes = !inQuotes
