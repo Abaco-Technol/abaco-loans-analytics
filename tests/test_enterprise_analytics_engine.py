@@ -85,10 +85,10 @@ def test_cashflow_curve_generates_cumulative_view():
     curve = engine.cashflow_curve(freq="Q")
 
     assert "cumulative_cashflow" in curve.columns
-    assert len(curve) == 3
-    # Compute expected cumulative cashflow programmatically from sample_frame data:
     df = sample_frame().copy()
     df["origination_quarter"] = pd.to_datetime(df["origination_date"]).dt.to_period("Q")
+    expected_num_quarters = df["origination_quarter"].nunique()
+    assert len(curve) == expected_num_quarters
     grouped = df.groupby("origination_quarter").agg(
         origination_sum=("principal", "sum"),
         paid_principal_sum=("paid_principal", "sum"),
