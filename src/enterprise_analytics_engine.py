@@ -52,16 +52,6 @@ class LoanAnalyticsEngine:
         )
         if frame["origination_date"].isna().any():
             raise ValueError("origination_date contains invalid or missing values")
-        numeric_cols: List[str] = [
-            "principal",
-            "interest_rate",
-            "term_months",
-            "outstanding_principal",
-            "days_in_arrears",
-            "charge_off_amount",
-            "recoveries",
-            "paid_principal",
-        ]
         # Validate 'principal' and 'interest_rate' strictly
         for col in ["principal", "interest_rate"]:
             frame[col] = pd.to_numeric(frame[col], errors="coerce")
