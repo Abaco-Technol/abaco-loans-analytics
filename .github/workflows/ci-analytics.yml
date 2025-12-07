@@ -77,4 +77,4 @@ jobs:
         uses: actions/upload-artifact@v5
         with:
           name: analytics-coverage
-          path: apps/coverage-python.xml
+          path: coverage-python.xml
