@@ -461,13 +461,31 @@ export function IntegrationSettings() {
               {renderStatusChip(tokens.linkedin.connected)}
             </div>
 
-            <button
-              onClick={() => setShowTokenInput('linkedin')}
-              className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#0077B5] px-4 py-2 text-white transition-all hover:bg-[#006399]"
-            >
-              <Icon.Key />
-              Connect LinkedIn
-            </button>
+            {tokens.linkedin.connected ? (
+              <div className="flex flex-col items-center justify-center gap-2">
+                <div className="mb-2 flex items-center gap-2">
+                  <Icon.CheckCircle className="text-green-400" />
+                  <span className="text-white">
+                    Connected{tokens.linkedin.accountName ? ` as ${tokens.linkedin.accountName}` : ''}
+                  </span>
+                </div>
+                <button
+                  onClick={() => setShowTokenInput('linkedin')}
+                  className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#0077B5] px-4 py-2 text-white transition-all hover:bg-[#006399]"
+                >
+                  <Icon.Key />
+                  Reconnect LinkedIn
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => setShowTokenInput('linkedin')}
+                className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#0077B5] px-4 py-2 text-white transition-all hover:bg-[#006399]"
+              >
+                <Icon.Key />
+                Connect LinkedIn
+              </button>
+            )}
           </div>
 
           <div className="rounded-xl border border-[#6D7D8E]/30 bg-[#0C2742]/40 p-6 backdrop-blur-md">
