@@ -80,7 +80,7 @@ def project_growth(
     start_date: pd.Timestamp = None,
 ) -> pd.DataFrame:
     if periods < 2:
-        raise ValueError("periods must be more than 1 to create a projection range")
+        raise ValueError("periods must be at least 2 to create a projection range")
     if start_date is None:
         start_date = pd.Timestamp.now()
     months = pd.date_range(start=start_date, periods=periods, freq="MS")
