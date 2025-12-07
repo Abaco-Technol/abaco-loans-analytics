@@ -508,7 +508,20 @@ export function IntegrationSettings() {
               style={{ background: 'linear-gradient(135deg, #C1A6FF 0%, #6D7D8E 100%)' }}
             >
               <Icon.Key />
-              Configure Custom Integration
+              {tokens.custom.connected
+                ? (
+                  <>
+                    {tokens.custom.accountName
+                      ? `Connected: ${tokens.custom.accountName}`
+                      : 'Custom Integration Connected'}
+                    {tokens.custom.lastSync && (
+                      <span className="ml-2 text-xs text-[#9EA9B3]">
+                        Last Sync: {tokens.custom.lastSync}
+                      </span>
+                    )}
+                  </>
+                )
+                : 'Configure Custom Integration'}
             </button>
           </div>
         </div>
