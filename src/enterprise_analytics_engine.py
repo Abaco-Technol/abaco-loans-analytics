@@ -82,6 +82,8 @@ class LoanAnalyticsEngine:
             | frame["status"].str.lower().eq("defaulted")
         )
         frame["origination_quarter"] = frame["origination_date"].dt.to_period("Q")
+        # Exposure at default is the greater of outstanding principal or charge-off amount
+        # to capture the true exposure at the time of default.
         frame["exposure_at_default"] = frame[["outstanding_principal", "charge_off_amount"]].max(axis=1)
         return frame
 
