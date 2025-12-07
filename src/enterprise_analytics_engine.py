@@ -186,6 +186,41 @@ class LoanAnalyticsEngine:
             self.data = original_data
 
     def segment_kpis(self, segment_by: List[str]) -> pd.DataFrame:
+        """
+        Compute portfolio KPIs for each segment defined by the given columns.
+
+        This method groups the loan portfolio data by the specified `segment_by` columns,
+        computes KPIs for each segment, and returns a DataFrame where each row represents
+        a segment and its associated KPIs.
+
+        Parameters
+        ----------
+        segment_by : List[str]
+            List of column names to group by. Each unique combination of values in these
+            columns defines a segment. Must contain at least one column, and all columns
+            must exist in the data.
+
+        Returns
+        -------
+        pd.DataFrame
+            DataFrame with one row per segment. The columns include all `segment_by`
+            columns, plus the computed KPI columns (e.g., "default_rate", "loss_given_default",
+            "repayment_velocity", etc.).
+
+        Constraints
+        -----------
+        - `segment_by` must be a non-empty list.
+        - All columns in `segment_by` must exist in the portfolio data.
+
+        Example
+        -------
+        >>> engine.segment_kpis(["country", "loan_type"])
+        Returns a DataFrame like:
+            country  loan_type  default_rate  loss_given_default  repayment_velocity  ...
+            US       consumer   0.02          0.45               0.87                ...
+            US       business   0.01          0.30               0.92                ...
+            CA       consumer   0.03          0.50               0.80                ...
+        """
         if not segment_by:
             raise ValueError("segment_by must contain at least one column")
         missing = [col for col in segment_by if col not in self.data.columns]
