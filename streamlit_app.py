@@ -238,7 +238,7 @@ if payer_column:
         "Bimbo": [r"bimbo", r"grupo\s*bimbo", r"marinela"],
         "EPA": [r"\bepa\b", r"almacenes\s*epa", r"ferreteria\s*epa"],
         "Walmart": [r"walmart", r"walmart de mexico y centroamerica", r"walmart centroamerica"],
-        "Pricesmart": [r"prices?mart"],
+        "PriceSmart": [r"prices?mart"],
         "Nestle": [r"nestl[eé]", r"nestle el salvador"],
         "Coca Cola": [r"coca\s*cola", r"femsa"],
     }
