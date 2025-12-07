@@ -117,5 +117,7 @@ def test_cashflow_curve_generates_cumulative_view():
 
     assert "cumulative_cashflow" in curve.columns
     assert len(curve) == 3
+    # These values are calculated as principal_repaid minus principal_funded per quarter
+    # for the sample loans in sample_frame(). See sample_frame() for details.
     expected_cumulative = [-70000, -200000, -250000]
     assert curve["cumulative_cashflow"].tolist() == expected_cumulative
