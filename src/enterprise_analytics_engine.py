@@ -307,6 +307,13 @@ class LoanAnalyticsEngine:
         return curve.reset_index()
 
     def scorecard(self) -> pd.DataFrame:
+        """
+        Returns portfolio KPIs in a tabular format with 'metric' and 'value' columns.
+
+        This method converts the dictionary returned by `portfolio_kpis()` into a pandas DataFrame,
+        making it suitable for display or reporting. In contrast, `portfolio_kpis()` returns a
+        dictionary for programmatic access to KPI values.
+        """
         kpis = self.portfolio_kpis()
         return pd.DataFrame(
             {
