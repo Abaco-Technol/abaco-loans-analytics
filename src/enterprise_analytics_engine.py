@@ -274,6 +274,26 @@ class LoanAnalyticsEngine:
         return pd.DataFrame(rows).sort_values("origination_quarter").reset_index(drop=True)
 
     def cashflow_curve(self, freq: str = "M") -> pd.DataFrame:
+        """
+        Compute the cashflow curve for the loan portfolio, aggregating principal funded, principal repaid,
+        outstanding principal, and calculating net and cumulative cashflow over time.
+
+        Parameters
+        ----------
+        freq : str, default "M"
+            Frequency for time aggregation. Valid values are any pandas Period frequency string,
+            such as "M" (monthly), "Q" (quarterly), "A" (annual), etc.
+
+        Returns
+        -------
+        pd.DataFrame
+            DataFrame indexed by period with the following columns:
+                - principal_funded: Total principal originated in the period.
+                - principal_repaid: Total principal repaid in the period.
+                - outstanding: Total outstanding principal at the end of the period.
+                - net_cashflow: principal_repaid minus principal_funded for the period.
+                - cumulative_cashflow: Cumulative sum of net_cashflow up to the period.
+        """
         expanded = self.data.copy()
         expanded["period"] = expanded["origination_date"].dt.to_period(freq)
         grouped = expanded.groupby("period")
