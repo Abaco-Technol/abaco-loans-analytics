@@ -54,10 +54,7 @@ jobs:
           # Run code review on apps/analytics/
           zencoder jobs:create '{"input": "apps/analytics/", "output": "zencoder-review.json", "type": "code_review"}'
           cat zencoder-review.json
-      - name: Zencoder Code Review
-        run: |
-          # Example: Run a Zencoder job or code review (replace with your actual command)
-          zencoder jobs:create '{"input": "apps/analytics/", "output": "zencoder-output.json"}'
+# (Removed redundant Zencoder Code Review step)
   analytics-push:
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
