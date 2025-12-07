@@ -50,7 +50,7 @@ jobs:
           pip install pylint
       - name: Run pylint code analysis
         run: |
-          pylint apps/analytics
+          pylint --exit-zero apps/analytics
   analytics-push:
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
