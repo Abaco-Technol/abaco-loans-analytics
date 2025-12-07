@@ -173,7 +173,7 @@ def ingest():
     normalized = normalize_columns(raw)
     # Only select object columns that contain currency symbols or comma separators
     candidate_columns = normalized.select_dtypes(include=["object"]).columns
-    pattern = re.compile(r"[\$,]")
+    pattern = re.compile(r"[\$€£¥₽₡,]")
     numeric_columns = []
     for col in candidate_columns:
         # Sample up to 10 non-null values for efficiency
