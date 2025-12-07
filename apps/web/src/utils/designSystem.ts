@@ -4,7 +4,7 @@ export const typography = {
       color: '#9EA9B3',
       fontSize: '0.9rem',
       letterSpacing: '0.12em',
-      textTransform: 'uppercase',
+      textTransform: 'uppercase' as const,
       fontWeight: 600,
     },
     slideTitle: {
