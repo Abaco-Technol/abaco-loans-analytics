@@ -213,7 +213,7 @@ st.markdown(f"- **Delinquency rate:** {metrics['delinquency_rate']:.2f}%")
 st.markdown(f"- **Portfolio yield:** {metrics['portfolio_yield']:.2f}%")
 st.markdown(f"- **Average LTV:** {metrics['average_ltv']:.1f}%")
 st.markdown(f"- **Average DTI:** {metrics['average_dti']:.1f}%")
-alerts = enriched_df[enriched_df["ltv_ratio"] > 90].assign(
+alerts = loan_df[loan_df["ltv_ratio"] > 90].assign(
     alert_type="High LTV",
     probability=lambda d: np.clip((d["ltv_ratio"] - 90) / 20, 0, 1),
 )
