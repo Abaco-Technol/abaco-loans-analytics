@@ -67,7 +67,14 @@ class LoanAnalyticsEngine:
             if invalid_mask.any():
                 bad_values = frame.loc[invalid_mask, col].unique()
                 raise ValueError(f"Column '{col}' contains non-numeric values: {bad_values.tolist()}")
-            frame[col] = coerced.fillna(0)
+            # For critical fields, do not silently fill NAs; raise an error instead.
+            if col in ("principal", "outstanding_principal"):
+                if coerced.isna().any():
+                    raise ValueError(f"Column '{col}' contains missing (NA) values, which is not allowed.")
+                frame[col] = coerced
+            else:
+                # For non-critical fields, missing values are filled with zero.
+                frame[col] = coerced.fillna(0)
 
         frame["status"] = frame["status"].fillna("").astype(str)
         frame["arrears_flag"] = (
