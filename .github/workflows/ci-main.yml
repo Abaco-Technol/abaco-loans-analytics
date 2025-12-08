@@ -1,6 +1,9 @@
 # Forced re-index: renamed from ci.yml to ci-main.yml
 name: CI Main
 
+permissions:
+  read-only: all
+
 
 
 on:
