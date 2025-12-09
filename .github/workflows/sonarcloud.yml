@@ -10,11 +10,11 @@ on:
 jobs:
   sonarcloud:
     name: SonarCloud Scan
-    # Explicit permissions are required for SonarCloud to read PR metadata and publish decorations.
+    # Explicit permissions are required for SonarCloud to read repository and pull request metadata for decoration.
     # By default, specifying a permissions block overrides the token's scopes, so only grant what is strictly needed.
-    # Both 'contents: read' (for repository access) and 'pull-requests: write' (for PR decoration) are required for SonarCloud PR decoration.
     permissions:
       contents: read         # Required to read repository contents
+      pull-requests: read    # Required for SonarCloud to access PR metadata
     runs-on: ubuntu-latest
 
     steps:
