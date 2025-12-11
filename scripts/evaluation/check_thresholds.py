@@ -59,7 +59,7 @@ class ThresholdValidator:
                 return False, f"below minimum ({actual_value:.4f} < {min_value})"
             
             # Check warning threshold
-            if warning_threshold and actual_value < warning_threshold:
+            if warning_threshold is not None and actual_value < warning_threshold:
                 return "warning", f"below warning level ({actual_value:.4f} < {warning_threshold})"
         
         return True, f"meets threshold ({actual_value:.4f})"
