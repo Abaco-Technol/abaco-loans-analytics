@@ -39,7 +39,7 @@ class ThresholdValidator:
         actual_value: float,
         threshold: Dict[str, Any],
         category: str = "general"
-    ) -> Tuple[bool, str]:
+    ) -> Tuple[Union[bool, str], str]:
         """Check if a metric meets its threshold.
         
         Returns:
