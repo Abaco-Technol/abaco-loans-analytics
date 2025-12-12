@@ -2,7 +2,8 @@
 name: CI Main
 
 permissions:
-  read-only: all
+  contents: read
+  metadata: read
 
 
 
