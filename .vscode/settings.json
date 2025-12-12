@@ -1,29 +1,12 @@
 {
-  // Use modern file watching for better performance
-  "files.watcherExclude": {
-    "**/.git/objects/**": true,
-    "**/.git/subtree-cache/**": true,
-    "**/node_modules/**": true,
-    "**/tmp/**": true,
-    "**/build/**": true
-  },
-  // Enable modern TypeScript server features
-  "typescript.tsserver.experimental.enableProjectDiagnostics": true,
-  "typescript.tsserver.useSyntaxServer": "auto",
-  "typescript.tsserver.log": "off",
-  // Remove legacy file watching if present
-  "typescript.tsserver.watchOptions": {
-    "watchFile": "useFsEvents",
-    "watchDirectory": "useFsEvents"
-  }
-}
-{
   // --- General Performance: Exclude folders from all tools ---
   "files.watcherExclude": {
     "**/.git/objects/**": true,
     "**/.git/subtree-cache/**": true,
+    "**/node_modules/**": true,
     "**/node_modules/*/**": true,
     "**/.next/**": true,
+    "**/tmp/**": true,
     "**/build/**": true,
     "**/.gradle/**": true,
     "**/__pycache__/**": true,
@@ -41,14 +24,24 @@
     "**/venv": true
   },
 
+  // --- TypeScript server tuning ---
+  "typescript.tsserver.experimental.enableProjectDiagnostics": true,
+  "typescript.tsserver.useSyntaxServer": "auto",
+  "typescript.tsserver.log": "off",
+  "typescript.tsserver.watchOptions": {
+    "watchFile": "useFsEvents",
+    "watchDirectory": "useFsEvents"
+  },
+
   // --- Deno: Only enable for the web app ---
   "deno.enable": true,
   "deno.enablePaths": [
     "apps/web"
   ],
 
-  // --- Git: ensure VS Code uses a portable binary path ---
-  "git.path": "/opt/homebrew/bin/git",
+  // --- Git: point to a present binary to avoid ENOENT ---
+  "git.path": "/usr/bin/git",
+
   // --- ESLint: Specify the working directory ---
   "eslint.workingDirectories": [
     "./apps/web"
@@ -80,19 +73,11 @@
   "python-envs.defaultEnvManager": "ms-python.python:system",
   "python-envs.pythonProjects": [],
 
-  // --- Analytics & Traceability: Prioritize KPIs, dashboards, and auditability ---
+  // --- Analytics & Traceability ---
   // Ensure all code changes for JS/TS run lint at repo root (see AGENTS.md)
   // Document public utilities in docs/ when changing behavior
 
-  // --- Collaboration & Best Practices ---
-  // Use standardized documentation and review checklists for all dashboard/KPI changes
-  // Maintain clear roles and context for all measurement and visualization outputs
-
   // --- Compliance & Security ---
-  // Mask PII in all dashboards and restrict access to sensitive data
-  // Log all dashboard actions and alert payloads for audit
-
-  // --- Continuous Learning ---
-  // Surface last refresh time, commit SHA, and contract links in dashboards
-  // Require multi-domain approval for KPI changes and dashboard rollouts
+  // Mask PII in dashboards and restrict access to sensitive data
+  // Log dashboard actions and alert payloads for audit
 }
