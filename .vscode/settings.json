@@ -39,8 +39,8 @@
     "apps/web"
   ],
 
-  // --- Git: point to a present binary to avoid ENOENT ---
-  "git.path": "/usr/bin/git",
+  // --- Git: rely on system PATH to avoid hard-coded paths ---
+  // "git.path": "/usr/bin/git",
 
   // --- ESLint: Specify the working directory ---
   "eslint.workingDirectories": [
