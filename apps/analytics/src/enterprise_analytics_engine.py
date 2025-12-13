@@ -1,21 +1,11 @@
 import numpy as np
-<<<<<<< HEAD
-<<<<<<< HEAD
-from typing import Dict, Optional, Protocol, runtime_checkable
-=======
 import pandas as pd
 from typing import Dict, List, Optional, Protocol, runtime_checkable
->>>>>>> origin/main
-
 
 @runtime_checkable
 class KPIExporter(Protocol):
     def upload_metrics(self, metrics: Dict[str, float], blob_name: Optional[str] = None) -> str:
         ...
-=======
-import pandas as pd
-from typing import Dict, List
->>>>>>> origin/main
 
 class LoanAnalyticsEngine:
     """
