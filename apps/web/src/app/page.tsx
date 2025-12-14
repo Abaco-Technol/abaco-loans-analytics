@@ -43,7 +43,7 @@ async function getData(): Promise<LandingPageData> {
       error: error ?? undefined,
       payload: fallbackData,
     })
-    console.error('Error fetching landing page data:', error)
+    console.error('Error fetching landing page data:', error ?? 'Response contained no data')
     return fallbackData
   }
 
