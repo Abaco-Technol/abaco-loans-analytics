@@ -42,9 +42,8 @@ class LoanAnalyticsEngine:
         return cls(frame, config=config)
 
     def _prepare_data(self, frame: pd.DataFrame) -> pd.DataFrame:
-        if missing := [
-            col for col in self.required_columns if col not in frame.columns
-        ]:
+        missing = [col for col in self.required_columns if col not in frame.columns]
+        if missing:
             raise ValueError(f"Missing required columns: {', '.join(sorted(missing))}")
 
         frame["origination_date"] = pd.to_datetime(
