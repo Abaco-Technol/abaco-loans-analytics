@@ -27,7 +27,7 @@
   - Net interest after warehouse ~$70K; bad debt reserve ~$10K (1.66% of AUM per year, accrued monthly); platform costs ~$2K (0.3% per year, accrued monthly).
   - Net contribution ~$58K/month before OpEx; OpEx ~$35K; EBITDA ≈ +$23K/month; runway ~18 months if flat; all assumptions logged in the finance KPI workbook with owner (CFO) and refresh cadence (weekly).
 - **Data quality:** 78% overall; critical fields 95%+; important 82%; optional 45%; 23 loans missing KAM; remediation weekly, target >95% by Nov-2025.
-- **Entity status:** Abaco Financial ~$0K AUM (collapsed Sep-2025); Abaco Technologies ~$7,368K AUM (100% current); migration complete; KAMs 4 with top KAM at 35% volume; 12 industries with B2B Services 40% of AUM; Central America 90%+.
+- **Entity status:** Abaco Financial ~$0K AUM (collapsed Sep-2025); Abaco Technologies ~$7,368K AUM (100% current); migration complete; 4 KAMs, with the top KAM at 35% of volume; 12 industries with B2B Services 40% of AUM; Central America 90%+.
 
 ---
 
