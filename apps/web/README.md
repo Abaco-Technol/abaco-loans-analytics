@@ -69,7 +69,7 @@ Run all quality checks locally before pushing:
 
 ```bash
 cd apps/web
-npm ci
+npm ci --legacy-peer-deps
 npm run lint
 npm run type-check
 npm run build
@@ -91,3 +91,45 @@ See **[CLAUDE.md](./CLAUDE.md)** for:
 - Monitoring & error tracking setup
 - Rollback procedures
 - Staging workflow
+
+## Monitoring and Rollback Strategy
+
+### Monitoring
+We recommend integrating Sentry for error tracking and performance monitoring. To set up Sentry:
+
+1. Install the Sentry SDK for Next.js:
+   ```bash
+   npm install @sentry/nextjs
+   ```
+
+2. Initialize Sentry in your Next.js application by creating the following files:
+   - `sentry.server.config.ts`:
+     ```typescript
+     import * as Sentry from '@sentry/nextjs';
+
+     Sentry.init({
+       dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
+       tracesSampleRate: 1.0,
+     });
+     ```
+
+   - `sentry.client.config.ts`:
+     ```typescript
+     import * as Sentry from '@sentry/nextjs';
+
+     Sentry.init({
+       dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
+       tracesSampleRate: 1.0,
+     });
+     ```
+
+3. Ensure the `NEXT_PUBLIC_SENTRY_DSN` environment variable is set in your deployment environments.
+
+### Rollback
+To rollback a bad deployment on Vercel:
+
+1. Go to the [Vercel Dashboard](https://vercel.com/dashboard).
+2. Select your project and navigate to the "Deployments" tab.
+3. Find the last stable deployment and click "Redeploy".
+
+This will revert your application to the previous stable version.

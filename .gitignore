@@ -25,3 +25,4 @@ node_modules/
 
 clean_settings.json
 tailwind.config.js
+.vercel
