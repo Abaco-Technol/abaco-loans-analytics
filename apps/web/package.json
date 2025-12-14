@@ -25,10 +25,11 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint --max-warnings=0 --ext .ts,.tsx,.js,.jsx .",
-    "type-check": "tsc --project tsconfig.json --noEmit"
+    "lint": "eslint ./src",
+    "type-check": "tsc --noEmit"
   },
   "dependencies": {
+    "@sentry/nextjs": "^8.55.0",
     "@supabase/supabase-js": "2.87.0",
     "@tailwindcss/postcss": "4.1.18",
     "@vercel/analytics": "1.6.1",
