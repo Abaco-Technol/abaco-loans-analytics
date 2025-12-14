@@ -12,10 +12,10 @@ import {
 } from '../types/landingPage'
 
 const fallbackData: LandingPageData = {
-  metrics: metrics.map((item) => ({ ...item })),
-  products: products.map((item) => ({ ...item })),
-  controls: [...controls],
-  steps: steps.map((item) => ({ ...item })),
+  metrics,
+  products,
+  controls,
+  steps,
 }
 
 async function getData(): Promise<LandingPageData> {
