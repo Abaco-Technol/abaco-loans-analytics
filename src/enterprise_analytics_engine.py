@@ -226,10 +226,9 @@ class LoanAnalyticsEngine:
         # To ensure consistent processing, we normalize `keys` to a tuple in both cases.
         # This allows zip(segment_by, keys) to work regardless of the number of grouping columns.
         for keys, frame in grouped:
-            metrics = self._portfolio_kpis_from_frame(frame.reset_index(drop=True))
             # Normalize keys to tuple for consistent processing
-            if not isinstance(keys, tuple):
-                keys = (keys,)
+            keys = keys if isinstance(keys, tuple) else (keys,)
+            metrics = self._portfolio_kpis_from_frame(frame.reset_index(drop=True))
             rows.append({**dict(zip(segment_by, keys)), **metrics})
         return pd.DataFrame(rows)
 
