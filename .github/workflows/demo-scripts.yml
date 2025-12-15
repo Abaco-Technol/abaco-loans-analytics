@@ -48,7 +48,7 @@ jobs:
             --text demo_output.txt \
             --images dpd_distribution.png exposure_distribution.png
       - name: Upload Demo Output
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: financial-analysis-demo
           path: |
