@@ -1,0 +1,71 @@
+name: Automatic Dependency Submission
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "30 3 * * *"
+
+jobs:
+  submit-gradle:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - id: detect-gradle
+        name: Detect Gradle project
+        shell: bash
+        run: |
+          if [ -x "./gradlew" ]; then
+            echo "has-gradle=true" >> "$GITHUB_OUTPUT"
+          elif [ -f build.gradle ] || [ -f settings.gradle ]; then
+            echo "has-gradle=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has-gradle=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::No Gradle wrapper or build file found; skipping submission"
+          fi
+      - if: steps.detect-gradle.outputs.has-gradle == 'true'
+        name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          java-version: "21"
+          distribution: "temurin"
+      - if: steps.detect-gradle.outputs.has-gradle == 'true'
+        name: Submit Gradle dependencies
+        uses: gradle/actions/dependency-submission@v3
+      - if: steps.detect-gradle.outputs.has-gradle != 'true'
+        name: Skip Gradle submission
+        run: echo "Gradle project not detected; job completed"
+
+  submit-nuget:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - id: detect-dotnet
+        name: Detect .NET project files
+        shell: bash
+        run: |
+          files=$(find . -type f \( -name "*.csproj" -o -name "*.sln" -o -name "*.vbproj" -o -name "*.fsproj" \) | grep -v '/bin/' | grep -v '/obj/' | head -20)
+          if [ -z "$files" ]; then
+            echo "has-dotnet=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::No .NET project files found; skipping submission"
+          else
+            echo "has-dotnet=true" >> "$GITHUB_OUTPUT"
+            echo "files<<EOF" >> "$GITHUB_OUTPUT"
+            echo "$files" >> "$GITHUB_OUTPUT"
+            echo "EOF" >> "$GITHUB_OUTPUT"
+          fi
+      - if: steps.detect-dotnet.outputs.has-dotnet == 'true'
+        name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+      - if: steps.detect-dotnet.outputs.has-dotnet == 'true'
+        name: Restore detected projects
+        shell: bash
+        run: |
+          while IFS= read -r project; do
+            echo "Restoring $project"
+            dotnet restore "$project"
+          done <<< "${{ steps.detect-dotnet.outputs.files }}"
+      - if: steps.detect-dotnet.outputs.has-dotnet != 'true'
+        name: Skip NuGet submission
+        run: echo "No NuGet projects detected; job completed"
