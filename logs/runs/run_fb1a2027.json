@@ -1,0 +1,33 @@
+{
+  "run_id": "run_fb1a2027",
+  "started_at": "2025-12-15T08:36:46.014268+00:00",
+  "input_file": "data/abaco_portfolio_calculations.csv",
+  "errors": [
+    {
+      "stage": "validation",
+      "error": "Column failed percentage bounds check: collateralization_pct_in_0_100",
+      "timestamp": "2025-12-15T08:36:46.014314+00:00",
+      "run_id": "run_fb1a2027"
+    }
+  ],
+  "kpis": {},
+  "kpi_audit_trail": [],
+  "ingest": {
+    "rows_ingested": 10,
+    "files": {
+      "abaco_portfolio_calculations.csv": 10
+    },
+    "run_id": "run_fb1a2027",
+    "timestamp": "2025-12-15T08:36:46.014314+00:00",
+    "total_errors": 1,
+    "errors": [
+      {
+        "stage": "validation",
+        "error": "Column failed percentage bounds check: collateralization_pct_in_0_100",
+        "timestamp": "2025-12-15T08:36:46.014314+00:00",
+        "run_id": "run_fb1a2027"
+      }
+    ]
+  },
+  "transform_run_id": "tx_b914d9fa8d8440ef"
+}

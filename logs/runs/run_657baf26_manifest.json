@@ -1,0 +1,19 @@
+{
+  "run_id": "run_657baf26",
+  "metrics_file": "data/metrics/run_657baf26.parquet",
+  "csv_file": "data/metrics/run_657baf26.csv",
+  "audit_file": "logs/runs/run_657baf26.json",
+  "timestamp": "2025-12-15T08:13:00.587202+00:00",
+  "kpis": {},
+  "errors": [
+    {
+      "stage": "validation",
+      "error": "Column failed percentage bounds check: collateralization_pct_in_0_100",
+      "timestamp": "2025-12-15T08:13:00.587240+00:00",
+      "run_id": "run_657baf26"
+    }
+  ],
+  "kpi_audit_trail": [],
+  "ingest": {},
+  "transform_run_id": null
+}

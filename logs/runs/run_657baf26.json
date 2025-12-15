@@ -1,0 +1,14 @@
+{
+  "run_id": "run_657baf26",
+  "started_at": "2025-12-15T08:13:00.587202+00:00",
+  "input_file": "data/abaco_portfolio_calculations.csv",
+  "errors": [
+    {
+      "stage": "validation",
+      "error": "Column failed percentage bounds check: collateralization_pct_in_0_100",
+      "timestamp": "2025-12-15T08:13:00.587240+00:00",
+      "run_id": "run_657baf26"
+    }
+  ],
+  "kpis": {}
+}
