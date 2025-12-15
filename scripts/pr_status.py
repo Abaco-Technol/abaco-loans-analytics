@@ -7,7 +7,7 @@ from typing import Dict, List, Optional
 
 import requests
 
-DEFAULT_REPO = "Abaco-Technol/abaco-loans-analytics"
+DEFAULT_REPO = "Abaco-Technologies/abaco-loans-analytics"
 API_ROOT = "https://api.github.com/repos"
 
 
