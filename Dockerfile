@@ -18,11 +18,11 @@ RUN npm run build
 # Production stage
 FROM node:20-alpine
 
-WORKDIR /app
-
 # Create non-root user for security
 RUN addgroup -g 1001 -S nodejs && \
     adduser -S nextjs -u 1001
+
+WORKDIR /app
 
 # Copy built application from builder
 COPY --from=builder --chown=nextjs:nodejs /app/.next ./.next
@@ -43,3 +43,9 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
   CMD node -e "require('http').get('http://localhost:3000', (r) => {if (r.statusCode !== 200) throw new Error(r.statusCode)})"
 
 CMD ["npm", "start"]
+
+RUN adduser --system --home /app appuser
+WORKDIR /app
+COPY . .
+RUN chown -R appuser:appuser /app
+USER appuser

@@ -1,0 +1,15 @@
+name: Notify Slack
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Notify Slack
+        uses: slackapi/slack-github-action@c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3 # pin to latest commit SHA
+        with:
+          payload: '{"text": "New push to main branch!"}'

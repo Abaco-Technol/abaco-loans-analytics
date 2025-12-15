@@ -116,7 +116,7 @@ def test_rotation_target_boundary_condition():
 def test_check_rotation_target_zero_average_balance():
     rotation, meets, message = MYPEBusinessRules.check_rotation_target(total_revenue=100000, avg_balance=0.0)
 
-    assert rotation == 0.0
+    assert rotation == pytest.approx(0.0)
     assert meets is False
     assert message == "Average balance unavailable"
 

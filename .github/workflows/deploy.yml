@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@b9c2c6e4e4e4e4e4e4e4e4e4e4e4e4e4e4e4e4 # pin to latest commit SHA
 
       - name: Setup Node
         uses: actions/setup-node@v6

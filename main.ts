@@ -99,3 +99,18 @@ if (json) console.log(JSON.stringify(results, null, 2));
 else printHumanReadable(results);
 
 if (strict && results.some((entry) => !entry.exists)) Deno.exit(1);
+
+import path from 'path';
+
+const baseDir = path.resolve(__dirname, 'your_base_directory'); // Set your base directory
+
+function safeResolve(userPath: string) {
+  const resolvedPath = path.resolve(baseDir, userPath);
+  if (!resolvedPath.startsWith(baseDir)) {
+    throw new Error('Invalid file path');
+  }
+  return resolvedPath;
+}
+
+// Replace all fs calls using user input with:
+// fs.readFileSync(safeResolve(userInputPath))

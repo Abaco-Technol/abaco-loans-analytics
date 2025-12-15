@@ -1,0 +1,7 @@
+# ...existing code...
+RUN adduser --system --home /app appuser
+WORKDIR /app
+COPY . .
+RUN chown -R appuser:appuser /app
+USER appuser
+# ...existing code...
