@@ -103,7 +103,7 @@ class LoanAnalyticsEngine:
             - Weighted interest rate: np.average(interest_rate, weights=outstanding_principal or principal)
             - Non-performing loan ratio: sum(outstanding_principal for loans in arrears or defaulted) / total_outstanding
             - Default rate: number of defaulted loans / total number of loans
-            - Loss given default: see _loss_given_default() for details
+            - Loss given default: sum(charge_off_amount - recoveries) / sum(exposure_at_default) for defaulted loans
             - Prepayment rate: sum(paid_principal) / sum(principal)
             - Repayment velocity: see _repayment_velocity() for details
 
