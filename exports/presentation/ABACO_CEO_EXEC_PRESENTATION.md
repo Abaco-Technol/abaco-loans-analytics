@@ -44,7 +44,7 @@
 - **Target metrics (Dec-26):** Default <1.5%; Top-10 concentration 22%; single-obligor 2% (<4% policy); rotation ≥4.5x (today 5.5x); DPD mean <10 days; weighted APR 26-28%; utilization 70-75%; data quality >95%.
 
 **KPI governance & dashboards (traceability and auditability):**
-- **Owners & cadence:** Finance (CFO) owns capital/EBITDA KPIs; Risk (CRO) owns DPD/default/concentration; Growth (CRO/CMO) owns CAC/LTV/activation; Product & Ops (CPO/COO) own STP/T2F and data quality. All KPIs refreshed weekly with monthly board-grade snapshots stored in the CEO OS.
+- **Owners & cadence:** Finance (CFO) owns capital/EBITDA KPIs; Risk (CRO) owns DPD/default/concentration; Growth (CRO/CMO) owns CAC/LTV/activation; Product & Ops (CPO/COO) own STP/T2F and data quality. All KPIs are refreshed weekly, with monthly board-grade snapshots stored in the CEO OS.
 - **Dashboards:** Unified CEO OS dashboard with drill-through to credit, sales, and funding workspaces; lineage documented (source tables, transformations, definitions) to satisfy audit and compliance.
 - **Controls:** Role-based permissions; change log for metric definitions; reconciliations monthly (finance vs. data warehouse) to ensure measurement integrity.
 
