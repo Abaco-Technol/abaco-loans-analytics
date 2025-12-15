@@ -16,6 +16,15 @@ REQUIRED_KPI_COLUMNS = [
 
 DELINQUENT_STATUSES = ["30-59 days past due", "60-89 days past due", "90+ days past due"]
 
+NUMERIC_KPI_COLUMNS = [
+    "loan_amount",
+    "appraised_value",
+    "borrower_income",
+    "monthly_debt",
+    "interest_rate",
+    "principal_balance",
+]
+
 def _coerce_numeric(series: pd.Series, field_name: str) -> pd.Series:
     """Convert a series to numeric values, preserving NaNs for validation visibility."""
 
@@ -75,6 +84,49 @@ def weighted_portfolio_yield(interest_rates: pd.Series, principal_balances: pd.S
     return (weighted_interest / total_principal) * 100
 
 
+def _average_null_ratio(loan_data: pd.DataFrame) -> float:
+    total_cells = loan_data.size
+    if total_cells == 0:
+        return 0.0
+    null_count = loan_data.isna().sum().sum()
+    return null_count / total_cells
+
+
+def _invalid_numeric_ratio(loan_data: pd.DataFrame) -> float:
+    total_cells = 0
+    invalid_cells = 0
+    for column in NUMERIC_KPI_COLUMNS:
+        if column not in loan_data.columns:
+            continue
+        series = loan_data[column]
+        coerced = pd.to_numeric(series, errors="coerce")
+        total_cells += len(series)
+        invalid_cells += int((coerced.isna() & series.notna()).sum())
+    if total_cells == 0:
+        return 0.0
+    return invalid_cells / total_cells
+
+
+def _duplicate_ratio(loan_data: pd.DataFrame) -> float:
+    if loan_data.empty:
+        return 0.0
+    return float(loan_data.duplicated().mean())
+
+
+def _data_quality_score(loan_data: pd.DataFrame) -> Dict[str, float]:
+    null_ratio = _average_null_ratio(loan_data)
+    invalid_ratio = _invalid_numeric_ratio(loan_data)
+    duplicate_ratio = _duplicate_ratio(loan_data)
+
+    score = max(0.0, 100 - (null_ratio * 100) - (duplicate_ratio * 50) - (invalid_ratio * 60))
+
+    return {
+        "data_quality_score": round(score, 2),
+        "average_null_ratio_percent": round(null_ratio * 100, 2),
+        "invalid_numeric_ratio_percent": round(invalid_ratio * 100, 2),
+    }
+
+
 def portfolio_kpis(loan_data: pd.DataFrame) -> Dict[str, float]:
     """Aggregate portfolio KPIs used across analytics modules."""
     validate_kpi_columns(loan_data)
@@ -92,6 +144,7 @@ def portfolio_kpis(loan_data: pd.DataFrame) -> Dict[str, float]:
 
     avg_ltv = ltv_series.mean(skipna=True)
     avg_dti = dti_series.mean(skipna=True)
+    quality = _data_quality_score(loan_data)
 
     return {
         "portfolio_delinquency_rate_percent": portfolio_delinquency_rate(
@@ -102,4 +155,7 @@ def portfolio_kpis(loan_data: pd.DataFrame) -> Dict[str, float]:
         ),
         "average_ltv_ratio_percent": float(avg_ltv if not np.isnan(avg_ltv) else 0.0),
         "average_dti_ratio_percent": float(avg_dti if not np.isnan(avg_dti) else 0.0),
+        "data_quality_score": quality["data_quality_score"],
+        "average_null_ratio_percent": quality["average_null_ratio_percent"],
+        "invalid_numeric_ratio_percent": quality["invalid_numeric_ratio_percent"],
     }

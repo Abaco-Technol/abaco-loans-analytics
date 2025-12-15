@@ -29,8 +29,29 @@ jobs:
             const currentAssignees = pull.assignees.map(({ login }) => login);
             const currentReviewers = pull.requested_reviewers.map(({ login }) => login);
 
+            const filterCollaborators = async (logins) => {
+              const results = await Promise.all(
+                logins.map(async (login) => {
+                  try {
+                    await github.rest.repos.checkCollaborator({
+                      ...repo,
+                      username: login,
+                    });
+                    return login;
+                  } catch (error) {
+                    if (error.status === 404) {
+                      return null;
+                    }
+                    throw error;
+                  }
+                }),
+              );
+              return results.filter(Boolean);
+            };
+
             const assigneesToAdd = desiredAssignees.filter((login) => !currentAssignees.includes(login));
-            const reviewersToAdd = desiredReviewers.filter((login) => !currentReviewers.includes(login));
+            const pendingReviewers = desiredReviewers.filter((login) => !currentReviewers.includes(login));
+            const reviewersToAdd = await filterCollaborators(pendingReviewers);
 
             if (assigneesToAdd.length > 0) {
               await github.rest.issues.addAssignees({

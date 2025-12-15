@@ -1,0 +1,32 @@
+name: Run Repository Script
+
+on:
+  workflow_dispatch:
+    inputs:
+      command:
+        description: "Command to execute from the repository root"
+        required: true
+        default: "python scripts/trigger_workflows.py --help"
+
+jobs:
+  run-command:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Python dependencies
+        run: |
+          if [ -f requirements.txt ]; then
+            pip install --upgrade pip
+            pip install -r requirements.txt
+          fi
+
+      - name: Execute command
+        shell: bash
+        run: ${{ github.event.inputs.command }}
