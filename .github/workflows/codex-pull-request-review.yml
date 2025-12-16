@@ -1,6 +1,7 @@
 name: Codex pull request review
 
 on:
+  workflow_call:
   pull_request:
     types: [opened, synchronize, reopened]
 
@@ -25,13 +26,6 @@ jobs:
               repo,
               issue_number: pull_number,
               assignees: ['codex'],
-            });
-
-            await github.rest.pulls.requestReviewers({
-              owner,
-              repo,
-              pull_number,
-              reviewers: ['copilot'],
             });
 
   codex:
