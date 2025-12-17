@@ -1,3 +1,4 @@
+
 def calculate_portfolio_health(par_30: float, collection_rate: float) -> float:
     """
     Calculate portfolio health score (0-10).

@@ -12,25 +12,6 @@ import re
 import unicodedata
 from typing import Optional
 
-def define_ingestion_state(df: pd.DataFrame) -> dict:
-    """Return ingestion state summary for a DataFrame."""
-    return {
-        "rows": len(df),
-        "columns": len(df.columns),
-        "has_loan_base": "loan_status" in df.columns and "loan_amount" in df.columns and "principal_balance" in df.columns,
-    }
-
-def compute_roll_rates(df: pd.DataFrame) -> pd.DataFrame:
-    """Compute roll rates if required columns exist."""
-    if "dpd_status" not in df.columns or "loan_status" not in df.columns:
-        return pd.DataFrame({})
-    base = df.loc[df["dpd_status"].notna()]
-    transitions = (
-        base.groupby(["dpd_status", "loan_status"]).size().reset_index(name="count")
-        .assign(percent=lambda d: d["count"] / d["count"].sum() * 100)
-    )
-    return transitions
-
 import numpy as np
 import pandas as pd
 try:
@@ -48,6 +29,7 @@ from python.analytics import (
     project_growth,
 )
 from python.theme import ABACO_THEME
+from python.financial_analysis import FinancialAnalyzer
 from python.validation import safe_numeric
 
 
@@ -258,9 +240,15 @@ def ingest(file_obj, signature: Optional[str]) -> None:
         converted = safe_numeric(numeric_payload[col])
         if converted.notna().sum() > 0:
             numeric_payload[col] = converted
-    st.session_state["loan_data"] = numeric_payload
+    
+    # Phase 2 Integration: Apply Financial Analysis Enrichment
+    # This adds DPD buckets, exposure segments, and client types automatically.
+    analyzer = FinancialAnalyzer()
+    enriched_payload = analyzer.enrich_master_dataframe(numeric_payload)
+    
+    st.session_state["loan_data"] = enriched_payload
     st.session_state["ingestion_state"] = define_ingestion_state(
-        numeric_payload
+        enriched_payload
     )
     st.session_state["last_upload_signature"] = signature
     st.session_state["last_ingested_at"] = pd.Timestamp.now()
@@ -305,6 +293,16 @@ if missing_required_columns:
     )
     st.stop()
 
+# --- Data Quality Error Surfacing ---
+def get_validation_errors(df: pd.DataFrame):
+    """Run all validation checks and return a list of error messages."""
+    from python.ingestion import CascadeIngestion
+    ci = CascadeIngestion()
+    ci.errors.clear()
+    ci.validate_loans(df)
+    return ci.errors
+
+
 st.markdown("## Data Quality Audit")
 quality_score = calculate_quality_score(loan_df)
 st.progress(quality_score / 100)
@@ -312,6 +310,14 @@ st.markdown(
     "Critical tables scored, missing columns handled, and zeros penalized "
     "before KPI synthesis."
 )
+
+# Surface validation errors in dashboard
+validation_errors = get_validation_errors(loan_df)
+if validation_errors:
+    st.error("Data quality validation failed. See details below:")
+    for err in validation_errors:
+        st.markdown(f"- **{err.get('stage', 'validation')}**: {err.get('error')}")
+    st.stop()
 
 st.markdown("## Payer Coverage Scan")
 payer_column = select_payer_column(loan_df)
@@ -382,6 +388,24 @@ alerts = enriched_df[enriched_df["ltv_ratio"] > 90].assign(
 st.dataframe(
     alerts[["alert_type", "ltv_ratio", "probability"]], hide_index=True
 )
+
+st.markdown("## Portfolio Segmentation (Phase 2)")
+if "exposure_segment" in loan_df.columns:
+    col1, col2 = st.columns(2)
+    with col1:
+        seg_counts = loan_df["exposure_segment"].value_counts().reset_index()
+        seg_counts.columns = ["Segment", "Count"]
+        fig_seg = px.bar(seg_counts, x="Segment", y="Count", title="Client Exposure Segments")
+        apply_theme(fig_seg)
+        st.plotly_chart(fig_seg, use_container_width=True)
+    
+    with col2:
+        if "dpd_bucket" in loan_df.columns:
+            dpd_counts = loan_df["dpd_bucket"].value_counts().reset_index()
+            dpd_counts.columns = ["DPD Bucket", "Count"]
+            fig_dpd = px.bar(dpd_counts, x="DPD Bucket", y="Count", title="Delinquency Buckets")
+            apply_theme(fig_dpd)
+            st.plotly_chart(fig_dpd, use_container_width=True)
 
 st.markdown("## Growth & Marketing Analysis")
 targets = {
