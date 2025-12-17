@@ -1,1 +1,50 @@
-name: CI
+
+name: CI Main
+
+on:
+	push:
+		branches: [main, develop]
+	pull_request:
+		branches: [main, develop]
+	workflow_dispatch:
+	schedule:
+		- cron: '0 3 * * *' # Nightly at 3am UTC
+
+jobs:
+	analytics:
+		runs-on: ubuntu-latest
+		env:
+			NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+			NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_PUBLIC_KEY }}
+		steps:
+			- uses: actions/checkout@v4
+			- uses: actions/setup-python@v5
+				with:
+					python-version: "3.11"
+			- name: Install
+				run: |
+					cd apps/analytics
+					pip install -r requirements.txt
+			- name: Validate
+				run: |
+					python -c "import pandas as pd; print('Environment ready. Pandas version:', pd.__version__)"
+			- name: Tests and coverage
+				run: |
+					cd apps/analytics
+					pytest --cov=. --cov-report=xml:../coverage-python.xml
+			- name: Upload coverage artifact
+				uses: actions/upload-artifact@v5
+				with:
+					name: analytics-coverage
+					path: coverage-python.xml
+			- name: Check for Supabase URL and Anon Key
+				run: |
+					if [ -z "$NEXT_PUBLIC_SUPABASE_URL" ] && [ -z "$SUPABASE_URL" ]; then
+						echo "Supabase URL is not set. Skipping related tasks."
+						exit 1
+					fi
+					if [ -z "$NEXT_PUBLIC_SUPABASE_ANON_KEY" ] && [ -z "$SUPABASE_ANON_PUBLIC_KEY" ]; then
+						echo "Supabase Anon Key is not set. Skipping related tasks."
+						exit 1
+					fi
+					echo "Supabase URL and Anon Key are set."
