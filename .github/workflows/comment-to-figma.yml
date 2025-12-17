@@ -1,3 +1,4 @@
+# Trigger workflow registration
 name: Comment to Figma
 
 on:
