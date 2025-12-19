@@ -16,7 +16,7 @@ export function SkipLink({ targetId = 'main-content' }: SkipLinkProps) {
       }
 
       event.preventDefault()
-      target.focus()
+      target.focus({ preventScroll: true })
 
       const prefersReducedMotion =
         typeof window !== 'undefined' &&
