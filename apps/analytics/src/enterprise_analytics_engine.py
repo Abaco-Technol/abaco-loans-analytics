@@ -1,6 +1,7 @@
 """
 Enterprise Analytics Engine for loan portfolio KPI computation and risk analysis.
 """
+
 from __future__ import annotations
 
 import logging
@@ -10,12 +11,13 @@ import numpy as np
 import pandas as pd
 
 from python.validation import (
-    REQUIRED_ANALYTICS_COLUMNS,
     ANALYTICS_NUMERIC_COLUMNS,
+    REQUIRED_ANALYTICS_COLUMNS,
     validate_dataframe,
 )
 
 logger = logging.getLogger(__name__)
+
 
 @runtime_checkable
 class KPIExporter(Protocol):
@@ -26,7 +28,12 @@ class KPIExporter(Protocol):
         metrics: Dict[str, float],
         blob_name: Optional[str] = None,
     ) -> str:
+        """Upload KPI metrics to a remote store or blob."""
         raise NotImplementedError("KPIExporter must implement upload_metrics")
+
+    def get_exporter_info(self) -> str:
+        """Return a short description of the exporter implementation."""
+        raise NotImplementedError("KPIExporter must implement get_exporter_info")
 
 
 class LoanAnalyticsEngine:
@@ -41,9 +48,7 @@ class LoanAnalyticsEngine:
 
     def __init__(self, loan_data: pd.DataFrame):
         if not isinstance(loan_data, pd.DataFrame) or loan_data.empty:
-            raise ValueError(
-                "Input loan_data must be a non-empty pandas DataFrame."
-            )
+            raise ValueError("Input loan_data must be a non-empty pandas DataFrame.")
         self.loan_data = loan_data.copy()
         self._validate_columns()
         self._coercion_report = self._coerce_numeric_columns()
@@ -121,13 +126,9 @@ class LoanAnalyticsEngine:
             "60-89 days past due",
             "90+ days past due",
         ]
-        delinquent_count = self.loan_data["loan_status"].isin(
-            delinquent_statuses
-        ).sum()
+        delinquent_count = self.loan_data["loan_status"].isin(delinquent_statuses).sum()
         total_loans = len(self.loan_data)
-        return (
-            (delinquent_count / total_loans) * 100 if total_loans > 0 else 0.0
-        )
+        return (delinquent_count / total_loans) * 100 if total_loans > 0 else 0.0
 
     def compute_portfolio_yield(self) -> float:
         """Compute weighted average portfolio yield (percent)."""
@@ -144,9 +145,7 @@ class LoanAnalyticsEngine:
         """Generate lightweight data quality metrics for auditability."""
         null_ratio = float(self.loan_data.isna().mean().mean())
         duplicate_ratio = float(self.loan_data.duplicated().mean())
-        numeric_cols = [
-            col for col in ANALYTICS_NUMERIC_COLUMNS if col in self.loan_data.columns
-        ]
+        numeric_cols = [col for col in ANALYTICS_NUMERIC_COLUMNS if col in self.loan_data.columns]
         total_numeric_cells = (
             len(self.loan_data) * len(numeric_cols) if len(self.loan_data) > 0 else 0
         )
@@ -179,19 +178,14 @@ class LoanAnalyticsEngine:
             dti_ratio=dti,
         )
         alerts = alerts[
-            (alerts["ltv_ratio"] > ltv_threshold)
-            | (alerts["dti_ratio"] > dti_threshold)
+            (alerts["ltv_ratio"] > ltv_threshold) | (alerts["dti_ratio"] > dti_threshold)
         ]
         if alerts.empty:
             return alerts
 
         alerts = alerts.copy()
-        alerts["ltv_component"] = np.clip(
-            (alerts["ltv_ratio"] - ltv_threshold) / 20, 0, 1
-        )
-        alerts["dti_component"] = np.clip(
-            (alerts["dti_ratio"] - dti_threshold) / 30, 0, 1
-        )
+        alerts["ltv_component"] = np.clip((alerts["ltv_ratio"] - ltv_threshold) / 20, 0, 1)
+        alerts["dti_component"] = np.clip((alerts["dti_ratio"] - dti_threshold) / 30, 0, 1)
         ltv_valid = alerts["ltv_component"].notna()
         dti_valid = alerts["dti_component"].notna()
         alerts["risk_score"] = np.where(
@@ -212,9 +206,7 @@ class LoanAnalyticsEngine:
         quality = self.data_quality_profile()
 
         return {
-            "portfolio_delinquency_rate_percent": (
-                self.compute_delinquency_rate()
-            ),
+            "portfolio_delinquency_rate_percent": (self.compute_delinquency_rate()),
             "portfolio_yield_percent": self.compute_portfolio_yield(),
             "average_ltv_ratio_percent": float(ltv_ratio.mean(skipna=True)),
             "average_dti_ratio_percent": float(dti_ratio.mean(skipna=True)),
