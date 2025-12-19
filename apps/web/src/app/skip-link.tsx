@@ -17,7 +17,16 @@ export function SkipLink({ targetId = 'main-content' }: SkipLinkProps) {
 
       event.preventDefault()
       target.focus()
-      target.scrollIntoView({ behavior: 'smooth', block: 'start' })
+
+      const prefersReducedMotion =
+        typeof window !== 'undefined' &&
+        typeof window.matchMedia === 'function' &&
+        window.matchMedia('(prefers-reduced-motion: reduce)').matches
+
+      target.scrollIntoView({
+        behavior: prefersReducedMotion ? 'auto' : 'smooth',
+        block: 'start',
+      })
     },
     [targetId],
   )
