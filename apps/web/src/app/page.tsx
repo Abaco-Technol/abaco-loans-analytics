@@ -12,10 +12,10 @@ import {
 } from '../types/landingPage'
 
 const fallbackData: LandingPageData = {
-  metrics,
-  products,
-  controls,
-  steps,
+  metrics: metrics.map((item) => ({ ...item })),
+  products: products.map((item) => ({ ...item })),
+  controls: [...controls],
+  steps: steps.map((item) => ({ ...item })),
 }
 
 async function getData(): Promise<LandingPageData> {
@@ -43,7 +43,7 @@ async function getData(): Promise<LandingPageData> {
       error: error ?? undefined,
       payload: fallbackData,
     })
-    console.error('Error fetching landing page data:', error ?? 'Response contained no data')
+    console.error(error ? 'Error fetching landing page data:' : 'Landing page data is missing from Supabase response', error ?? '')
     return fallbackData
   }
 
