@@ -21,11 +21,6 @@ const fallbackData: LandingPageData = {
 async function getData(): Promise<LandingPageData> {
   if (!supabase || !isSupabaseConfigured) {
     logLandingPageDiagnostic({
-      payload: fallbackData,
-    })
-    console.warn('Supabase environment variables are missing; using fallback landing page data')
-    return fallbackData
-  }
       status: 'missing-config',
       supabaseConfigured: false,
       payload: EMPTY_LANDING_PAGE_DATA,
