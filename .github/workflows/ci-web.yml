@@ -16,14 +16,16 @@ jobs:
   assignee-check:
     if: github.event_name == 'pull_request'
     uses: ./.github/workflows/pr-assignee-check.yml
+    with:
+      assignees: ${{ toJson(github.event.pull_request.assignees) }}
 
   build-pr:
     needs: assignee-check
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v4 # Replace with @<COMMIT_HASH> for pinning
+      - uses: actions/setup-node@v4 # Replace with @<COMMIT_HASH> for pinning
         with:
           node-version: 20
           cache: 'npm'
@@ -31,7 +33,7 @@ jobs:
       - name: Install
         run: |
           cd apps/web
-          npm ci
+          npm ci --ignore-scripts
       - name: Type-check
         run: |
           cd apps/web
@@ -54,8 +56,8 @@ jobs:
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v4 # Replace with @<COMMIT_HASH> for pinning
+      - uses: actions/setup-node@v4 # Replace with @<COMMIT_HASH> for pinning
         with:
           node-version: 20
           cache: 'npm'
@@ -63,7 +65,7 @@ jobs:
       - name: Install
         run: |
           cd apps/web
-          npm ci
+          npm ci --ignore-scripts
       - name: Type-check
         run: |
           cd apps/web

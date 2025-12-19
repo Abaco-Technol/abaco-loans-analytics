@@ -1,10 +1,11 @@
-name: Automatic Dependency Submission (Python)
+name: Automatic Dependency Submission
 
 on:
   push:
     branches: [main]
   pull_request:
     branches: [main]
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -14,8 +15,41 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Submit Dependency Snapshot
+      - name: Submit Dependency Snapshot (Python)
         run: echo "Dependency submission not configured"
+
+  submit-nuget:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Detect .NET manifests
+        id: detect_dotnet
+        run: |
+          manifests=$(git ls-files '*.csproj' '*.sln' '*.vbproj' '*.vcxproj' '*.fsproj' 'packages.config')
+          if [ -z "$manifests" ]; then
+            echo "has_manifests=false" >> "$GITHUB_OUTPUT"
+            echo "No .NET project files found; skipping NuGet dependency submission."
+          else
+            printf '%s\n' "$manifests" > dotnet-manifests.txt
+            echo "has_manifests=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Skip NuGet submission
+        if: steps.detect_dotnet.outputs.has_manifests != 'true'
+        run: echo "NuGet dependency submission skipped because no .NET manifests are present."
+
+      - name: Setup .NET
+        if: steps.detect_dotnet.outputs.has_manifests == 'true'
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Submit Dependency Snapshot (NuGet)
+        if: steps.detect_dotnet.outputs.has_manifests == 'true'
+        uses: actions/dependency-review-action@v4
+        with:
+          allow-licenses: ''
