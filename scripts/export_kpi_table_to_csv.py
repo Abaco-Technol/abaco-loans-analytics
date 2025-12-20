@@ -29,7 +29,7 @@ def md_table_to_csv(md_path, csv_path):
     for line in lines[start:]:
         if not line.strip().startswith("|"):
             break
-        if '---' not in line:
+        if "---" not in line:
             table_lines.append(line.strip())
     # Convert to CSV
     with open(csv_path, "w") as f:

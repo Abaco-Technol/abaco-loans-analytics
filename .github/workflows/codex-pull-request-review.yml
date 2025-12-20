@@ -29,7 +29,6 @@ jobs:
               issue_number: pullNumber,
               assignees: ['codex'],
             });
-
   codex_review:
     name: Run Codex Review
     needs: assign_metadata

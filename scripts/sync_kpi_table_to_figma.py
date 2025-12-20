@@ -4,6 +4,7 @@ from datetime import datetime
 
 import requests
 
+# Figma API settings
 FIGMA_TOKEN = os.getenv("FIGMA_TOKEN")
 FIGMA_FILE_KEY = os.getenv("FIGMA_FILE_KEY")
 if not FIGMA_TOKEN or not FIGMA_FILE_KEY:

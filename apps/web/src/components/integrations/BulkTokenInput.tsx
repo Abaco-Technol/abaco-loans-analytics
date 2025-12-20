@@ -213,19 +213,20 @@ function parseInput(input: string): BulkTokenItem[] {
     .map((line) => line.split(',').map((segment) => segment.trim()))
     .filter((parts) => parts.length >= 2)
     .map((parts) => {
-      const [rawPlatform, token, accountId] = parts;
-      const normalizedPlatform = rawPlatform?.toLowerCase() as Platform;
+      const [rawPlatform, token, accountId] = parts
+      const normalizedPlatform = rawPlatform?.toLowerCase() as Platform | undefined
+      if (!normalizedPlatform || !PLATFORMS.includes(normalizedPlatform)) {
+        return null
+      }
       return {
         platform: normalizedPlatform,
         token: token ?? '',
         accountId: accountId ?? '',
         status: 'pending' as ItemStatus,
         attempts: 0,
-      };
+      } as BulkTokenItem
     })
-    .filter(
-      (item): item is BulkTokenItem => !!item.platform && PLATFORMS.includes(item.platform)
-    );
+    .filter((item): item is BulkTokenItem => item !== null)
 }
 
 function waitForDelay(attempt: number) {

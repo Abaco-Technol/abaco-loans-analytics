@@ -130,22 +130,15 @@ class LoanAnalyticsEngine:
         total_loans = len(self.loan_data)
         return (delinquent_count / total_loans) * 100 if total_loans > 0 else 0.0
 
-    def compute_portfolio_yield(self) -> float:
-        """Compute weighted average portfolio yield (percent)."""
-        total_principal = self.loan_data["principal_balance"].sum()
-        if total_principal == 0:
-            return 0.0
-
-        weighted_interest = (
-            self.loan_data["interest_rate"] * self.loan_data["principal_balance"]
-        ).sum()
-        return (weighted_interest / total_principal) * 100
-
     def data_quality_profile(self) -> Dict[str, float]:
         """Generate lightweight data quality metrics for auditability."""
         null_ratio = float(self.loan_data.isna().mean().mean())
         duplicate_ratio = float(self.loan_data.duplicated().mean())
+
         numeric_cols = [col for col in ANALYTICS_NUMERIC_COLUMNS if col in self.loan_data.columns]
+
+        numeric_cols = [col for col in ANALYTICS_NUMERIC_COLUMNS if col in self.loan_data.columns]
+
         total_numeric_cells = (
             len(self.loan_data) * len(numeric_cols) if len(self.loan_data) > 0 else 0
         )
@@ -178,14 +171,21 @@ class LoanAnalyticsEngine:
             dti_ratio=dti,
         )
         alerts = alerts[
-            (alerts["ltv_ratio"] > ltv_threshold) | (alerts["dti_ratio"] > dti_threshold)
+            (alerts["ltv_ratio"] > ltv_threshold)
+            | (alerts["dti_ratio"] > dti_threshold)(alerts["ltv_ratio"] > ltv_threshold)
+            | (alerts["dti_ratio"] > dti_threshold)
         ]
         if alerts.empty:
             return alerts
 
         alerts = alerts.copy()
+
         alerts["ltv_component"] = np.clip((alerts["ltv_ratio"] - ltv_threshold) / 20, 0, 1)
         alerts["dti_component"] = np.clip((alerts["dti_ratio"] - dti_threshold) / 30, 0, 1)
+
+        alerts["ltv_component"] = np.clip((alerts["ltv_ratio"] - ltv_threshold) / 20, 0, 1)
+        alerts["dti_component"] = np.clip((alerts["dti_ratio"] - dti_threshold) / 30, 0, 1)
+
         ltv_valid = alerts["ltv_component"].notna()
         dti_valid = alerts["dti_component"].notna()
         alerts["risk_score"] = np.where(

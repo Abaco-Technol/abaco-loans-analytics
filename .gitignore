@@ -1,11 +1,3 @@
-<<<<<<< HEAD
-# Gradle
-.gradle/
-build/
-**/.gradle/
-**/build/
-=======
->>>>>>> main
 
 # OS
 .DS_Store
@@ -27,15 +19,11 @@ logs/
 # Build / tooling
 .gradle/
 .next/
-<<<<<<< HEAD
 .turbo/
 dist/
 coverage/
-=======
 out/
 build/
-dist/
->>>>>>> main
 
 # IDE
 .vscode/tasks.json

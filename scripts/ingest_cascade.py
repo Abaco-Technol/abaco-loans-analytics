@@ -20,6 +20,9 @@ Environment Variables:
     CASCADE_PID         Portfolio ID (default: abaco)
 
 For manual downloads, use the URLs documented in CASCADE_DATA_SOURCES.md
+
+For automated downloads, first run:
+    python scripts/scrape_cascade.py --loan-tape
 """
 
 import argparse
