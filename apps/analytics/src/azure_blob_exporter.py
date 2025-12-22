@@ -47,7 +47,7 @@ class AzureBlobKPIExporter:
         for key, value in metrics.items():
             if not isinstance(key, str) or not key.strip():
                 raise ValueError("Metric keys must be non-empty strings.")
-            if not isinstance(value, Number) or isinstance(value, bool):
+            if isinstance(value, bool) or not isinstance(value, Number):
                 raise ValueError("Metric values must be numeric.")
             normalized_metrics[key] = float(value)
 
