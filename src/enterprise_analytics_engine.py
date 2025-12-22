@@ -2,13 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-<<<<<<< HEAD
-from typing import Iterable, Tuple
-
-
-@dataclass(frozen=True)
-=======
-from typing import Iterable, List, Optional
+from typing import Iterable, Optional, Tuple
 
 import pandas as pd
 
@@ -184,8 +178,7 @@ class LoanAnalyticsEngine:
 
 
 # Backwards-compatible exports for legacy callers
-@dataclass
->>>>>>> c97a83f4 (Improve loan analytics validation and coverage)
+@dataclass(frozen=True)
 class LoanPosition:
     principal: float
     annual_interest_rate: float
