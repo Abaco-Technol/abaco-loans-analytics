@@ -30,6 +30,13 @@ export type Product = z.infer<typeof productSchema>
 export type Step = z.infer<typeof stepSchema>
 export type LandingPageData = z.infer<typeof landingPageDataSchema>
 
+export type MarketingContent = Readonly<{
+  metrics: readonly Metric[]
+  products: readonly Product[]
+  controls: readonly string[]
+  steps: readonly Step[]
+}>
+
 export const EMPTY_LANDING_PAGE_DATA: LandingPageData = Object.freeze(
   landingPageDataSchema.parse({})
 )
