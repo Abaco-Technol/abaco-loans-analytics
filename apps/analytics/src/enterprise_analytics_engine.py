@@ -58,7 +58,8 @@ class LoanAnalyticsEngine:
             out=np.full(loan_amounts.shape, np.nan, dtype=float),
             where=positive_appraisals.to_numpy(),
         ) * 100
-        ltv_series = pd.Series(ltv_values, index=self.loan_data.index)
+        ltv_clean = np.where(np.isfinite(ltv_values), ltv_values, np.nan)
+        ltv_series = pd.Series(ltv_clean, index=self.loan_data.index)
 
         self.loan_data['ltv_ratio'] = ltv_series
         return ltv_series
