@@ -36,7 +36,7 @@ class AzureBlobKPIExporter:
                 )
         self.container_name = str(container_name).strip()
 
-    def upload_metrics(self, metrics: Dict[str, float], blob_name: Optional[str] = None) -> str:
+    def upload_metrics(self, metrics: Dict[str, Number], blob_name: Optional[str] = None) -> str:
         if not isinstance(metrics, dict) or not metrics:
             raise ValueError("Metrics payload must be a non-empty dictionary.")
 
