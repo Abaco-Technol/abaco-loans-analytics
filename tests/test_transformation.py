@@ -33,7 +33,7 @@ def test_calculate_dpd_ratios():
     ratios = dt.calculate_dpd_ratios(sample_df())
     for key in ["dpd_0_7_usd", "dpd_7_30_usd", "dpd_30_60_usd", "dpd_60_90_usd", "dpd_90_plus_usd"]:
         assert key in ratios
-    total = 3000.0
+    total = sample_df()["total_receivable_usd"].sum()
     assert ratios["dpd_0_7_usd"] == pytest.approx((100 + 200) / total * 100)
     assert ratios["dpd_7_30_usd"] == pytest.approx((50 + 100) / total * 100)
     assert ratios["dpd_30_60_usd"] == pytest.approx((100 + 200) / total * 100)
