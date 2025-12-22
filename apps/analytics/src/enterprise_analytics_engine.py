@@ -138,7 +138,13 @@ class LoanAnalyticsEngine:
         duplicate_count = int(self.loan_data.duplicated().sum())
         total_rows = len(self.loan_data)
         duplicate_ratio = (duplicate_count / total_rows) if total_rows > 0 else 0.0
-        quality_score = max(0.0, min(100.0, (1 - ((null_ratio + invalid_numeric_ratio + duplicate_ratio) / 3)) * 100))
+        # Average of the issue ratios (nulls, invalid numerics, duplicates)
+        average_issue_ratio = (null_ratio + invalid_numeric_ratio + duplicate_ratio) / 3
+        # Convert to a quality score where 1.0 means perfect quality
+        raw_quality_score = 1 - average_issue_ratio
+        # Clamp raw score to [0.0, 1.0] for safety, then express as a percentage in [0.0, 100.0]
+        bounded_raw_score = max(0.0, min(1.0, raw_quality_score))
+        quality_score = bounded_raw_score * 100
 
         return {
             "average_null_ratio": null_ratio,
