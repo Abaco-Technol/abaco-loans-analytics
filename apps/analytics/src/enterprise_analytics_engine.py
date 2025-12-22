@@ -51,9 +51,14 @@ class LoanAnalyticsEngine:
         )
         loan_amounts = pd.to_numeric(self.loan_data['loan_amount'], errors='coerce')
 
-        valid_appraisals = appraised_values.where(lambda values: values > 0, np.nan)
-        ltv_series = loan_amounts.div(valid_appraisals).mul(100)
-        ltv_series = ltv_series.replace([np.inf, -np.inf], np.nan)
+        positive_appraisals = appraised_values > 0
+        ltv_values = np.divide(
+            loan_amounts.to_numpy(dtype=float),
+            appraised_values.to_numpy(dtype=float),
+            out=np.full(loan_amounts.shape, np.nan, dtype=float),
+            where=positive_appraisals.to_numpy(),
+        ) * 100
+        ltv_series = pd.Series(ltv_values, index=self.loan_data.index)
 
         self.loan_data['ltv_ratio'] = ltv_series
         return ltv_series
