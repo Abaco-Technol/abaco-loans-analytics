@@ -1,73 +1,75 @@
-<<<<<<< HEAD
-# Gradle
-.gradle/
-build/
-**/.gradle/
-**/build/
-=======
->>>>>>> main
-
-# OS
-.DS_Store
-
-# Python
-__pycache__/
-*.pyc
-.venv/
-venv/
-
-# Streamlit
-.streamlit/
-
-# Data outputs (NO versionar)
-data/metrics/
-data_samples/*.csv
-logs/
-
-# Build / tooling
-.gradle/
+# Node / JavaScript
+node_modules/
+**/node_modules/
 .next/
-<<<<<<< HEAD
 .turbo/
 dist/
 coverage/
-=======
 out/
+
+# Gradle
+.gradle/
+**/.gradle/
 build/
-dist/
->>>>>>> main
+**/build/
 
-# IDE
+# OS
+.DS_Store
+Thumbs.db
+apps/.DS_Store
+
+# Python
+.venv/
+venv/
+__pycache__/
+*.pyc
+
+# IDE / Editor
+.vscode/
 .vscode/tasks.json
-node_modules/
+.idea/
+*.vsix
 
+# Data outputs
+data/metrics/
+data_samples/
+data_samples/*.csv
+logs/
+logs/runs/*.json
+
+# Build / tooling artifacts
 clean_settings.json
-tailwind.config.js
 
 # Coverage
 .coverage
 .coverage.*
 htmlcov/
 
-<<<<<<< HEAD
-# Project-specific artifacts
-apps/.DS_Store
-
-# Local repository clones
-abaco-loans-analytics/
-data_samples/
-gemini-cli/
-
-# Environment & platform
-nvm/
-.env
-.env.local
-.env*.local
-.vercel/
-=======
 # Environment variables
 .env
 .env.local
 .env.*.local
->>>>>>> main
+.env*.local
+.vercel/
+nvm/
+
+# Project-specific artifacts
+abaco-loans-analytics/
+gemini-cli/
+
+# Other
+failed_workflows.csv
+*.csv
+# Environment & platform
+.env
+.env.local
+.env*.local
+.vercel/
+# Environment variables
+.env
+.env.local
+.env.*.local
 .vscode/
+=======
+node_modules
+node_modules

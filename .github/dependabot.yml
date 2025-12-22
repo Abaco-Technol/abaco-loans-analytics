@@ -1,36 +1,6 @@
 version: 2
-updates:
 <<<<<<< HEAD
-  - package-ecosystem: "npm"
-    directory: "/"
-    schedule: { interval: "weekly" }
-    open-pull-requests-limit: 10
-    assignees: ["codex"]
-    groups: { minor-and-patch: { update-types: ["minor", "patch"] } }
-
-  - package-ecosystem: "pip"
-    directory: "/"
-    schedule: { interval: "weekly" }
-    open-pull-requests-limit: 10
-    assignees: ["codex"]
-    groups: { minor-and-patch: { update-types: ["minor", "patch"] } }
-
-  - package-ecosystem: "nuget"
-    directory: "/"
-    schedule: { interval: "weekly" }
-    open-pull-requests-limit: 10
-    assignees: ["codex"]
-    groups: { minor-and-patch: { update-types: ["minor", "patch"] } }
-
-  - package-ecosystem: "github-actions"
-    directory: "/"
-    schedule: { interval: "weekly" }
-    open-pull-requests-limit: 5
-    assignees: ["codex"]
-    reviewers: ["sonarqube", "coderabbit", "sourcery"]
-    groups: { minor-and-patch: { update-types: ["minor", "patch"] } }
-=======
-  # Maintain GitHub Actions
+updates:
   - package-ecosystem: 'github-actions'
     directory: '/'
     schedule:
@@ -42,7 +12,6 @@ updates:
       minor-and-patch:
         update-types: ['minor', 'patch']
 
-  # Maintain Python dependencies (pip)
   - package-ecosystem: 'pip'
     directory: '/'
     schedule:
@@ -54,7 +23,6 @@ updates:
       minor-and-patch:
         update-types: ['minor', 'patch']
 
-  # Maintain JavaScript dependencies (npm)
   - package-ecosystem: 'npm'
     directory: '/'
     schedule:
@@ -65,4 +33,39 @@ updates:
     groups:
       minor-and-patch:
         update-types: ['minor', 'patch']
->>>>>>> main
+=======
+
+updates:
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 10
+    assignees:
+      - "codex"
+    groups:
+      minor-and-patch:
+        update-types: ["minor", "patch"]
+
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 10
+    assignees:
+      - "codex"
+    groups:
+      minor-and-patch:
+        update-types: ["minor", "patch"]
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    assignees:
+      - "codex"
+    groups:
+      minor-and-patch:
+        update-types: ["minor", "patch"]
+>>>>>>> fix/ci-workflow-codecov

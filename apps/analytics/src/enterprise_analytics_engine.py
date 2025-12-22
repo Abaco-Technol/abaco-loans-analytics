@@ -1,458 +1,221 @@
-<<<<<<< HEAD
-from __future__ import annotations
-
-from typing import Dict, List, Optional, Protocol, runtime_checkable
-
-import numpy as np
 import pandas as pd
-=======
-"""
-Enterprise Analytics Engine for loan portfolio KPI computation and
-risk analysis.
-"""
-
-import logging
-from typing import Dict, List, Optional, Protocol, runtime_checkable
 import numpy as np
-import pandas as pd
-from python.validation import REQUIRED_ANALYTICS_COLUMNS, ANALYTICS_NUMERIC_COLUMNS, validate_dataframe
-
-logger = logging.getLogger(__name__)
->>>>>>> main
+from typing import Dict, Optional, Protocol, runtime_checkable
 
 
 @runtime_checkable
 class KPIExporter(Protocol):
-<<<<<<< HEAD
     def upload_metrics(self, metrics: Dict[str, float], blob_name: Optional[str] = None) -> str:
-        pass
-=======
-    """
-    Interface/Protocol defining required methods for exporting KPI data.
-    Implementations should provide methods such as export_kpis, serialize, and close
-    to handle the transfer, serialization, and finalization of KPI metric outputs to external systems
-    (e.g., cloud storage, files, APIs). This does not perform analytics computation.
-    """
-    def upload_metrics(
-        self,
-        metrics: Dict[str, float],
-        blob_name: Optional[str] = None
-    ) -> str:
-        """
-        Upload KPI metrics to a remote storage location
-        (e.g., Azure Blob Storage).
-
-        Args:
-            metrics (Dict[str, float]):
-                Dictionary of KPI metric names and their float values.
-            blob_name (Optional[str]):
-                Optional name for the blob or file to store the metrics.
-
-        Returns:
-            str: The URI or path of the uploaded metrics blob.
-        """
-        raise NotImplementedError("KPIExporter must implement upload_metrics")
->>>>>>> main
-
+        ...
 
 class LoanAnalyticsEngine:
     """
     A robust engine for computing critical KPIs for a loan portfolio.
-    This system is designed for scalability and provides traceable,
-    actionable insights to drive financial intelligence and commercial growth.
+    This system is designed for scalability and provides traceable, actionable insights
+    to drive financial intelligence and commercial growth.
     """
 
-    @property
-    def coercion_report(self):
-        """
-        Returns the coercion report for numeric columns.
-        """
-        return self._coercion_report
+    NUMERIC_COLUMNS = [
+        "loan_amount",
+        "appraised_value",
+        "borrower_income",
+        "monthly_debt",
+        "interest_rate",
+        "principal_balance",
+    ]
 
     def __init__(self, loan_data: pd.DataFrame):
-<<<<<<< HEAD
-=======
         """
-        Initialize the LoanAnalyticsEngine with loan data.
+        Initializes the engine with loan portfolio data.
 
         Args:
-            loan_data (pd.DataFrame):
-                DataFrame containing loan records. Expected columns:
-                'loan_amount', 'appraised_value', 'borrower_income',
-                'monthly_debt', 'loan_status', 'interest_rate',
-                'principal_balance'.
+            loan_data (pd.DataFrame): A DataFrame containing loan records.
+                Expected columns: 'loan_amount', 'appraised_value', 'borrower_income',
+                                  'monthly_debt', 'loan_status', 'interest_rate', 'principal_balance'.
         """
->>>>>>> main
         if not isinstance(loan_data, pd.DataFrame) or loan_data.empty:
-            raise ValueError(
-                "Input loan_data must be a non-empty pandas DataFrame."
-            )
+            raise ValueError("Input loan_data must be a non-empty pandas DataFrame.")
+
         self.loan_data = loan_data.copy()
         self._validate_columns()
-        self._coercion_report = self._coerce_numeric_columns()
-        self._check_data_sanity()
+        # Track coercion report: count of invalid entries per numeric column
+        self._coercion_report = {}
+        coerced, coercion_report = self._coerce_numeric_columns_with_report(self.loan_data)
+        self.loan_data = coerced
+        self._coercion_report = coercion_report
+        self._invalid_numeric_ratio = self._compute_invalid_numeric_ratio(loan_data, self.loan_data)
 
-    def get_engine_info(self) -> str:
-        """
-        Returns a brief description of the LoanAnalyticsEngine for audit and
-        traceability.
-        """
-        return (
-            "LoanAnalyticsEngine: Computes KPIs for loan portfolios, "
-            "designed for scalability, auditability, and actionable "
-            "financial intelligence."
-        )
+    @property
+    def coercion_report(self) -> dict:
+        """Public property exposing the coercion report (invalid entries per numeric column)."""
+        return self._coercion_report
 
-    @classmethod
-    def from_dict(cls, input_data: Dict[str, list]) -> "LoanAnalyticsEngine":
-        """
-        Alternate constructor to create an engine from a dictionary.
-
-        Args:
-            input_data (Dict[str, list]):
-                Dictionary of column names to lists of values.
-
-        Returns:
-            LoanAnalyticsEngine: An instance of the analytics engine.
-        """
-        return cls(pd.DataFrame(input_data))
-
-<<<<<<< HEAD
     @classmethod
     def from_dict(cls, data: Dict[str, list]) -> "LoanAnalyticsEngine":
         return cls(pd.DataFrame(data))
 
-    def _validate_columns(self) -> None:
+    def _validate_columns(self):
+        """Ensures the DataFrame contains the necessary columns for KPI computation."""
         required_cols = [
-            "loan_amount",
-            "appraised_value",
-            "borrower_income",
-            "monthly_debt",
-            "loan_status",
-            "interest_rate",
-            "principal_balance",
+            'loan_amount', 'appraised_value', 'borrower_income', 'monthly_debt',
+            'loan_status', 'interest_rate', 'principal_balance'
         ]
         missing_cols = [col for col in required_cols if col not in self.loan_data.columns]
         if missing_cols:
             raise ValueError(f"Missing required columns in loan_data: {', '.join(missing_cols)}")
 
-    def _coerce_numeric_columns(self) -> Dict[str, int]:
-        numeric_cols: List[str] = [
-            "loan_amount",
-            "appraised_value",
-            "borrower_income",
-            "monthly_debt",
-            "interest_rate",
-            "principal_balance",
-        ]
-=======
-    def _validate_columns(self):
-        """
-        Ensures the DataFrame contains the necessary columns for KPI
-        computation.
-        """
-        validate_dataframe(self.loan_data, required_columns=REQUIRED_ANALYTICS_COLUMNS)
 
-    def _coerce_numeric_columns(self) -> Dict[str, int]:
-        """
-        Convert numeric columns to proper dtypes and record invalid values for auditability.
-        Returns a report of invalid values coerced to NaN for each column.
-        """
-        numeric_cols: List[str] = ANALYTICS_NUMERIC_COLUMNS
->>>>>>> main
+    def _coerce_numeric_columns_with_report(self, frame: pd.DataFrame):
+        coerced = frame.copy()
+        report = {}
+        for column in self.NUMERIC_COLUMNS:
+            orig = coerced[column]
+            coerced[column] = pd.to_numeric(orig, errors="coerce")
+            # Count how many values were coerced to NaN that were not NaN originally
+            report[column] = int(((coerced[column].isna()) & (pd.Series(orig).notna())).sum())
+        return coerced, report
 
-        coercion_report: Dict[str, int] = {}
-        for col in numeric_cols:
-            original = self.loan_data[col]
-            coerced = pd.to_numeric(original, errors="coerce")
-            invalid_count = int(coerced.isna().sum() - original.isna().sum())
-            coercion_report[col] = max(invalid_count, 0)
-            self.loan_data[col] = coerced
-
-        return coercion_report
-
-    def _check_data_sanity(self):
-        """Perform heuristic checks on data values."""
-        if 'interest_rate' in self.loan_data.columns:
-            # Check if interest rates look like percentages (e.g. 5.0 instead of 0.05)
-            # Assuming typical annual rates are < 100% (ratio < 1.0)
-            max_rate = self.loan_data['interest_rate'].max()
-            if max_rate > 1.0:
-                logger.warning(f"Max interest_rate is {max_rate}. Ensure rates are ratios (e.g., 0.05 for 5%) not percentages.")
-
-    def compute_loan_to_value(self) -> pd.Series:
-<<<<<<< HEAD
-        appraised_value = self.loan_data["appraised_value"].replace(0, np.nan)
-        ltv = (self.loan_data["loan_amount"] / appraised_value) * 100
-        return ltv.replace([np.inf, -np.inf], np.nan)
-
-    def compute_debt_to_income(self) -> pd.Series:
-        monthly_income = self.loan_data["borrower_income"] / 12
-=======
-        """
-        Compute the Loan-to-Value (LTV) ratio for each loan.
-        Avoids division by zero.
-        """
-        appraised_value = self.loan_data['appraised_value'].replace(0, np.nan)
-        ltv = (self.loan_data['loan_amount'] / appraised_value) * 100
-        return ltv.replace([np.inf, -np.inf], np.nan)
-
-    def compute_debt_to_income(self) -> pd.Series:
-        """
-        Computes the Debt-to-Income (DTI) ratio for each borrower.
-        """
-        monthly_income = self.loan_data['borrower_income'] / 12
->>>>>>> main
-        positive_income = monthly_income > 0
-        dti = np.where(
-            positive_income,
-            (self.loan_data["monthly_debt"] / monthly_income) * 100,
-            np.nan,
-        )
-        return pd.Series(dti, index=self.loan_data.index)
-
-    def compute_delinquency_rate(self) -> float:
-<<<<<<< HEAD
-        delinquent_statuses = {"30-59 days past due", "60-89 days past due", "90+ days past due"}
-        delinquent_count = self.loan_data["loan_status"].isin(delinquent_statuses).sum()
-=======
-        """
-        Computes the overall portfolio delinquency rate.
-
-        Returns:
-            float: The delinquency rate as a percentage.
-        """
-        delinquent_statuses = [
-            '30-59 days past due',
-            '60-89 days past due',
-            '90+ days past due',
-        ]
-        delinquent_count = self.loan_data['loan_status'].isin(
-            delinquent_statuses
-        ).sum()
->>>>>>> main
-        total_loans = len(self.loan_data)
-        return (
-            (delinquent_count / total_loans) * 100 if total_loans > 0 else 0.0
-        )
-
-    def compute_portfolio_yield(self) -> float:
-<<<<<<< HEAD
-        total_principal = self.loan_data["principal_balance"].sum()
-        if total_principal == 0:
+    def _compute_invalid_numeric_ratio(
+        self, original: pd.DataFrame, coerced: pd.DataFrame
+    ) -> float:
+        if coerced.empty:
             return 0.0
 
-        weighted_interest = (self.loan_data["interest_rate"] * self.loan_data["principal_balance"]).sum()
-        return (weighted_interest / total_principal) * 100
+        invalid_count = 0
+        total = 0
 
-    def data_quality_profile(self) -> Dict[str, float]:
-        row_count = len(self.loan_data)
-=======
-        """
-        Compute the weighted average portfolio yield for the loan portfolio.
-        """
+        for column in self.NUMERIC_COLUMNS:
+            orig_series = original[column]
+            coerced_series = coerced[column]
+            converted_invalid = coerced_series.isna() & orig_series.notna()
+            invalid_count += converted_invalid.sum()
+            total += len(orig_series)
+
+        return invalid_count / total if total else 0.0
+
+    def compute_loan_to_value(self) -> pd.Series:
+        """Computes the Loan-to-Value (LTV) ratio for each loan."""
+        ltv = pd.Series(dtype=float, index=self.loan_data.index)
+
+        denominator = self.loan_data['appraised_value']
+        numerator = self.loan_data['loan_amount']
+        valid_mask = denominator > 0
+
+        ltv.loc[valid_mask] = (numerator[valid_mask] / denominator[valid_mask]) * 100
+        ltv.loc[~valid_mask] = np.nan
+        return ltv
+
+    def compute_debt_to_income(self) -> pd.Series:
+        """Computes the Debt-to-Income (DTI) ratio for each borrower."""
+        # Assuming borrower_income is annual, convert to monthly
+        monthly_income = self.loan_data['borrower_income'] / 12
+        # Avoid division by zero
+        dti = pd.Series(np.nan, index=self.loan_data.index, dtype=float)
+        valid_mask = monthly_income > 0
+        dti.loc[valid_mask] = (self.loan_data.loc[valid_mask, 'monthly_debt'] / monthly_income[valid_mask]) * 100
+        return dti
+
+    def compute_delinquency_rate(self) -> float:
+        """Computes the overall portfolio delinquency rate."""
+        delinquent_statuses = ['30-59 days past due', '60-89 days past due', '90+ days past due']
+        delinquent_count = self.loan_data['loan_status'].isin(delinquent_statuses).sum()
+        total_loans = len(self.loan_data)
+        return (delinquent_count / total_loans) * 100 if total_loans > 0 else 0.0
+
+    def compute_portfolio_yield(self) -> float:
+        """Computes the weighted average portfolio yield."""
         total_principal = self.loan_data['principal_balance'].sum()
         if total_principal == 0:
             return 0.0
 
-        weighted_interest = (
-            self.loan_data['interest_rate'] *
-            self.loan_data['principal_balance']
-        ).sum()
+        weighted_interest = (self.loan_data['interest_rate'] * self.loan_data['principal_balance']).sum()
         return (weighted_interest / total_principal) * 100
 
     def data_quality_profile(self) -> Dict[str, float]:
-        """
-        Generate a lightweight data quality profile for auditability and traceability.
-        """
->>>>>>> main
-        null_ratio = float(self.loan_data.isna().mean().mean())
-        duplicate_ratio = float(self.loan_data.duplicated().mean())
-        total_numeric_cells = (
-            len(self.loan_data) * len(self._coercion_report)
-            if len(self.loan_data) > 0 else 0
-        )
-        invalid_numeric_ratio = (
-<<<<<<< HEAD
-            sum(self._coercion_report.values()) / total_numeric_cells if total_numeric_cells else 0.0
-=======
-            sum(self._coercion_report.values()) / total_numeric_cells
-            if total_numeric_cells > 0 else 0.0
->>>>>>> main
-        )
-        data_quality_score = max(
-            0.0,
-            100 - (null_ratio * 100) - (duplicate_ratio * 50)
-        )
+        null_ratio = float(self.loan_data.isna().mean().mean()) if not self.loan_data.empty else 0.0
+        invalid_numeric_ratio = float(self._invalid_numeric_ratio)
+        # Duplicate ratio: number of duplicate rows / total rows
+        duplicate_count = int(self.loan_data.duplicated().sum())
+        total_rows = len(self.loan_data)
+        duplicate_ratio = (duplicate_count / total_rows) if total_rows > 0 else 0.0
+        quality_score = max(0.0, min(100.0, (1 - ((null_ratio + invalid_numeric_ratio + duplicate_ratio) / 3)) * 100))
+
         return {
-            "average_null_ratio": round(null_ratio * 100, 2),
-            "duplicate_ratio": round(duplicate_ratio * 100, 2),
-            "invalid_numeric_ratio": round(invalid_numeric_ratio * 100, 2),
-            "data_quality_score": round(data_quality_score, 2),
+            "average_null_ratio": null_ratio,
+            "invalid_numeric_ratio": invalid_numeric_ratio,
+            "duplicate_ratio": duplicate_ratio,
+            "data_quality_score": quality_score,
         }
 
-<<<<<<< HEAD
-    def risk_alerts(self, ltv_threshold: float = 90.0, dti_threshold: float = 40.0) -> pd.DataFrame:
-=======
-    def risk_alerts(
-        self,
-        ltv_threshold: float = 90.0,
-        dti_threshold: float = 40.0
-    ) -> pd.DataFrame:
-        """
-        Flags high-risk loans for downstream dashboards and operational alerts.
-
-        Args:
-            ltv_threshold (float, optional):
-                The LTV threshold for flagging loans. Defaults to 90.0.
-            dti_threshold (float, optional):
-                The DTI threshold for flagging loans. Defaults to 40.0.
-
-        Returns:
-            pd.DataFrame: A DataFrame containing flagged loans.
-        """
->>>>>>> main
+    def risk_alerts(self, ltv_threshold: float = 85.0, dti_threshold: float = 36.0) -> pd.DataFrame:
         ltv = self.compute_loan_to_value()
         dti = self.compute_debt_to_income()
-        alerts = self.loan_data.copy().assign(
-            ltv_ratio=ltv,
-            dti_ratio=dti,
-        )
-<<<<<<< HEAD
-        alerts = alerts[(alerts["ltv_ratio"] > ltv_threshold) | (alerts["dti_ratio"] > dti_threshold)]
-        if alerts.empty:
-            return alerts
 
-        alerts["risk_score"] = (
-            alerts[["ltv_ratio", "dti_ratio"]]
-            .fillna(0)
-            .assign(
-                ltv_component=lambda d: np.clip((d["ltv_ratio"] - ltv_threshold) / 20, 0, 1),
-                dti_component=lambda d: np.clip((d["dti_ratio"] - dti_threshold) / 30, 0, 1),
-            )
-            .pipe(lambda d: (d["ltv_component"] + d["dti_component"]) / 2)
-=======
-        alerts = alerts[
-            (alerts['ltv_ratio'] > ltv_threshold)
-            | (alerts['dti_ratio'] > dti_threshold)
-        ]
-        if alerts.empty:
-            return alerts
+        alerts = pd.DataFrame(
+            {
+                "ltv_ratio": ltv,
+                "dti_ratio": dti,
+            },
+            index=self.loan_data.index,
+        )
 
-        alerts = alerts.copy()
-        alerts['ltv_component'] = np.clip(
-            (alerts['ltv_ratio'] - ltv_threshold) / 20, 0, 1
-        )
-        alerts['dti_component'] = np.clip(
-            (alerts['dti_ratio'] - dti_threshold) / 30, 0, 1
-        )
-        # Compute risk_score using available components with adjusted weights
-        ltv_valid = alerts['ltv_component'].notna()
-        dti_valid = alerts['dti_component'].notna()
-        # Use only available components, normalizing weights
-        alerts['risk_score'] = np.where(
-            ltv_valid & dti_valid,
-            0.6 * alerts['ltv_component'] + 0.4 * alerts['dti_component'],
-            np.where(
-                ltv_valid,
-                alerts['ltv_component'],
-                np.where(dti_valid, alerts['dti_component'], 0.0)
-            )
->>>>>>> main
-        )
-        return alerts[["ltv_ratio", "dti_ratio", "risk_score"]]
+        ltv_component = np.nan_to_num(ltv / max(ltv_threshold, 1), nan=0.0)
+        dti_component = np.nan_to_num(dti / max(dti_threshold, 1), nan=0.0)
+        alerts["risk_score"] = (0.5 * ltv_component) + (0.5 * dti_component)
+        alerts["risk_score"] = alerts["risk_score"].clip(upper=1.0)
+
+        return alerts[(alerts["ltv_ratio"] > ltv_threshold) | (alerts["dti_ratio"] > dti_threshold)]
 
     def run_full_analysis(self) -> Dict[str, float]:
-<<<<<<< HEAD
-=======
         """
-        Runs a comprehensive analysis and returns a dictionary of
-        portfolio-level KPIs.
+        Runs a comprehensive analysis and returns a dictionary of portfolio-level KPIs.
         """
->>>>>>> main
-        ltv_ratio = self.compute_loan_to_value()
-        dti_ratio = self.compute_debt_to_income()
-
+        analysis_frame = self.loan_data.copy()
+        analysis_frame['ltv_ratio'] = self.compute_loan_to_value()
+        analysis_frame['dti_ratio'] = self.compute_debt_to_income()
         quality = self.data_quality_profile()
 
         return {
-            "portfolio_delinquency_rate_percent": (
-                self.compute_delinquency_rate()
-            ),
+            "portfolio_delinquency_rate_percent": self.compute_delinquency_rate(),
             "portfolio_yield_percent": self.compute_portfolio_yield(),
-            "average_ltv_ratio_percent": ltv_ratio.mean(skipna=True),
-            "average_dti_ratio_percent": dti_ratio.mean(skipna=True),
+            "average_ltv_ratio_percent": analysis_frame['ltv_ratio'].mean(),
+            "average_dti_ratio_percent": analysis_frame['dti_ratio'].mean(),
             "data_quality_score": quality["data_quality_score"],
-            "average_null_ratio_percent": quality["average_null_ratio"],
-            "invalid_numeric_ratio_percent": quality["invalid_numeric_ratio"],
+            "average_null_ratio_percent": quality["average_null_ratio"] * 100,
+            "invalid_numeric_ratio_percent": quality["invalid_numeric_ratio"] * 100,
         }
 
-<<<<<<< HEAD
-    def export_kpis_to_blob(self, exporter: KPIExporter, blob_name: Optional[str] = None) -> str:
-        kpis = self.run_full_analysis()
-        return exporter.upload_metrics(kpis, blob_name=blob_name)
-=======
     def export_kpis_to_blob(
-        self,
-        exporter: KPIExporter,
-        blob_name: Optional[str] = None
+        self, exporter: KPIExporter, blob_name: Optional[str] = None
     ) -> str:
-        """
-        Exports KPIs to a remote blob using the provided exporter.
-        """
         if blob_name is not None and not isinstance(blob_name, str):
             raise ValueError("blob_name must be a string if provided.")
 
         kpis = self.run_full_analysis()
         return exporter.upload_metrics(kpis, blob_name=blob_name)
 
-    def get_validation_errors(self) -> List[dict]:
-        """
-        Run all data quality checks and return a list of error messages for dashboard surfacing.
-        """
-        from python.ingestion import CascadeIngestion
-        ci = CascadeIngestion()
-        ci.errors.clear()
-        ci.validate_loans(self.loan_data)
-        return ci.errors
-
-
 if __name__ == '__main__':
     # Example usage demonstrating the engine's capabilities
     # This simulates a data-driven workflow for generating actionable insights.
->>>>>>> main
 
-
-if __name__ == "__main__":
+    # Sample data representing a loan portfolio
     data = {
-<<<<<<< HEAD
-        "loan_amount": [250000, 450000, 150000, 600000],
-        "appraised_value": [300000, 500000, 160000, 750000],
-        "borrower_income": [80000, 120000, 60000, 150000],
-        "monthly_debt": [1500, 2500, 1000, 3000],
-        "loan_status": ["current", "30-59 days past due", "current", "current"],
-        "interest_rate": [0.035, 0.042, 0.038, 0.045],
-        "principal_balance": [240000, 440000, 145000, 590000],
-=======
         'loan_amount': [250000, 450000, 150000, 600000],
         'appraised_value': [300000, 500000, 160000, 750000],
         'borrower_income': [80000, 120000, 60000, 150000],
         'monthly_debt': [1500, 2500, 1000, 3000],
-        'loan_status': [
-            'current', '30-59 days past due', 'current', 'current'
-        ],
+        'loan_status': ['current', '30-59 days past due', 'current', 'current'],
         'interest_rate': [0.035, 0.042, 0.038, 0.045],
         'principal_balance': [240000, 440000, 145000, 590000]
->>>>>>> main
     }
-
     portfolio_df = pd.DataFrame(data)
+
+    # Initialize and run the analytics engine
     engine = LoanAnalyticsEngine(portfolio_df)
-<<<<<<< HEAD
-    print(engine.run_full_analysis())
-=======
     kpi_dashboard = engine.run_full_analysis()
 
     # Output the KPI dashboard - ready for visualization or reporting
-    # Logging handled by run_scoring or external reporting utilities
->>>>>>> main
+    print("--- Loan Portfolio KPI Dashboard ---")
+    for kpi, value in kpi_dashboard.items():
+        print(f"{kpi.replace('_', ' ').title()}: {value:.2f}")
+    print("------------------------------------")
