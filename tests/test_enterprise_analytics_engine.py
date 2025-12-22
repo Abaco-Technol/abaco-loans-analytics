@@ -112,7 +112,9 @@ def test_segment_kpis_by_region(sample_frame: pd.DataFrame):
     segment_df = engine.segment_kpis("region")
 
     assert set(segment_df["region"]) == {"NA", "EU", "SA"}
-    na_row = segment_df.loc[segment_df["region"] == "NA"].iloc[0]
+    na_rows = segment_df.loc[segment_df["region"] == "NA"]
+    assert not na_rows.empty
+    na_row = na_rows.iloc[0]
     assert na_row["exposure"] == pytest.approx(17_000)
     assert na_row["default_rate"] == pytest.approx(7000 / 17_000)
 
