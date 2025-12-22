@@ -121,6 +121,6 @@ def test_transform_missing_required_columns_raises():
 def test_transform_non_numeric_required_column_raises():
     dt = DataTransformation()
     df = sample_df()
-    df["total_receivable_usd"] = ["not-a-number", "also-bad"]
+    df["total_receivable_usd"] = ["invalid_string", "non_numeric_value"]
     with pytest.raises(ValueError):
         dt.transform_to_kpi_dataset(df)
