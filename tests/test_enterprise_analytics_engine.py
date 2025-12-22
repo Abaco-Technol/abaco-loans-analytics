@@ -154,13 +154,9 @@ def test_calculate_portfolio_kpis_returns_expected_weights():
     kpis = calculate_portfolio_kpis(loans, loss_given_default=0.4)
 
     expected_exposure = sum(loan.principal for loan in loans)
-    weighted_rate = (
-        loans[0].annual_interest_rate * loans[0].principal + loans[1].annual_interest_rate * loans[1].principal
-    ) / expected_exposure
-    weighted_term = (loans[0].term_months * loans[0].principal + loans[1].term_months * loans[1].principal) / expected_exposure
-    weighted_default_probability = (
-        loans[0].default_probability * loans[0].principal + loans[1].default_probability * loans[1].principal
-    ) / expected_exposure
+    weighted_rate = sum(loan.annual_interest_rate * loan.principal for loan in loans) / expected_exposure
+    weighted_term = sum(loan.term_months * loan.principal for loan in loans) / expected_exposure
+    weighted_default_probability = sum(loan.default_probability * loan.principal for loan in loans) / expected_exposure
     expected_payment = sum(calculate_monthly_payment(loan) for loan in loans)
     expected_interest = sum(loan.principal * (loan.annual_interest_rate / 12) for loan in loans)
     expected_loss_value = sum(expected_loss(loan, 0.4) for loan in loans)
