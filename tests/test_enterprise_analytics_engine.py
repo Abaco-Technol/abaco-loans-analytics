@@ -7,7 +7,7 @@ from src.enterprise_analytics_engine import LoanAnalyticsConfig, LoanAnalyticsEn
 
 
 @pytest.fixture()
-def sample_frame() -> pd.DataFrame:
+def sample_loan_data() -> pd.DataFrame:
     return pd.DataFrame(
         [
             {
@@ -74,14 +74,14 @@ def sample_frame() -> pd.DataFrame:
     )
 
 
-def test_missing_columns_raise_value_error(sample_frame: pd.DataFrame):
-    truncated = sample_frame.drop(columns=["principal"])
+def test_missing_columns_raise_value_error(sample_loan_data: pd.DataFrame):
+    truncated = sample_loan_data.drop(columns=["principal"])
     with pytest.raises(ValueError):
         LoanAnalyticsEngine(truncated)
 
 
-def test_invalid_origination_dates_raise(sample_frame: pd.DataFrame):
-    invalid = sample_frame.copy()
+def test_invalid_origination_dates_raise(sample_loan_data: pd.DataFrame):
+    invalid = sample_loan_data.copy()
     invalid.loc[0, "origination_date"] = "not-a-date"
     with pytest.raises(ValueError):
         LoanAnalyticsEngine(invalid)
