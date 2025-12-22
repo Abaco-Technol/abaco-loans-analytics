@@ -2,12 +2,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-<<<<<<< HEAD
-from typing import Iterable, Tuple
-
-
-@dataclass(frozen=True)
-=======
 from typing import Iterable, List, Optional
 
 import pandas as pd
