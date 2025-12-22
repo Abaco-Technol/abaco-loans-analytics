@@ -1,7 +1,8 @@
 # Forced re-index: renamed from ci.yml to ci-main.yml
+permissions:
+  pull-requests: read
+  contents: read
 name: CI Main
-
-
 
 on:
   push:
@@ -11,8 +12,17 @@ on:
   workflow_dispatch:
   schedule:
     - cron: '0 3 * * *' # Nightly at 3am UTC
-
 jobs:
+  pr-hygiene:
+    if: github.event_name == 'pull_request'
+    uses: ./.github/workflows/pr-assignee-check.yml
+    secrets: inherit
+
+  codex-pr-review:
+    if: github.event_name == 'pull_request'
+    uses: ./.github/workflows/codex-pull-request-review.yml
+    secrets: inherit
+
   build:
     runs-on: ubuntu-latest
     strategy:
@@ -20,7 +30,7 @@ jobs:
         java-version: [17, 21]
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: Set up JDK ${{ matrix.java-version }}
         uses: actions/setup-java@v4
         with:
@@ -40,7 +50,7 @@ jobs:
       matrix:
         python-version: ['3.9', '3.10', '3.11']
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
         with:
@@ -59,7 +69,7 @@ jobs:
   sonar:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Skip Sonar on PRs (no cloud project yet)
         if: ${{ github.event_name == 'pull_request' }}
         run: echo "Skipping SonarQube scan on pull_request; cloud project not provisioned."
@@ -75,7 +85,7 @@ jobs:
         run: ./gradlew clean build --no-daemon
       - name: SonarQube Scan
         if: ${{ github.event_name != 'pull_request' }}
-        uses: SonarSource/sonarcloud-github-action@v2
+        uses: SonarSource/sonarcloud-github-action@v5.0.0
         with:
           projectBaseDir: .
         env:
@@ -84,7 +94,7 @@ jobs:
   web:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: actions/setup-node@v4
         with:
           node-version: 20
@@ -107,7 +117,7 @@ jobs:
   analytics:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
@@ -119,6 +129,8 @@ jobs:
         run: |
           python -c "import pandas as pd; print('Environment ready. Pandas version:', pd.__version__)"
       - name: Tests and coverage
+        env:
+          PYTHONPATH: ${{ github.workspace }}
         run: |
           cd apps/analytics
           pytest --cov=. --cov-report=xml:../coverage-python.xml
@@ -126,7 +138,7 @@ jobs:
         uses: actions/upload-artifact@v5
         with:
           name: analytics-coverage
-          path: coverage-python.xml
+          path: apps/coverage-python.xml
 
   pr-hygiene:
     if: github.event_name == 'pull_request'
