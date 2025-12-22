@@ -111,13 +111,13 @@ Located in `vercel.json`.
 }
 ```
 
-<<<<<<< HEAD
-This causes Vercel deployment failures due to an incompatible config version.
-=======
-This causes Vercel deployment failures with: `version should be <= 2`
->>>>>>> fix/ci-workflow-codecov
+This causes Vercel deployment failures due to an incompatible config version (for example: `version should be <= 2`).
 
 ## GitHub Actions Workflows
+
+### Valid Workflow Steps
+
+❌ **NEVER put JavaScript code in shell steps:**
 
 ### Valid Workflow Steps
 
