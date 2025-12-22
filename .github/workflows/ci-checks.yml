@@ -31,7 +31,7 @@ jobs:
     name: Run Demo Scripts
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
@@ -63,7 +63,7 @@ jobs:
     name: Evaluate ML Models
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -97,7 +97,7 @@ jobs:
     if: failure()
     steps:
       - name: Notify Slack on Failure
-        uses: slackapi/slack-github-action@v2
+        uses: slackapi/slack-github-action@b6f4640825302dc9b85bd5ffbe34dfc7a762e404
         with:
           webhook-type: INCOMING_WEBHOOK
           payload: |

@@ -11,6 +11,9 @@ on:
 jobs:
   sonarcloud:
     name: SonarCloud Scan
+    permissions:
+      contents: read
+      pull-requests: read
     runs-on: ubuntu-latest
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -18,7 +21,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
@@ -41,7 +44,7 @@ jobs:
       - name: Install dependencies
         run: |
           cd apps/web
-          npm ci
+          npm install
 
       - name: Analytics coverage (pytest)
         run: |
@@ -62,7 +65,7 @@ jobs:
           fi
 
       - name: SonarCloud Scan
-        uses: SonarSource/sonarcloud-github-action@v2
+        uses: SonarSource/sonarcloud-github-action@e44258b109568baa0df60ed515909fc6c72cba92
         with:
           args: >
             -Dsonar.verbose=true

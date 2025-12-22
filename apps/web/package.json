@@ -6,8 +6,11 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
-    "type-check": "tsc --noEmit"
+    "lint": "eslint --ext .ts,.tsx app src middleware.ts next.config.ts",
+    "lint:fix": "eslint --ext .ts,.tsx app src middleware.ts next.config.ts --fix",
+    "type-check": "tsc --noEmit",
+    "format:check": "prettier --check \"{app,src,public,tests,docs}/**/*.{ts,tsx,js,jsx,json,css,md}\"",
+    "check-all": "npm run lint && npm run type-check && npm run format:check"
   },
   "dependencies": {
     "@sentry/nextjs": "^10.31.0",
@@ -23,6 +26,7 @@
     "zod": "^4.1.13"
   },
   "devDependencies": {
+    "@next/eslint-plugin-next": "^16.0.3",
     "@tailwindcss/postcss": "^4.1.17",
     "@types/node": "^20.19.25",
     "@types/react": "^19.2.7",
