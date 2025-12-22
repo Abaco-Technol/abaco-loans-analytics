@@ -2,13 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-<<<<<<< HEAD
-from typing import Iterable, Tuple
-
-
-@dataclass(frozen=True)
-=======
-from typing import Iterable, List, Optional
+from typing import Iterable, List, Optional, Tuple
 
 import pandas as pd
 
@@ -128,7 +122,7 @@ class LoanAnalyticsEngine:
         if segment not in self.data.columns:
             raise ValueError(f"Segment column '{segment}' not found")
 
-        rows = []
+        rows: List[dict] = []
         for value, group in self.data.groupby(segment):
             engine = LoanAnalyticsEngine(group, config=self.config)
             metrics = engine.portfolio_kpis()
@@ -184,8 +178,7 @@ class LoanAnalyticsEngine:
 
 
 # Backwards-compatible exports for legacy callers
-@dataclass
->>>>>>> c97a83f4 (Improve loan analytics validation and coverage)
+@dataclass(frozen=True)
 class LoanPosition:
     principal: float
     annual_interest_rate: float
