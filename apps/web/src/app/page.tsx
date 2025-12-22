@@ -72,7 +72,7 @@ export default async function Home() {
   return (
     <div className={styles.page}>
       <header className={styles.hero}>
-        <div className={styles.pill}>Growth & Risk Intelligence</div>
+        <div className={styles.pill}>Growth &amp; Risk Intelligence</div>
         <h1>Abaco Loans Analytics</h1>
         <p>
           A fintech-grade command center that blends underwriting precision, revenue acceleration,
