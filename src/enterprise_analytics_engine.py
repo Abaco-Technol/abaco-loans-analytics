@@ -1,4 +1,7 @@
-"""Portfolio analytics utilities for credit KPIs and risk metrics."""
+"""
+Portfolio analytics utilities for credit KPIs and risk metrics.
+Provides classes and functions for loan data preparation, KPI calculation, and risk metrics.
+"""
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -9,15 +12,15 @@ import pandas as pd
 
 @dataclass
 class LoanAnalyticsConfig:
+    """Configuration for loan analytics calculations."""
     arrears_threshold: int = 90
     currency: str = "USD"
 
 
 class LoanAnalyticsEngine:
-    """Prepare loan data and compute portfolio analytics.
-
-    The engine enforces schema validation and derives normalized fields that are
-    reused across KPI calculations.
+    """
+    Prepare loan data and compute portfolio analytics.
+    Enforces schema validation and derives normalized fields reused across KPI calculations.
     """
 
     REQUIRED_COLUMNS = {
@@ -42,22 +45,37 @@ class LoanAnalyticsEngine:
         "write_off_amount",
     ]
 
-    def __init__(self, frame: pd.DataFrame, config: Optional[LoanAnalyticsConfig] = None):
+    def __init__(self, frame: pd.DataFrame, config: Optional[LoanAnalyticsConfig] = None) -> None:
+        """
+        Initialize LoanAnalyticsEngine with loan data and configuration.
+        Args:
+            frame: DataFrame containing loan data.
+            config: Optional LoanAnalyticsConfig instance.
+        """
         self.config = config or LoanAnalyticsConfig()
         self.data = self._prepare_data(frame.copy())
 
     def _prepare_data(self, frame: pd.DataFrame) -> pd.DataFrame:
+        """
+        Validate and normalize loan data for analytics.
+        Args:
+            frame: DataFrame containing raw loan data.
+        Returns:
+            pd.DataFrame: Normalized loan data.
+        Raises:
+            ValueError: If required columns are missing or data is invalid.
+        """
         missing = self.REQUIRED_COLUMNS.difference(frame.columns)
         if missing:
             raise ValueError(f"Missing required columns: {sorted(missing)}")
 
-        # strict date validation
+        # Strict date validation
         try:
             frame["origination_date"] = pd.to_datetime(frame["origination_date"], errors="raise")
-        except Exception as exc:  # pragma: no cover - error rewrapped
+        except Exception as exc:
             raise ValueError("Invalid origination_date values") from exc
 
-        # numeric coercion with validation
+        # Numeric coercion with validation
         coerced = frame[self.NUMERIC_COLUMNS].apply(pd.to_numeric, errors="coerce")
         if coerced.isna().any().any():
             invalid_cols = coerced.columns[coerced.isna().any()].tolist()
@@ -81,7 +99,7 @@ class LoanAnalyticsEngine:
 
         return frame
 
-    def _portfolio_kpis_from_df(self, df: pd.DataFrame) -> dict:
+    def _portfolio_kpis_from_df(self, df: pd.DataFrame) -> Dict[str, Any]:
         exposure = df["principal"].sum()
         if exposure <= 0:
             raise ValueError("Total exposure cannot be zero")
@@ -108,7 +126,8 @@ class LoanAnalyticsEngine:
             "repayment_velocity": repayment_velocity,
         }
 
-    def portfolio_kpis(self) -> dict:
+    def portfolio_kpis(self) -> Dict[str, Any]:
+        """Return portfolio KPIs for the loaded data."""
         return self._portfolio_kpis_from_df(self.data)
 
     def _calculate_lgd(self, df: pd.DataFrame) -> float:
@@ -126,8 +145,15 @@ class LoanAnalyticsEngine:
         return payments / exposure
 
     def segment_kpis(self, segment: str) -> pd.DataFrame:
-        """Compute KPIs grouped by a segment column."""
-
+        """
+        Compute KPIs grouped by a segment column.
+        Args:
+            segment: Column name to group by.
+        Returns:
+            pd.DataFrame: KPIs for each segment value.
+        Raises:
+            ValueError: If segment column is not found.
+        """
         if segment not in self.data.columns:
             raise ValueError(f"Segment column '{segment}' not found")
 
@@ -139,6 +165,11 @@ class LoanAnalyticsEngine:
         return pd.DataFrame(rows)
 
     def vintage_default_table(self) -> pd.DataFrame:
+        """
+        Return a table of default rates by origination quarter.
+        Returns:
+            pd.DataFrame: Table with origination_quarter, principal, default_rate, defaults_principal.
+        """
         df = self.data
         grouped = df.groupby("origination_quarter")
         rows = []
@@ -157,7 +188,13 @@ class LoanAnalyticsEngine:
         return result.sort_values("origination_quarter").reset_index(drop=True)
 
     def cashflow_curve(self, freq: str = "M") -> pd.DataFrame:
-        """Simulate expected cashflows by spreading payments evenly across term."""
+        """
+        Simulate expected cashflows by spreading payments evenly across term.
+        Args:
+            freq: Frequency for aggregation (default "M" for monthly).
+        Returns:
+            pd.DataFrame: Cashflow curve with period, cashflow, cumulative_cashflow.
+        """
 
         records = []
         for _, row in self.data.iterrows():
@@ -182,6 +219,7 @@ class LoanAnalyticsEngine:
         return agg
 
     def scorecard(self) -> pd.DataFrame:
+        """Return a scorecard DataFrame for the portfolio KPIs."""
         kpis = self.portfolio_kpis()
         return pd.DataFrame([kpis])
 
@@ -189,6 +227,7 @@ class LoanAnalyticsEngine:
 # Backwards-compatible exports for legacy callers
 @dataclass
 class LoanPosition:
+    """Represents a single loan position for risk and payment calculations."""
     principal: float
     annual_interest_rate: float
     term_months: int
@@ -207,12 +246,17 @@ class LoanPosition:
 
 def _monthly_interest_rate(loan: LoanPosition) -> float:
     """Return the monthly interest rate as a decimal."""
-
     return loan.annual_interest_rate / 12
 
 
 def calculate_monthly_payment(loan: LoanPosition) -> float:
-    """Return the amortized monthly payment for a fixed-rate loan."""
+    """
+    Return the amortized monthly payment for a fixed-rate loan.
+    Args:
+        loan: LoanPosition instance.
+    Returns:
+        float: Monthly payment amount.
+    """
     monthly_rate = _monthly_interest_rate(loan)
     if monthly_rate == 0:
         return loan.principal / loan.term_months
@@ -223,7 +267,16 @@ def calculate_monthly_payment(loan: LoanPosition) -> float:
 
 
 def expected_loss(loan: LoanPosition, loss_given_default: float) -> float:
-    """Compute expected loss for a single loan position."""
+    """
+    Compute expected loss for a single loan position.
+    Args:
+        loan: LoanPosition instance.
+        loss_given_default: Loss given default ratio (0-1).
+    Returns:
+        float: Expected loss value.
+    Raises:
+        ValueError: If loss_given_default is not between 0 and 1.
+    """
     if not 0 <= loss_given_default <= 1:
         raise ValueError("Loss given default must be between 0 and 1.")
 
@@ -236,9 +289,11 @@ def portfolio_interest_and_risk(
 ) -> Tuple[float, float]:
     """
     Aggregate expected first-month interest and expected loss across a portfolio.
-
+    Args:
+        loans: Iterable of LoanPosition instances.
+        loss_given_default: Loss given default ratio (0-1).
     Returns:
-        A tuple with (expected_monthly_interest, expected_loss_value).
+        Tuple[float, float]: (expected_monthly_interest, expected_loss_value).
     """
     expected_interest = 0.0
     aggregated_loss = 0.0
@@ -252,8 +307,9 @@ def portfolio_interest_and_risk(
 
 @dataclass(frozen=True)
 class PortfolioKPIs:
-    """Aggregate indicators for portfolio performance and risk."""
-
+    """
+    Aggregate indicators for portfolio performance and risk.
+    """
     exposure: float
     weighted_rate: float
     weighted_term_months: float
@@ -271,11 +327,12 @@ def calculate_portfolio_kpis(
 ) -> PortfolioKPIs:
     """
     Compute weighted averages and expected first-month cash flows for a portfolio.
-
-    The calculation returns exposure, weighted rate and term (principal weighted),
-    expected total monthly payment, first-month interest, and expected loss.
+    Args:
+        loans: Iterable of LoanPosition instances.
+        loss_given_default: Loss given default ratio (0-1).
+    Returns:
+        PortfolioKPIs: Aggregated portfolio KPIs.
     """
-
     exposure = 0.0
     weighted_rate = 0.0
     weighted_term = 0.0

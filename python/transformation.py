@@ -2,8 +2,8 @@ import logging
 import uuid
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
-
-import numpy as np
+    
+import numpy as np  # Only keep if used; remove if not used below
 import pandas as pd
 
 from python.validation import (ANALYTICS_NUMERIC_COLUMNS,
@@ -14,7 +14,45 @@ logger = logging.getLogger(__name__)
 
 
 class DataTransformation:
-    REQUIRED_INPUT_COLUMNS = [
+        def _validate_input_columns(self, df: pd.DataFrame) -> None:
+            missing = list(set(self.REQUIRED_INPUT_COLUMNS) - set(df.columns))
+            if missing:
+                self._log_transformation(
+                    "transform_to_kpi_dataset", f"Missing required columns: {missing}", missing_columns=missing
+                )
+                raise ValueError(f"Transformation failed: missing required columns: {missing}")
+            for col in self.REQUIRED_INPUT_COLUMNS:
+                if col in df.columns and not pd.api.types.is_numeric_dtype(df[col]):
+                    raise ValueError(f"Transformation failed: must be numeric: {col}")
+
+        def _calculate_dpd_percentages(self, kpi_df: pd.DataFrame, receivable: pd.Series) -> None:
+            dpd_cols = [
+                "dpd_0_7_usd",
+                "dpd_7_30_usd",
+                "dpd_30_60_usd",
+                "dpd_60_90_usd",
+                "dpd_90_plus_usd",
+            ]
+            for col in dpd_cols:
+                if col in kpi_df.columns:
+                    if not pd.api.types.is_numeric_dtype(kpi_df[col]):
+                        logger.warning(f"Non-numeric DPD column detected: {col}; coercing to numeric.")
+                        kpi_df[col] = pd.to_numeric(kpi_df[col], errors="coerce")
+                    pct = (kpi_df[col] / receivable).where(receivable.notna(), np.nan) * 100
+                    kpi_df[f"{col}_pct"] = pct.round(2)
+
+        def _assign_required_analytics_columns(self, kpi_df: pd.DataFrame) -> None:
+            for col in self.REQUIRED_ANALYTICS_COLUMNS:
+                if col not in kpi_df.columns:
+                    candidates = self.COLUMN_MAPPINGS.get(col, [])
+                    source_col = find_column(kpi_df, candidates)
+                    if source_col:
+                        kpi_df[col] = kpi_df[source_col]
+                    elif col == "loan_status":
+                        kpi_df[col] = "unknown"
+                    else:
+                        kpi_df[col] = np.nan
+    DEFAULT_INPUT_COLUMNS = [
         "total_receivable_usd",
         "total_eligible_usd",
         "discounted_balance_usd",
@@ -24,6 +62,14 @@ class DataTransformation:
         "dpd_60_90_usd",
         "dpd_90_plus_usd",
     ]
+
+    def __init__(self, required_input_columns=None):
+        self.REQUIRED_INPUT_COLUMNS = required_input_columns or self.DEFAULT_INPUT_COLUMNS
+        self.run_id = f"tx_{uuid.uuid4().hex[:16]}"
+        self.transformations_count = 0
+        self.timestamp: Optional[str] = None
+        self.lineage: List[Dict[str, Any]] = []
+        self.context: Dict[str, Any] = {}
 
     REQUIRED_ANALYTICS_COLUMNS = REQUIRED_ANALYTICS_COLUMNS
 
@@ -133,22 +179,16 @@ class DataTransformation:
         return ratios
 
     def transform_to_kpi_dataset(self, df: pd.DataFrame) -> pd.DataFrame:
-        """Transform raw loan data into a KPI-ready dataset with ratios, analytics columns, and metadata."""
+        """
+        Transform raw loan data into a KPI-ready dataset with ratios, analytics columns, and metadata.
+        Assumes income is positive for DTI calculations; zero or negative income results in NaN for DTI.
+        All percentage metrics are formatted to two decimals. Missing columns raise errors unless explicitly handled.
+        Returns a DataFrame with audit trail columns and consistent types.
+        """
         self._log_transformation(
             "transform_to_kpi_dataset", "Starting KPI dataset transformation", rows=len(df)
         )
-        missing = [c for c in self.REQUIRED_INPUT_COLUMNS if c not in df.columns]
-        if missing:
-            self._log_transformation(
-                "transform_to_kpi_dataset", "Missing required columns", missing_columns=missing
-            )
-            raise ValueError(f"Transformation failed: missing required columns: {missing}")
-
-        # Check for non-numeric required columns and raise ValueError
-        for col in self.REQUIRED_INPUT_COLUMNS:
-            if col in df.columns and not pd.api.types.is_numeric_dtype(df[col]):
-                raise ValueError(f"Transformation failed: must be numeric: {col}")
-
+        self._validate_input_columns(df)
         try:
             assert_dataframe_schema(
                 df,
@@ -161,40 +201,44 @@ class DataTransformation:
             self._log_transformation(
                 "transform_to_kpi_dataset", "Input schema assertion failed", error=message
             )
-            raise ValueError(f"Transformation failed: {message}") from error
+            raise AssertionError(f"Transformation failed: {message}") from error
 
         kpi_df = df.copy()
-        # Create aliases for clarity but keep original names for compatibility with KPI engine
         kpi_df["receivable_amount"] = kpi_df["total_receivable_usd"]
         kpi_df["eligible_amount"] = kpi_df["total_eligible_usd"]
         kpi_df["discounted_amount"] = kpi_df["discounted_balance_usd"]
 
-        receivable = kpi_df["receivable_amount"].replace(0, np.nan)
-        for col in [
-            "dpd_0_7_usd",
-            "dpd_7_30_usd",
-            "dpd_30_60_usd",
-            "dpd_60_90_usd",
-            "dpd_90_plus_usd",
-        ]:
-            if col in df.columns:
-                kpi_df[f"{col}_pct"] = (df[col] / receivable).fillna(0.0) * 100
+        receivable = kpi_df["receivable_amount"].copy()
+        receivable = receivable.where(receivable >= 0, np.nan)
+        receivable = receivable.replace(0, np.nan)
 
-        for col in self.REQUIRED_ANALYTICS_COLUMNS:
-            if col not in kpi_df.columns:
-                candidates = self.COLUMN_MAPPINGS.get(col, [])
-                source_col = find_column(kpi_df, candidates)
-                if source_col:
-                    kpi_df[col] = kpi_df[source_col]
-                elif col == "loan_status":
-                    kpi_df[col] = "unknown"
-                else:
-                    kpi_df[col] = float("nan")
+        try:
+            self._calculate_dpd_percentages(kpi_df, receivable)
+        except Exception as exc:
+            self._log_transformation("transform_to_kpi_dataset", f"DPD percentage calculation failed: {exc}")
+            raise ValueError(f"DPD percentage calculation failed: {exc}") from exc
+        try:
+            self._assign_required_analytics_columns(kpi_df)
+        except Exception as exc:
+            self._log_transformation("transform_to_kpi_dataset", f"Analytics column assignment failed: {exc}")
+            raise ValueError(f"Analytics column assignment failed: {exc}") from exc
+
+        if "borrower_income" in kpi_df.columns:
+            income = kpi_df["borrower_income"].copy()
+            try:
+                kpi_df["dti_ratio"] = np.where(income > 0, kpi_df.get("monthly_debt", np.nan) / income, np.nan)
+                kpi_df["dti_ratio"] = kpi_df["dti_ratio"].round(2)
+            except Exception as exc:
+                self._log_transformation("transform_to_kpi_dataset", f"DTI calculation failed: {exc}")
+                raise ValueError(f"DTI calculation failed: {exc}") from exc
 
         transform_ts = datetime.now(timezone.utc).isoformat()
         self.timestamp = transform_ts
         kpi_df["_transform_run_id"] = self.run_id
         kpi_df["_transform_timestamp"] = transform_ts
+        kpi_df["_transform_user"] = self.context.get("user", "unknown")
+        kpi_df["_transform_source"] = self.context.get("source", "unknown")
+        kpi_df["_transform_version"] = self.context.get("version", "v1")
 
         self._log_transformation("transform_to_kpi_dataset", "KPI dataset ready", rows=len(kpi_df))
         try:
@@ -209,7 +253,7 @@ class DataTransformation:
             self._log_transformation(
                 "transform_to_kpi_dataset", "Output schema assertion failed", error=message
             )
-            raise ValueError(f"Transformation output invalid: {message}") from error
+            raise AssertionError(f"Transformation output invalid: {message}") from error
         self._record_lineage(
             "transform_to_kpi_dataset",
             list(df.columns),
@@ -220,6 +264,8 @@ class DataTransformation:
                 "analytics_columns": [
                     col for col in self.REQUIRED_ANALYTICS_COLUMNS if col in kpi_df.columns
                 ],
+                "run_id": self.run_id,
+                "timestamp": self.timestamp,
             },
         )
         self.transformations_count += 1
