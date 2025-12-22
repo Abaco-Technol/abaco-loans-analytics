@@ -58,7 +58,11 @@ class AzureBlobKPIExporter:
             pass
 
         timestamp = datetime.now(timezone.utc)
-        blob_path = blob_name or f"kpi-dashboard-{timestamp.strftime('%Y%m%dT%H%M%SZ')}.json"
+        blob_path = (
+            blob_name
+            if blob_name is not None
+            else f"kpi-dashboard-{timestamp.strftime('%Y%m%dT%H%M%SZ')}.json"
+        )
         payload = {
             "generated_at": timestamp.isoformat(),
             "metrics": normalized_metrics,
