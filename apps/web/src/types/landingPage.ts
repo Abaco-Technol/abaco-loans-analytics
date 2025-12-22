@@ -1,46 +1,15 @@
-<<<<<<< HEAD
-export type Metric = {
-  label: string
-  value: string
-  helper?: string
-}
-
-export type Product = {
-  title: string
-  detail: string
-  kicker?: string
-}
-
-export type Step = {
-  label: string
-  title: string
-  copy: string
-}
-
-export type LandingPageData = {
-  metrics: Metric[]
-  products: Product[]
-  steps: Step[]
-  controls: string[]
-}
-
-export const EMPTY_LANDING_PAGE_DATA: LandingPageData = {
-  metrics: [],
-  products: [],
-  steps: [],
-  controls: [],
-}
-=======
 import { z } from 'zod'
 
 const metricSchema = z.object({
   value: z.string(),
   label: z.string(),
+  helper: z.string().optional(),
 })
 
 const productSchema = z.object({
   title: z.string(),
   detail: z.string(),
+  kicker: z.string().optional(),
 })
 
 const stepSchema = z.object({
@@ -61,7 +30,13 @@ export type Product = z.infer<typeof productSchema>
 export type Step = z.infer<typeof stepSchema>
 export type LandingPageData = z.infer<typeof landingPageDataSchema>
 
+export type MarketingContent = {
+  readonly metrics: readonly Metric[]
+  readonly products: readonly Product[]
+  readonly controls: readonly string[]
+  readonly steps: readonly Step[]
+}
+
 export const EMPTY_LANDING_PAGE_DATA: LandingPageData = Object.freeze(
   landingPageDataSchema.parse({})
 )
->>>>>>> main

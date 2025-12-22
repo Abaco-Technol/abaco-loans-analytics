@@ -1,31 +1,12 @@
-import type { Metric, Product, Step } from '../types/landingPage'
+import type { MarketingContent, Metric, Product, Step } from '../types/landingPage'
 
-<<<<<<< HEAD
-export const metrics: Metric[] = [
+export const metrics: readonly Metric[] = [
   { label: 'Approval uplift with governed risk', value: '+18%', helper: 'QoQ across prime and near-prime' },
   { label: 'Reduction in manual reviews', value: '42%', helper: 'Workflow automation with auditability' },
   { label: 'Portfolio coverage with audit trails', value: '100%', helper: 'Evidence mapped to every decision' },
-]
-=======
-export type Product = Readonly<{
-  title: string
-  detail: string
-}>
+] as const
 
-export type Step = Readonly<{
-  label: string
-  title: string
-  copy: string
-}>
-
-export const metrics: ReadonlyArray<Metric> = [
-  { label: 'Approval uplift with governed risk', value: '+18%' },
-  { label: 'Reduction in manual reviews', value: '42%' },
-  { label: 'Portfolio coverage with audit trails', value: '100%' },
-] as const satisfies readonly Metric[]
->>>>>>> main
-
-export const products: Product[] = [
+export const products: readonly Product[] = [
   {
     title: 'Portfolio Intelligence',
     detail: 'Daily performance lenses across cohorts, pricing, liquidity, and partner flows.',
@@ -41,48 +22,20 @@ export const products: Product[] = [
     detail: 'Pre-approved journeys, partner-ready APIs, and data rooms that accelerate funding decisions.',
     kicker: 'Unified evidence packs for investors, auditors, and strategic partners.',
   },
-] as const satisfies readonly Product[]
+] as const
 
-export const steps: Step[] = [
+export const steps: readonly Step[] = [
   { label: '01', title: 'Unify data signals', copy: 'Blend bureau, behavioral, and operational streams into a trusted lending graph.' },
   { label: '02', title: 'Govern decisions', copy: 'Codify policies with traceable approvals, challenger tests, and audit logs.' },
   { label: '03', title: 'Accelerate growth', copy: 'Launch pre-approved journeys, partner APIs, and KPI packs for capital partners.' },
-]
+] as const
 
-export const controls: string[] = [
+export const controls: readonly string[] = [
   'Segregated roles, approvals, and immutable audit logs for every change.',
   'Real-time monitoring of SLAs, risk thresholds, and operational KPIs.',
   'Encryption by default with least-privilege access across environments.',
-<<<<<<< HEAD
   'Continuous evidence packs for regulators, investors, and funding partners.',
-]
-=======
-] as const satisfies readonly string[]
-
-export const steps: ReadonlyArray<Step> = [
-  {
-    label: '01',
-    title: 'Unify data signals',
-    copy: 'Blend credit bureau, behavioral, and operational streams to build a trusted lending graph.',
-  },
-  {
-    label: '02',
-    title: 'Model & decide',
-    copy: 'Score applicants with explainable risk layers and adaptive policies aligned to appetite.',
-  },
-  {
-    label: '03',
-    title: 'Measure & learn',
-    copy: 'Track outcomes against revenue and risk KPIs, iterating with governed experiment loops.',
-  },
-] as const satisfies readonly Step[]
-
-export type MarketingContent = {
-  readonly metrics: readonly Metric[]
-  readonly products: readonly Product[]
-  readonly controls: readonly string[]
-  readonly steps: readonly Step[]
-}
+] as const
 
 export const marketingContent: MarketingContent = {
   metrics,
@@ -90,4 +43,3 @@ export const marketingContent: MarketingContent = {
   controls,
   steps,
 }
->>>>>>> main
