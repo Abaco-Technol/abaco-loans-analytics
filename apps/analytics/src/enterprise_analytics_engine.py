@@ -106,7 +106,12 @@ class LoanAnalyticsEngine:
         return ltv
 
     def compute_debt_to_income(self) -> pd.Series:
-        """Computes the Debt-to-Income (DTI) ratio for each borrower."""
+        """Computes the Debt-to-Income (DTI) ratio for each borrower.
+
+        This method assumes that the ``borrower_income`` field in ``self.loan_data``
+        represents an annual income amount, which is converted to a monthly value
+        internally by dividing by 12 before computing the DTI.
+        """
         # Assuming borrower_income is annual, convert to monthly
         monthly_income = self.loan_data['borrower_income'] / 12
         # Avoid division by zero
