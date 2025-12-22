@@ -137,8 +137,6 @@ class LoanAnalyticsEngine:
 
         numeric_cols = [col for col in ANALYTICS_NUMERIC_COLUMNS if col in self.loan_data.columns]
 
-        numeric_cols = [col for col in ANALYTICS_NUMERIC_COLUMNS if col in self.loan_data.columns]
-
         total_numeric_cells = (
             len(self.loan_data) * len(numeric_cols) if len(self.loan_data) > 0 else 0
         )
