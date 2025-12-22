@@ -146,9 +146,9 @@ class LoanAnalyticsEngine:
         average_issue_ratio = (null_ratio + invalid_numeric_ratio + duplicate_ratio) / 3
         # Convert to a quality score where 1.0 means perfect quality
         raw_quality_score = 1 - average_issue_ratio
-        # Clamp raw score to [0.0, 1.0] for safety, then express as a percentage in [0.0, 100.0]
-        bounded_raw_score = max(0.0, min(1.0, raw_quality_score))
-        quality_score = bounded_raw_score * 100
+        # The clamping is redundant as raw_quality_score is already in [0, 1].
+        # Express as a percentage in [0.0, 100.0].
+        quality_score = raw_quality_score * 100
 
         return {
             "average_null_ratio": null_ratio,
