@@ -64,7 +64,6 @@ class LoanAnalyticsEngine:
         if missing_cols:
             raise ValueError(f"Missing required columns in loan_data: {', '.join(missing_cols)}")
 
-
     def _coerce_numeric_columns_with_report(self, frame: pd.DataFrame):
         coerced = frame.copy()
         report = {}
