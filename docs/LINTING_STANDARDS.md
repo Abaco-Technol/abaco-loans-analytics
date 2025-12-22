@@ -118,10 +118,6 @@ This causes Vercel deployment failures due to an incompatible config version (fo
 ### Valid Workflow Steps
 
 ❌ **NEVER put JavaScript code in shell steps:**
-
-### Valid Workflow Steps
-
-❌ **NEVER put JavaScript code in shell steps:**
 ```yaml
 - name: Update Figma Slides
   run: |
