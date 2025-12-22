@@ -172,7 +172,6 @@ class LoanAnalyticsEngine:
         )
         alerts = alerts[
             (alerts["ltv_ratio"] > ltv_threshold)
-            | (alerts["dti_ratio"] > dti_threshold)(alerts["ltv_ratio"] > ltv_threshold)
             | (alerts["dti_ratio"] > dti_threshold)
         ]
         if alerts.empty:
