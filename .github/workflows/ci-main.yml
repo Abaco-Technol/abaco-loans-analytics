@@ -4,8 +4,6 @@ permissions:
   contents: read
 name: CI Main
 
-
-
 on:
   push:
     branches: [main, develop]
@@ -14,8 +12,17 @@ on:
   workflow_dispatch:
   schedule:
     - cron: '0 3 * * *' # Nightly at 3am UTC
-
 jobs:
+  pr-hygiene:
+    if: github.event_name == 'pull_request'
+    uses: ./.github/workflows/pr-assignee-check.yml
+    secrets: inherit
+
+  codex-pr-review:
+    if: github.event_name == 'pull_request'
+    uses: ./.github/workflows/codex-pull-request-review.yml
+    secrets: inherit
+
   build:
     runs-on: ubuntu-latest
     strategy:
@@ -78,7 +85,7 @@ jobs:
         run: ./gradlew clean build --no-daemon
       - name: SonarQube Scan
         if: ${{ github.event_name != 'pull_request' }}
-        uses: SonarSource/sonarcloud-github-action@v2
+        uses: SonarSource/sonarcloud-github-action@v5.0.0
         with:
           projectBaseDir: .
         env:
@@ -122,6 +129,8 @@ jobs:
         run: |
           python -c "import pandas as pd; print('Environment ready. Pandas version:', pd.__version__)"
       - name: Tests and coverage
+        env:
+          PYTHONPATH: ${{ github.workspace }}
         run: |
           cd apps/analytics
           pytest --cov=. --cov-report=xml:../coverage-python.xml
@@ -129,7 +138,7 @@ jobs:
         uses: actions/upload-artifact@v5
         with:
           name: analytics-coverage
-          path: coverage-python.xml
+          path: apps/coverage-python.xml
 
   pr-hygiene:
     if: github.event_name == 'pull_request'
@@ -142,35 +151,18 @@ jobs:
     secrets: inherit
 
   dotnet:
+    if: ${{ hashFiles('**/*.csproj', '**/*.sln', '**/packages.config', '**/*.vbproj', '**/*.vcxproj', '**/*.fsproj') != '' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
-
-      - name: Detect .NET projects
-        id: dotnet_detect
-        shell: bash
-        run: |
-          shopt -s globstar nullglob
-          files=(**/*.csproj **/*.sln **/packages.config **/*.vbproj **/*.vcxproj **/*.fsproj)
-          if [ ${#files[@]} -eq 0 ]; then
-            echo "No .NET project files found. Skipping dotnet job."
-            echo "found=false" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-
-          echo "Found .NET project files:"
-          printf ' - %s\n' "${files[@]}"
-          echo "found=true" >> "$GITHUB_OUTPUT"
+        uses: actions/checkout@v4
 
       - name: Set up .NET SDK
-        if: steps.dotnet_detect.outputs.found == 'true'
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '8.0.x'
 
       - name: Restore and test
-        if: steps.dotnet_detect.outputs.found == 'true'
         run: |
           dotnet restore
           dotnet test --no-build

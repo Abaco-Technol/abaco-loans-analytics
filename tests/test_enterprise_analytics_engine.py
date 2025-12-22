@@ -1,10 +1,7 @@
 from datetime import datetime
-from pathlib import Path
 
 import pandas as pd
 import pytest
-
-ROOT = Path(__file__).resolve().parents[1]
 
 from src.enterprise_analytics_engine import LoanAnalyticsConfig, LoanAnalyticsEngine
 
