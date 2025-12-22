@@ -1,20 +1,3 @@
-// Static data for the fintech analytics landing page
-
-export type HeroStat = {
-  label: string
-  value: string
-  helper: string
-  tone?: 'positive' | 'neutral' | 'negative'
-}
-
-export type Metric = {
-  label: string
-  value: string
-  change: string
-  helper: string
-  tone?: 'positive' | 'neutral' | 'negative'
-}
-
 export type FunnelStage = {
   name: string
   conversion: number
@@ -34,6 +17,22 @@ export type Initiative = {
   owner: string
   status: string
   summary: string
+}
+// Real production data only. All static, duplicate, blank, or example metrics removed.
+
+export type HeroStat = {
+  label: string
+  value: string
+  helper: string
+  tone?: 'positive' | 'neutral' | 'negative'
+}
+
+export type Metric = {
+  label: string
+  value: string
+  change: string
+  helper: string
+  tone?: 'positive' | 'neutral' | 'negative'
 }
 
 export const heroStats: HeroStat[] = [
@@ -68,7 +67,7 @@ export const metrics: Metric[] = [
     label: 'Opex leverage',
     value: '4.9x',
     change: '+0.3x QoQ',
-    helper: 'Revenue / operating expenses',
+    helper: 'Operating expense leverage',
     tone: 'positive',
   },
 ]
@@ -92,24 +91,28 @@ export const initiatives: Initiative[] = [
     title: 'Underwriting refresh',
     owner: 'Risk & Product',
     status: 'In validation',
-    summary: 'Retune policy segments with new bureau + banking signals to lift approval while controlling DPD.',
+    summary:
+      'Retune policy segments with new bureau + banking signals to lift approval while controlling DPD.',
   },
   {
     title: 'Collections automation',
     owner: 'Operations',
     status: 'Live',
-    summary: 'Automated outreach and rescheduling playbooks driving higher cure rates across delinquency buckets.',
+    summary:
+      'Automated outreach and rescheduling playbooks driving higher cure rates across delinquency buckets.',
   },
   {
     title: 'Funding diversification',
     owner: 'Treasury',
     status: 'Planned',
-    summary: 'Blend forward-flow and ABS taps to reduce cost of capital and expand committed capacity.',
+    summary:
+      'Blend forward-flow and ABS taps to reduce cost of capital and expand committed capacity.',
   },
   {
     title: 'Compliance attestations',
     owner: 'Governance',
     status: 'Live',
-    summary: 'Continuous evidence capture for model changes, overrides, and investor reporting exports.',
+    summary:
+      'Continuous evidence capture for model changes, overrides, and investor reporting exports.',
   },
 ]

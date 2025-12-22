@@ -3,12 +3,13 @@ import { Inter } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/react'
 import { SpeedInsights } from '@vercel/speed-insights/next'
 import './globals.css'
+import { SkipLink } from './skip-link'
 
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'Abaco Loans Analytics',
-  description: 'Customer-centric lending intelligence with governed growth for Abaco clients.',
+  title: 'ABACO — Loan Intelligence',
+  description: 'Growth-ready analytics for credit, collections, finance, and funding teams.',
 }
 
 export default function RootLayout({
@@ -19,6 +20,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={inter.className}>
       <body>
+        <SkipLink />
         {children}
         <Analytics />
         <SpeedInsights />

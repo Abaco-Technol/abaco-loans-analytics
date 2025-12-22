@@ -111,7 +111,7 @@ Located in `vercel.json`.
 }
 ```
 
-This causes Vercel deployment failures due to an incompatible config version.
+This causes Vercel deployment failures due to an incompatible config version (for example: `version should be <= 2`).
 
 ## GitHub Actions Workflows
 

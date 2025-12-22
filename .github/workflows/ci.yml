@@ -68,12 +68,11 @@ jobs:
         run: ./gradlew clean build --no-daemon
       - name: SonarQube Scan
         if: ${{ github.event_name != 'pull_request' }}
-        uses: SonarSource/sonarcloud-github-action@v2
+        uses: SonarSource/sonarcloud-github-action@e44258b109568baa0df60ed515909fc6c72cba92
         with:
           projectBaseDir: .
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        continue-on-error: true
 
   web:
     runs-on: ubuntu-latest
@@ -114,6 +113,8 @@ jobs:
         run: |
           python -c "import pandas as pd; print('Environment ready. Pandas version:', pd.__version__)"
       - name: Tests and coverage
+        env:
+          PYTHONPATH: ${{ github.workspace }}
         run: |
           cd apps/analytics
           pytest --cov=. --cov-report=xml:../coverage-python.xml
@@ -121,38 +122,55 @@ jobs:
         uses: actions/upload-artifact@v5
         with:
           name: analytics-coverage
-          path: coverage-python.xml
+          path: apps/coverage-python.xml
 
   dotnet:
     runs-on: ubuntu-latest
+    if: ${{ hashFiles('**/*.csproj', '**/*.sln', '**/packages.config', '**/*.vbproj', '**/*.vcxproj', '**/*.fsproj') != '' }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
+      - name: Set up .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      - name: Restore dependencies
+        run: dotnet restore
+      - name: Build
+        run: dotnet build --configuration Release --no-restore
+      - name: Test
+        run: dotnet test --configuration Release --no-restore
 
-      - name: Detect .NET projects
-        id: dotnet_detect
-        shell: bash
-        run: |
-          shopt -s globstar nullglob
-          files=(**/*.csproj **/*.sln **/packages.config **/*.vbproj **/*.vcxproj **/*.fsproj)
-          if [ ${#files[@]} -eq 0 ]; then
-            echo "No .NET project files found. Skipping dotnet job."
-            echo "found=false" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-
-          echo "Found .NET project files:"
-          printf ' - %s\n' "${files[@]}"
-          echo "found=true" >> "$GITHUB_OUTPUT"
+  dotnet:
+    if: ${{ hashFiles('**/*.csproj', '**/*.sln', '**/packages.config', '**/*.vbproj', '**/*.vcxproj', '**/*.fsproj') != '' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
       - name: Set up .NET SDK
-        if: steps.dotnet_detect.outputs.found == 'true'
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '8.0.x'
 
       - name: Restore and test
-        if: steps.dotnet_detect.outputs.found == 'true'
+        run: |
+          dotnet restore
+          dotnet test --no-build
+
+  dotnet:
+    if: ${{ hashFiles('**/*.csproj', '**/*.sln', '**/packages.config', '**/*.vbproj', '**/*.vcxproj', '**/*.fsproj') != '' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore and test
         run: |
           dotnet restore
           dotnet test --no-build
