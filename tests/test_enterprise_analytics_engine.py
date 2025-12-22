@@ -89,7 +89,9 @@ def test_invalid_origination_dates_raise(sample_frame: pd.DataFrame):
 
 def test_arrears_flag_defaults_to_days_threshold(sample_frame: pd.DataFrame):
     engine = LoanAnalyticsEngine(sample_frame, config=LoanAnalyticsConfig(arrears_threshold=90))
-    arrears = engine.data.loc[engine.data["loan_id"] == "L2", "arrears_flag"].iloc[0]
+    arrears_series = engine.data.loc[engine.data["loan_id"] == "L2", "arrears_flag"]
+    assert not arrears_series.empty, "Expected at least one loan with loan_id 'L2'"
+    arrears = arrears_series.iloc[0]
     assert bool(arrears) is True
 
 
