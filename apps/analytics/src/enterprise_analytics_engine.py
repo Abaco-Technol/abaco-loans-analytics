@@ -46,13 +46,10 @@ class LoanAnalyticsEngine:
 
     def compute_loan_to_value(self) -> pd.Series:
         """Computes the Loan-to-Value (LTV) ratio for each loan."""
-        appraised_value = self.loan_data['appraised_value']
-        ltv_values = np.where(
-            appraised_value > 0,
-            (self.loan_data['loan_amount'] / appraised_value) * 100,
-            np.nan,
+        valid_appraisals = self.loan_data['appraised_value'].where(
+            lambda values: values > 0, np.nan
         )
-        ltv_series = pd.Series(ltv_values, index=self.loan_data.index)
+        ltv_series = self.loan_data['loan_amount'].div(valid_appraisals).mul(100)
         ltv_series = ltv_series.replace([np.inf, -np.inf], np.nan)
 
         self.loan_data['ltv_ratio'] = ltv_series
