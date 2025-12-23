@@ -145,23 +145,11 @@ def main():
     successes = 0
     for wf in targets:
         name = wf.get("name") or wf.get("path")
-<<<<<<< HEAD
-        try:
-            if trigger_workflow(args.repo, wf, args.ref, token):
-                print(f"Dispatched {name} on {args.ref}")
-                successes += 1
-            else:
-                print(f"Failed to dispatch {name} on {args.ref}")
-        except urllib.error.HTTPError as error:
-            message = error.read().decode("utf-8")
-            sys.stderr.write(f"Dispatch failed for {name}: {message}\n")
-=======
         if trigger_workflow(args.repo, wf, args.ref, token):
             print(f"Dispatched {name} on {args.ref}")
             successes += 1
         else:
             print(f"Failed to dispatch {name} on {args.ref}")
->>>>>>> main
         if args.delay:
             time.sleep(args.delay)
     if successes == 0:
