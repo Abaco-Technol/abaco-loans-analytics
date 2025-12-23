@@ -6,17 +6,18 @@ from typing import Dict, Optional, Protocol, runtime_checkable
 @runtime_checkable
 class KPIExporter(Protocol):
     def upload_metrics(self, metrics: Dict[str, float], blob_name: Optional[str] = None) -> str:
-        ...
+        pass
 
 class LoanAnalyticsEngine:
-    @property
-    def coercion_report(self):
-        return self._coercion_report
     """
     A robust engine for computing critical KPIs for a loan portfolio.
     This system is designed for scalability and provides traceable, actionable insights
     to drive financial intelligence and commercial growth.
     """
+
+    @property
+    def coercion_report(self):
+        return self._coercion_report
 
     def __init__(self, loan_data: pd.DataFrame):
         """
