@@ -39,23 +39,4 @@ def project_growth(
         }
     )
 
-    total_principal = enriched["principal_balance"].sum()
-    delinquent_principal = enriched.loc[
-        enriched["loan_status"].astype(str).str.lower() == "delinquent",
-        "principal_balance",
-    ].sum()
-    delinquency_rate = delinquent_principal / total_principal if total_principal else 0.0
-
-    weighted_interest = (enriched["principal_balance"] * enriched["interest_rate"]).sum()
-    portfolio_yield = weighted_interest / total_principal if total_principal else 0.0
-
-    average_ltv = enriched["ltv_ratio"].mean() if not enriched["ltv_ratio"].empty else 0.0
-    average_dti = float(np.nan_to_num(enriched["dti_ratio"].mean(skipna=True), nan=0.0))
-
-    metrics = {
-        "delinquency_rate": float(delinquency_rate),
-        "portfolio_yield": float(portfolio_yield),
-        "average_ltv": float(average_ltv) if not np.isnan(average_ltv) else 0.0,
-        "average_dti": average_dti,
-    }
-    return metrics, enriched
+    return projection
