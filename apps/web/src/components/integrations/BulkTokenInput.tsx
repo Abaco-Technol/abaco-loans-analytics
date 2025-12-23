@@ -18,11 +18,7 @@ type BulkTokenInputProps = {
   onProcessItem: (item: BulkTokenItem) => Promise<BulkProcessResult>
 }
 
-<<<<<<< HEAD
-type ItemStatus = TokenStatus | 'pending' | 'success' | 'retrying'
-=======
 type ItemStatus = TokenStatus | 'pending' | 'success' | 'retrying' | 'error'
->>>>>>> origin/main
 
 const defaultRow = 'platform,token,accountId(optional)'
 
@@ -212,33 +208,12 @@ export function BulkTokenInput({ open, onClose, onProcessItem }: BulkTokenInputP
 }
 
 function parseInput(input: string): BulkTokenItem[] {
-<<<<<<< HEAD
-  return input
-=======
   const rows = input
->>>>>>> origin/main
     .split(/\r?\n/)
     .map((line) => line.trim())
     .filter(Boolean)
     .map((line) => line.split(',').map((segment) => segment.trim()))
     .filter((parts) => parts.length >= 2)
-<<<<<<< HEAD
-    .map((parts) => {
-      const [rawPlatform, token, accountId] = parts
-      const normalizedPlatform = rawPlatform?.toLowerCase() as Platform | undefined
-
-      return {
-        platform: normalizedPlatform,
-        token: token ?? '',
-        accountId,
-        status: 'pending' as ItemStatus,
-        attempts: 0,
-      }
-    })
-    .filter(
-      (item): item is BulkTokenItem => Boolean(item.platform) && PLATFORMS.includes(item.platform)
-    )
-=======
 
   const validItems: BulkTokenItem[] = []
 
@@ -256,7 +231,6 @@ function parseInput(input: string): BulkTokenItem[] {
   }
 
   return validItems
->>>>>>> origin/main
 }
 
 function waitForDelay(attempt: number) {

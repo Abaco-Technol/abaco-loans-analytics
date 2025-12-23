@@ -26,13 +26,6 @@ export function updateLoanById(
 ): IdentifiedLoanRow[] {
   const targetIndex = rows.findIndex((row) => row.id === updated.id)
   if (targetIndex !== -1) {
-<<<<<<< HEAD
-    return rows.map((row, index) => (index === targetIndex ? { ...row, ...updated, id: row.id } : row))
-  }
-
-  if (fallbackIndex !== undefined && fallbackIndex >= 0 && fallbackIndex < rows.length) {
-    return rows.map((row, index) => (index === fallbackIndex ? { ...row, ...updated, id: row.id ?? updated.id } : row))
-=======
     return rows.map((row, index) =>
       index === targetIndex ? { ...row, ...updated, id: row.id } : row
     )
@@ -42,7 +35,6 @@ export function updateLoanById(
     return rows.map((row, index) =>
       index === fallbackIndex ? { ...row, ...updated, id: row.id ?? updated.id } : row
     )
->>>>>>> origin/main
   }
 
   return rows
