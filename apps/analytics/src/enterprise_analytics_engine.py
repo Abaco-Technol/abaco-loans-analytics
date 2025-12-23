@@ -101,7 +101,7 @@ class LoanAnalyticsEngine:
         ltv_ratio = self.compute_loan_to_value()
         dti_ratio = self.compute_debt_to_income()
 
-        return {
+        dashboard = {
             "portfolio_delinquency_rate_percent": self.compute_delinquency_rate(),
             "portfolio_yield_percent": self.compute_portfolio_yield(),
             "average_ltv_ratio_percent": self.loan_data['ltv_ratio'].mean(),
