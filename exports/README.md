@@ -1,4 +1,5 @@
 # Exports
+
 The `evolutivo_gobierno_2025.csv` file currently contains illustrative figures taken from the prior request. It is not refreshed from the Cascade Platform source because this environment cannot access external links.
 
 To replace it with the real numbers:
