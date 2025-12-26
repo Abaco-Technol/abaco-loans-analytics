@@ -152,7 +152,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Check for unqualified metrics
         run: |
-          if grep -rE '\$[0-9]+\.?[0-9]*[MK]?' docs/*.md | grep -v "TARGET\|GOAL\|PLAN\|QUERY"; then
+          if grep -rE --exclude-dir=planning '\$[0-9]+\.?[0-9]*[MK]?' docs/ | grep -v "TARGET\|GOAL\|PLAN\|QUERY"; then
             echo "ERROR: Static dollar amounts found in docs (without TARGET/GOAL label)"
             exit 1
           fi
