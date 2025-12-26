@@ -230,7 +230,7 @@ A: Yes, if dated: "As of 2025-12-04 snapshot, AUM was $7.4M (see /archives/...)"
 - **Effective Date:** 2025-12-26
 - **Last Updated:** 2025-12-26
 - **Next Review:** 2026-Q1 (Quarterly review cycle)
-- **Related Issue:** [Documentation Audit - Static Data Cleanup](link-to-issue)
+- **Related Issue:** [Documentation Audit - Static Data Cleanup](<actual-issue-url>)
 
 ---
 
