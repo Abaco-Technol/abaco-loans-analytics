@@ -121,13 +121,13 @@
 ### Pre-Commit Hook (Local)
 ```bash
 # Check for currency amounts in docs
-if grep -rE '\$[0-9]+\.?[0-9]*[MK]?' docs/*.md | grep -v "TARGET\|GOAL\|PLAN"; then
+if grep -rE --exclude-dir=planning '\$[0-9]+\.?[0-9]*[MK]?' docs/ | grep -v "TARGET\|GOAL\|PLAN\|QUERY"; then
   echo "ERROR: Static dollar amounts found in docs"
   exit 1
 fi
 
 # Check for numeric customer counts
-if grep -rE '[0-9]{2,} (active |customers|clients)' docs/*.md | grep -v "TARGET\|GOAL\|PLAN"; then
+if grep -rE --exclude-dir=planning '[0-9]{2,} (active |customers|clients)' docs/ | grep -v "TARGET\|GOAL\|PLAN\|QUERY"; then
   echo "ERROR: Static customer counts found in docs"
   exit 1
 fi
@@ -152,7 +152,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Check for unqualified metrics
         run: |
-          if grep -rE '\$[0-9]+\.?[0-9]*[MK]?' docs/*.md | grep -v "TARGET\|GOAL\|PLAN\|QUERY"; then
+          if grep -rE --exclude-dir=planning '\$[0-9]+\.?[0-9]*[MK]?' docs/ | grep -v "TARGET\|GOAL\|PLAN\|QUERY"; then
             echo "ERROR: Static dollar amounts found in docs (without TARGET/GOAL label)"
             exit 1
           fi
@@ -230,7 +230,7 @@ A: Yes, if dated: "As of 2025-12-04 snapshot, AUM was $7.4M (see /archives/...)"
 - **Effective Date:** 2025-12-26
 - **Last Updated:** 2025-12-26
 - **Next Review:** 2026-Q1 (Quarterly review cycle)
-- **Related Issue:** [Documentation Audit - Static Data Cleanup](link-to-issue)
+- **Related Issue:** [Documentation Audit - Static Data Cleanup](<actual-issue-url>)
 
 ---
 

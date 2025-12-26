@@ -68,8 +68,8 @@ Extracted data is written to:
 
 **Solution:**
 1. Verify `CASCADE_TOKEN` is set: `echo $CASCADE_TOKEN`
-2. Rotate token in Meta Business Manager
-3. Update GitHub secret `CASCADE_API_KEY`
+2. Rotate token in Cascade (or the relevant provider's system)
+3. Update GitHub secret `CASCADE_TOKEN`
 4. Re-run extraction
 
 ### Issue: Data validation errors
@@ -105,7 +105,7 @@ Historical extractions are reference only.
 ## Related Documentation
 
 - [Cascade Data Sources](CASCADE_DATA_SOURCES.md)
-- [Data Pipeline Validation](../archived/pipeline_validation.md)
+- [Data Pipeline Validation](../archives/pipeline_validation.md)
 - [Extraction Troubleshooting](../runbooks/cascade_extraction_troubleshooting.md)
 
 ---
