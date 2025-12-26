@@ -121,13 +121,13 @@
 ### Pre-Commit Hook (Local)
 ```bash
 # Check for currency amounts in docs
-if grep -rE '\$[0-9]+\.?[0-9]*[MK]?' docs/*.md | grep -v "TARGET\|GOAL\|PLAN"; then
+if grep -rE --exclude-dir=planning '\$[0-9]+\.?[0-9]*[MK]?' docs/ | grep -v "TARGET\|GOAL\|PLAN\|QUERY"; then
   echo "ERROR: Static dollar amounts found in docs"
   exit 1
 fi
 
 # Check for numeric customer counts
-if grep -rE '[0-9]{2,} (active |customers|clients)' docs/*.md | grep -v "TARGET\|GOAL\|PLAN"; then
+if grep -rE --exclude-dir=planning '[0-9]{2,} (active |customers|clients)' docs/ | grep -v "TARGET\|GOAL\|PLAN\|QUERY"; then
   echo "ERROR: Static customer counts found in docs"
   exit 1
 fi
