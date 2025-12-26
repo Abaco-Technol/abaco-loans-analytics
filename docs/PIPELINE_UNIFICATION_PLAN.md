@@ -46,7 +46,8 @@ This document consolidates the end-to-end audit scope and defines the execution 
 
 ## Deliverables
 - **Architecture**: updated `docs/ARCHITECTURE.md` diagrams and component responsibilities covering the unified pipeline.
-- **Configuration**: `config/pipelines/unified_pipeline.yml` as the single source of truth for endpoints, auth, validation thresholds, KPI formulas, and outputs.
+- **Configuration**: `config/pipeline.yml` as the single source of truth for endpoints, auth, validation thresholds, KPI formulas, and outputs.
+- **Pipeline code**: canonical modules under `python/pipeline/` for ingestion, transformation, KPI computation, validation, and outputs wired to the configuration file.
 - **Operational readiness**: `docs/OPERATIONS.md` with deployment, monitoring, alerting, incident response, and backup/restore steps.
 - **Migration guide**: `docs/MIGRATION.md` describing cutover, validation, and rollback plans.
 - **Data quality report**: validation outcomes against Cascade exports with remediation logs.
@@ -58,7 +59,7 @@ This document consolidates the end-to-end audit scope and defines the execution 
 - **Safety and idempotency**: deterministic re-runs, transactional writes, and dead-letter queue for unrecoverable payloads.
 
 ## Immediate actions (ready-to-execute)
-- Adopt `config/pipelines/unified_pipeline.yml` as the configuration entrypoint; wire ingestion and transformation modules to read from it.
+- Adopt `config/pipeline.yml` as the configuration entrypoint; wire ingestion and transformation modules to read from it.
 - Establish run-scoped directories under `logs/runs/<timestamp>` capturing structured logs, validation reports, manifests, and compliance outputs.
 - Replace hard-coded endpoints and tokens with environment lookups defined in the unified pipeline config; implement token refresh based on `refresh_threshold_hours`.
 - Introduce checksum-based duplicate detection prior to raw persistence; log hash mismatches and short-circuit downstream processing.
