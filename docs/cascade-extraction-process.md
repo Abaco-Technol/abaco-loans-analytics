@@ -105,7 +105,7 @@ Historical extractions are reference only.
 ## Related Documentation
 
 - [Cascade Data Sources](CASCADE_DATA_SOURCES.md)
-- [Data Pipeline Validation](../archived/pipeline_validation.md)
+- [Data Pipeline Validation](../archives/pipeline_validation.md)
 - [Extraction Troubleshooting](../runbooks/cascade_extraction_troubleshooting.md)
 
 ---
