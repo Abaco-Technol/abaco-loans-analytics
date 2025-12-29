@@ -1,3 +1,21 @@
+---
+⚠️ **STRATEGIC PLANNING DOCUMENT - TARGETS ONLY**
+
+**CRITICAL WARNING: DO NOT USE THESE NUMBERS IN PRODUCTION WORKFLOWS**
+
+This document contains **PLANNING GOALS**, NOT current performance metrics.
+
+**PROHIBITED:**
+- ❌ Using these values in automated pipelines
+- ❌ Copying metrics into production dashboards  
+- ❌ Reporting these numbers as "actual performance"
+
+**PERMITTED:**
+- ✅ Strategic goal discussions
+- ✅ Team OKR planning (clearly marked as targets)
+
+---
+
 # CEO Operating System v2 — Executive Presentation (Oct-16, 2025)
 ## Scale confirmation
 
