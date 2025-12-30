@@ -183,11 +183,13 @@ class KPICatalogProcessor:
         df = self.loan_month[self.loan_month["outstanding"] > 0].copy()
         df["weighted_apr_part"] = df["interest_rate_apr"] * df["outstanding"]
         
-        result = df.groupby("month_end").apply(
-            lambda x: x["weighted_apr_part"].sum() / x["outstanding"].sum() if x["outstanding"].sum() > 0 else 0
-        ).reset_index(name="weighted_apr")
+        result = df.groupby("month_end", as_index=False).agg({
+            "weighted_apr_part": "sum",
+            "outstanding": "sum"
+        })
+        result["weighted_apr"] = result["weighted_apr_part"] / result["outstanding"].replace(0, np.nan)
         
-        return result
+        return result[["month_end", "weighted_apr"]]
 
     def get_monthly_pricing(self) -> pd.DataFrame:
         """Combined pricing metrics per month (weighted APR, fee rate, etc.)."""
@@ -228,27 +230,21 @@ class KPICatalogProcessor:
                                    df["true_tax_payment"] + df["true_fee_tax_payment"]) / df["disbursement_amount"].replace(0, np.nan)
         df["other_part"] = df["other_income_rate"] * df["outstanding"]
         
-        # Group by month_end
-        def weighted_avg(group):
-            total_out = group["outstanding"].sum()
-            if total_out == 0:
-                return pd.Series({
-                    "weighted_apr": 0.0,
-                    "weighted_fee_rate": 0.0,
-                    "weighted_other_income_rate": 0.0,
-                    "weighted_effective_rate": 0.0
-                })
-            apr = group["apr_part"].sum() / total_out
-            fee = group["fee_part"].sum() / total_out
-            other = group["other_part"].sum() / total_out
-            return pd.Series({
-                "weighted_apr": apr,
-                "weighted_fee_rate": fee,
-                "weighted_other_income_rate": other,
-                "weighted_effective_rate": apr + fee + other
-            })
-            
-        result = df.groupby("month_end").apply(weighted_avg).reset_index()
+        result = df.groupby("month_end", as_index=False).agg({
+            "apr_part": "sum",
+            "fee_part": "sum",
+            "other_part": "sum",
+            "outstanding": "sum"
+        })
+        
+        result["weighted_apr"] = result["apr_part"] / result["outstanding"].replace(0, np.nan)
+        result["weighted_fee_rate"] = result["fee_part"] / result["outstanding"].replace(0, np.nan)
+        result["weighted_other_income_rate"] = result["other_part"] / result["outstanding"].replace(0, np.nan)
+        result["weighted_effective_rate"] = (result["weighted_apr"] + result["weighted_fee_rate"] + 
+                                             result["weighted_other_income_rate"]).fillna(0.0)
+        
+        result = result[["month_end", "weighted_apr", "weighted_fee_rate", 
+                        "weighted_other_income_rate", "weighted_effective_rate"]]
         result.rename(columns={"month_end": "year_month"}, inplace=True)
         return result
 
@@ -310,11 +306,13 @@ class KPICatalogProcessor:
         df["fee_rate"] = (df["origination_fee"] + df["origination_fee_taxes"]) / df["disbursement_amount"].replace(0, np.nan)
         df["weighted_fee_part"] = df["fee_rate"] * df["outstanding"]
         
-        result = df.groupby("month_end").apply(
-            lambda x: x["weighted_fee_part"].sum() / x["outstanding"].sum() if x["outstanding"].sum() > 0 else 0
-        ).reset_index(name="weighted_fee_rate")
+        result = df.groupby("month_end", as_index=False).agg({
+            "weighted_fee_part": "sum",
+            "outstanding": "sum"
+        })
+        result["weighted_fee_rate"] = result["weighted_fee_part"] / result["outstanding"].replace(0, np.nan)
         
-        return result
+        return result[["month_end", "weighted_fee_rate"]]
 
     def get_concentration(self) -> pd.DataFrame:
         """Compute portfolio concentration for top x% of loans."""
@@ -324,9 +322,10 @@ class KPICatalogProcessor:
             return pd.DataFrame()
             
         df = self.loan_month[self.loan_month["outstanding"] > 0].copy()
+        df = df.sort_values("outstanding", ascending=False)
         
-        def calc_top_pct(group):
-            group = group.sort_values("outstanding", ascending=False)
+        results = []
+        for month_end, group in df.groupby("month_end", as_index=False):
             total = group["outstanding"].sum()
             n = len(group)
             
@@ -334,14 +333,15 @@ class KPICatalogProcessor:
             top3_n = max(1, int(np.ceil(0.03 * n)))
             top1_n = max(1, int(np.ceil(0.01 * n)))
             
-            return pd.Series({
+            results.append({
+                "month_end": month_end,
                 "total_outstanding": total,
                 "top10_concentration": group.head(top10_n)["outstanding"].sum() / total if total > 0 else 0,
                 "top3_concentration": group.head(top3_n)["outstanding"].sum() / total if total > 0 else 0,
                 "top1_concentration": group.head(top1_n)["outstanding"].sum() / total if total > 0 else 0
             })
-            
-        return df.groupby("month_end").apply(calc_top_pct).reset_index()
+        
+        return pd.DataFrame(results)
 
     def get_average_ticket(self) -> pd.DataFrame:
         """Compute average disbursement ticket and distribution by band."""
@@ -428,18 +428,16 @@ class KPICatalogProcessor:
             
         df = self.loan_month.copy()
         
-        def calc_buckets(group):
-            total = group["outstanding"].sum()
-            return pd.Series({
-                "total_outstanding": total,
-                "dpd7_amount": group[group["days_past_due"] >= 7]["outstanding"].sum(),
-                "dpd15_amount": group[group["days_past_due"] >= 15]["outstanding"].sum(),
-                "dpd30_amount": group[group["days_past_due"] >= 30]["outstanding"].sum(),
-                "dpd60_amount": group[group["days_past_due"] >= 60]["outstanding"].sum(),
-                "dpd90_amount": group[group["days_past_due"] >= 90]["outstanding"].sum(),
-            })
-            
-        result = df.groupby("month_end").apply(calc_buckets).reset_index()
+        result = df.groupby("month_end", as_index=False).agg({
+            "outstanding": "sum"
+        }).rename(columns={"outstanding": "total_outstanding"})
+        
+        for threshold in [7, 15, 30, 60, 90]:
+            col_name = f"dpd{threshold}_amount"
+            dpd_sum = df[df["days_past_due"] >= threshold].groupby("month_end", as_index=False)["outstanding"].sum()
+            dpd_sum.columns = ["month_end", col_name]
+            result = result.merge(dpd_sum, on="month_end", how="left")
+            result[col_name] = result[col_name].fillna(0)
         
         result["dpd30_pct"] = result["dpd30_amount"] / result["total_outstanding"].replace(0, np.nan)
         result["dpd90_pct"] = result["dpd90_amount"] / result["total_outstanding"].replace(0, np.nan)

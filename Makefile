@@ -1,21 +1,31 @@
 .PHONY: install install-dev test test-cov run-pipeline run-dashboard clean check-maturity \
-        lint format type-check audit-code quality
+        lint format type-check audit-code quality env-clean venv venv-install \
+        test-kpi-parity gradle-build upgrade-gradle vscode-envfile-info help
 
+# ------------------------------------------------------------------------------
 # Installation targets
+# ------------------------------------------------------------------------------
+
 install:
 	pip install -r requirements.txt
 
 install-dev:
 	pip install -r requirements.txt -r dev-requirements.txt
 
+# ------------------------------------------------------------------------------
 # Testing targets
+# ------------------------------------------------------------------------------
+
 test:
 	pytest
 
 test-cov:
 	pytest --cov=python --cov-report=html --cov-report=term
 
+# ------------------------------------------------------------------------------
 # Code quality targets
+# ------------------------------------------------------------------------------
+
 lint:
 	@echo "Running pylint..."
 	pylint python --exit-zero
@@ -40,7 +50,10 @@ audit-code: lint type-check test-cov
 quality: format lint type-check test
 	@echo "\n✅ Full quality check complete"
 
+# ------------------------------------------------------------------------------
 # Operational targets
+# ------------------------------------------------------------------------------
+
 run-pipeline:
 	python scripts/run_data_pipeline.py
 
@@ -50,30 +63,54 @@ run-dashboard:
 check-maturity:
 	python repo_maturity_summary.py
 
+# ------------------------------------------------------------------------------
 # Python environment management
+# ------------------------------------------------------------------------------
+
 env-clean:
 	rm -rf .venv .venv-1
 
 venv:
-	make env-clean
+	$(MAKE) env-clean
 	python3 -m venv .venv
 	@echo "Activate with: source .venv/bin/activate"
 
 venv-install: venv
-	source .venv/bin/activate && pip install --upgrade pip
-	source .venv/bin/activate && pip install -r requirements.txt
+	@echo "Setting up virtualenv with project dependencies..."
+	. .venv/bin/activate && \
+	  pip install --upgrade pip && \
+	  pip install -r requirements.txt -r dev-requirements.txt
 
-# KPI parity test
+# KPI parity test (dual-engine governance)
 test-kpi-parity:
-	source .venv/bin/activate && pytest -q tests/test_kpi_parity.py
+	. .venv/bin/activate && pytest -q tests/test_kpi_parity.py
 
-# Gradle build with JAVA_HOME
-# Usage: make gradle-build JAVA_HOME=/path/to/java21
+# ------------------------------------------------------------------------------
+# Gradle / Java helpers
+# ------------------------------------------------------------------------------
+
+# Usage:
+#   make gradle-build JAVA_HOME=$(/usr/libexec/java_home -v 21)
 gradle-build:
 	@echo "Running Gradle build with JAVA_HOME=$$JAVA_HOME"
 	JAVA_HOME=$$JAVA_HOME PATH=$$JAVA_HOME/bin:$$PATH ./gradlew clean build
 
+upgrade-gradle:
+	@echo "Upgrading Gradle wrapper to 9.1.0 for Java 25 support"
+	./gradlew wrapper --gradle-version=9.1.0
+	./gradlew wrapper
+
+# ------------------------------------------------------------------------------
+# VS Code .env warning info
+# ------------------------------------------------------------------------------
+
+vscode-envfile-info:
+	@echo "To enable .env file loading in VS Code terminals, set 'python.terminal.useEnvFile' to true in your settings."
+
+# ------------------------------------------------------------------------------
 # Cleanup
+# ------------------------------------------------------------------------------
+
 clean:
 	rm -rf __pycache__ .pytest_cache
 	find . -name "*.pyc" -delete
@@ -81,19 +118,29 @@ clean:
 	rm -rf .coverage htmlcov
 	find . -type d -name ".mypy_cache" -exec rm -rf {} +
 
+# ------------------------------------------------------------------------------
+# Help
+# ------------------------------------------------------------------------------
+
 help:
 	@echo "Available targets:"
 	@echo "  make install          - Install production dependencies"
-	@echo "  make install-dev      - Install development dependencies"
+	@echo "  make install-dev      - Install dev + prod dependencies"
 	@echo "  make test             - Run tests"
 	@echo "  make test-cov         - Run tests with coverage report"
 	@echo "  make lint             - Run linters (pylint, flake8, ruff)"
 	@echo "  make format           - Auto-format code (black, isort)"
 	@echo "  make type-check       - Run mypy type checking"
-	@echo "  make audit-code       - Run linting, type checking, and coverage"
-	@echo "  make quality          - Full quality check (format, lint, type, test)"
+	@echo "  make audit-code       - Lint + type-check + coverage"
+	@echo "  make quality          - Full quality check (format + lint + type + test)"
 	@echo "  make run-pipeline     - Run the data pipeline"
 	@echo "  make run-dashboard    - Run Streamlit dashboard"
 	@echo "  make check-maturity   - Check repository maturity"
+	@echo "  make env-clean        - Remove local virtualenvs"
+	@echo "  make venv             - Create a fresh .venv (no packages)"
+	@echo "  make venv-install     - Create .venv and install requirements"
+	@echo "  make test-kpi-parity  - Run KPI parity tests (Python vs SQL)"
+	@echo "  make gradle-build     - Run Gradle build with provided JAVA_HOME"
+	@echo "  make upgrade-gradle   - Upgrade Gradle wrapper to 9.1.0"
 	@echo "  make clean            - Clean up temporary files"
 	@echo "  make help             - Show this help message"
