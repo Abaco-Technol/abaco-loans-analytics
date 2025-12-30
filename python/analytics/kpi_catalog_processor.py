@@ -630,8 +630,14 @@ class KPICatalogProcessor:
             result = result.merge(dpd_sum, on="month_end", how="left")
             result[col_name] = result[col_name].fillna(0)
 
-        result["dpd30_pct"] = result["dpd30_amount"] / result["total_outstanding"].replace(0, np.nan)
-        result["dpd90_pct"] = result["dpd90_amount"] / result["total_outstanding"].replace(0, np.nan)
+        result["dpd30_pct"] = (
+            result["dpd30_amount"] /
+            result["total_outstanding"].replace(0, np.nan)
+        )
+        result["dpd90_pct"] = (
+            result["dpd90_amount"] /
+            result["total_outstanding"].replace(0, np.nan)
+        )
 
         return result
 
@@ -674,61 +680,89 @@ class KPICatalogProcessor:
         kpis = {}
         # Core aggregated views for parity tests
         try:
-            kpis["monthly_pricing"] = self.get_monthly_pricing().to_dict("records")
+            kpis["monthly_pricing"] = (
+                self.get_monthly_pricing().to_dict("records")
+            )
         except Exception:
             pass
         try:
-            kpis["monthly_risk"] = self.get_monthly_risk().to_dict("records")
+            kpis["monthly_risk"] = (
+                self.get_monthly_risk().to_dict("records")
+            )
         except Exception:
             pass
         try:
-            kpis["customer_types"] = self.get_customer_types().to_dict("records")
+            kpis["customer_types"] = (
+                self.get_customer_types().to_dict("records")
+            )
         except Exception:
             pass
 
         # Detailed/Granular views
         try:
-            kpis["active_unique_customers"] = self.get_active_unique_customers().to_dict("records")
+            kpis["active_unique_customers"] = (
+                self.get_active_unique_customers().to_dict("records")
+            )
         except Exception:
             pass
         try:
-            kpis["customer_classification"] = self.get_customer_classification().to_dict("records")
+            kpis["customer_classification"] = (
+                self.get_customer_classification().to_dict("records")
+            )
         except Exception:
             pass
         try:
-            kpis["intensity_segmentation"] = self.get_intensity_segmentation().to_dict("records")
+            kpis["intensity_segmentation"] = (
+                self.get_intensity_segmentation().to_dict("records")
+            )
         except Exception:
             pass
         try:
-            kpis["weighted_apr"] = self.get_weighted_apr().to_dict("records")
+            kpis["weighted_apr"] = (
+                self.get_weighted_apr().to_dict("records")
+            )
         except Exception:
             pass
         try:
-            kpis["weighted_fee_rate"] = self.get_weighted_fee_rate().to_dict("records")
+            kpis["weighted_fee_rate"] = (
+                self.get_weighted_fee_rate().to_dict("records")
+            )
         except Exception:
             pass
         try:
-            kpis["concentration"] = self.get_concentration().to_dict("records")
+            kpis["concentration"] = (
+                self.get_concentration().to_dict("records")
+            )
         except Exception:
             pass
         try:
-            kpis["average_ticket"] = self.get_average_ticket().to_dict("records")
+            kpis["average_ticket"] = (
+                self.get_average_ticket().to_dict("records")
+            )
         except Exception:
             pass
         try:
-            kpis["line_size_segmentation"] = self.get_line_size_segmentation().to_dict("records")
+            kpis["line_size_segmentation"] = (
+                self.get_line_size_segmentation().to_dict("records")
+            )
         except Exception:
             pass
         try:
-            kpis["replines_metrics"] = self.get_replines_metrics().to_dict("records")
+            kpis["replines_metrics"] = (
+                self.get_replines_metrics().to_dict("records")
+            )
         except Exception:
             pass
         try:
-            kpis["dpd_buckets"] = self.get_dpd_buckets().to_dict("records")
+            kpis["dpd_buckets"] = (
+                self.get_dpd_buckets().to_dict("records")
+            )
         except Exception:
             pass
         try:
-            kpis["payor_concentration"] = self.get_payor_concentration().to_dict("records")
+            kpis["payor_concentration"] = (
+                self.get_payor_concentration().to_dict("records")
+            )
         except Exception:
             pass
         return kpis
