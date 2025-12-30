@@ -11,7 +11,7 @@ pytest.skip(
 )
 import pandas as pd
 
-from streamlit_app.utils.ingestion import DataIngestionEngine
+from dashboard.utils.ingestion import DataIngestionEngine
 
 
 def test_normalize_dataframe_converts_numeric_strings():

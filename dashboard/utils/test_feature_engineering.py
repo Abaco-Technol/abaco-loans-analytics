@@ -13,8 +13,8 @@ import unittest
 
 import pandas as pd
 
-import streamlit_app.utils as utils
-from streamlit_app.utils import FeatureEngineer
+import dashboard.utils.feature_engineering as utils
+from dashboard.utils.feature_engineering import FeatureEngineer
 
 
 class TestFeatureEngineering(unittest.TestCase):

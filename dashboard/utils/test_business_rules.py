@@ -11,7 +11,7 @@ pytest.skip(
 )
 import pytest
 
-from streamlit_app.utils.business_rules import (
+from dashboard.utils.business_rules import (
     ApprovalDecision,
     IndustryType,
     MYPEBusinessRules,
