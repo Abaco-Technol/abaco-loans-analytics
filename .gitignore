@@ -20,6 +20,7 @@ venv/
 data/metrics/
 data_samples/*.csv
 logs/
+exports/
 
 # Build / tooling
 .next/
