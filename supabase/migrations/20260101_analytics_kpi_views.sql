@@ -15,7 +15,7 @@ SET search_path TO public, analytics;
 CREATE OR REPLACE VIEW analytics.customer_segment AS
 WITH src AS (
     SELECT
-        COALESCE(c."Customer ID"::text, '') AS customer_id,
+        COALESCE(c.customer_id::text, '') AS customer_id,
         LOWER(COALESCE(c.segment, '')) AS segment_raw,
         COALESCE(c.subcategoria_linea, '') AS subcategoria_linea,
         COALESCE(c.kam_id, '') AS kam_id,
@@ -53,30 +53,30 @@ WITH month_ends AS (
 ),
 principal_cum AS (
     SELECT
-        "Loan ID" AS loan_id,
-        "True Payment Date"::date AS pay_date,
-        SUM("True Principal Payment") OVER (PARTITION BY "Loan ID" ORDER BY "True Payment Date") AS cum_principal
+        loan_id,
+        true_payment_date::date AS pay_date,
+        SUM(true_principal_payment) OVER (PARTITION BY loan_id ORDER BY true_payment_date) AS cum_principal
     FROM real_payment
 ),
 loan_month AS (
     SELECT
         m.month_end,
-        l."Loan ID" AS loan_id,
-        l."Customer ID" AS customer_id,
-        l."Disbursement Amount" AS disbursement_amount,
-        l."Interest Rate APR" AS interest_rate_apr,
-        l."Origination Fee" AS origination_fee,
-        l."Origination Fee Taxes" AS origination_fee_taxes,
-        l."Disbursement Date"::date AS disbursement_date,
-        (l."Disbursement Amount" - COALESCE(
-          (SELECT pc.cum_principal 
-           FROM principal_cum pc 
-           WHERE pc.loan_id = l."Loan ID" AND pc.pay_date <= m.month_end 
-           ORDER BY pc.pay_date DESC LIMIT 1), 0)
-        ) AS outstanding,
-        l."Days in Default" AS days_past_due
-    FROM month_ends m
-    JOIN loan_data l ON m.month_end >= l."Disbursement Date"::date
+        l.loan_id AS loan_id,
+        l.customer_id AS customer_id,
+        l.disbursement_amount AS disbursement_amount,
+        l.interest_rate_apr AS interest_rate_apr,
+        l.origination_fee AS origination_fee,
+        l.origination_fee_taxes AS origination_fee_taxes,
+        l.disbursement_date::date AS disbursement_date,
+                (l.disbursement_amount - COALESCE(
+                    (SELECT pc.cum_principal 
+                     FROM principal_cum pc 
+                     WHERE pc.loan_id = l.loan_id AND pc.pay_date <= m.month_end 
+                     ORDER BY pc.pay_date DESC LIMIT 1), 0)
+                ) AS outstanding,
+                l.days_past_due AS days_past_due
+        FROM month_ends m
+        JOIN loan_data l ON m.month_end >= l.disbursement_date::date
 )
 SELECT * FROM loan_month;
 
@@ -86,13 +86,13 @@ SELECT * FROM loan_month;
 CREATE OR REPLACE VIEW analytics.kpi_monthly_pricing AS
 WITH income_per_loan AS (
     SELECT
-        "Loan ID" AS loan_id,
-        SUM(COALESCE("True Interest Payment", 0)) AS total_int,
-        SUM(COALESCE("True Fee Payment", 0))      AS total_fee,
-        SUM(COALESCE("True Other Payment", 0))    AS total_other,
-        SUM(COALESCE("True Tax Payment", 0))      AS total_tax,
-        SUM(COALESCE("True Fee Tax Payment", 0))  AS total_fee_tax,
-        SUM(COALESCE("True Rabates", 0))          AS total_rebates
+        loan_id,
+        SUM(COALESCE(true_interest_payment, 0)) AS total_int,
+        SUM(COALESCE(true_fee_payment, 0))      AS total_fee,
+        SUM(COALESCE(true_other_payment, 0))    AS total_other,
+        SUM(COALESCE(true_tax_payment, 0))      AS total_tax,
+        SUM(COALESCE(true_fee_tax_payment, 0))  AS total_fee_tax,
+        SUM(COALESCE(true_rebates, 0))          AS total_rebates
     FROM real_payment
     GROUP BY 1
 ),
@@ -168,11 +168,11 @@ ORDER BY 1;
 CREATE OR REPLACE VIEW analytics.kpi_customer_types AS
 WITH ranked_loans AS (
     SELECT
-        "Customer ID" AS customer_id,
-        "Disbursement Date"::date AS disbursement_date,
-        "Disbursement Amount" AS disbursement_amount,
-        ROW_NUMBER() OVER (PARTITION BY "Customer ID" ORDER BY "Disbursement Date") AS rn,
-        LAG("Disbursement Date"::date) OVER (PARTITION BY "Customer ID" ORDER BY "Disbursement Date") AS prev_disb
+        customer_id,
+        disbursement_date::date AS disbursement_date,
+        disbursement_amount,
+        ROW_NUMBER() OVER (PARTITION BY customer_id ORDER BY disbursement_date) AS rn,
+        LAG(disbursement_date::date) OVER (PARTITION BY customer_id ORDER BY disbursement_date) AS prev_disb
     FROM loan_data
 ),
 classified AS (
