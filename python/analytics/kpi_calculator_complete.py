@@ -2,8 +2,8 @@
 
 import pandas as pd
 import numpy as np
-from datetime import datetime, timedelta
-from typing import Dict, Tuple, Optional
+from datetime import datetime
+from typing import Dict, Optional
 import logging
 
 logging.basicConfig(level=logging.INFO)
@@ -95,8 +95,8 @@ class ABACOKPICalculator:
     
     def get_monthly_revenue(self) -> float:
         """Total payment/revenue in current month."""
-        payment_col = self._find_column(["payment_amount", "amount", "monto_pago"])
-        date_col = self._find_column(["payment_date", "fecha_pago"])
+        payment_col = self._find_column(["payment_amount", "amount", "monto_pago"], self.payments)
+        date_col = self._find_column(["payment_date", "fecha_pago"], self.payments)
         
         if not payment_col or payment_col not in self.payments.columns:
             logger.warning("Cannot calculate monthly revenue: missing payment column")
@@ -112,8 +112,8 @@ class ABACOKPICalculator:
     
     def get_revenue_by_month(self) -> pd.Series:
         """Monthly revenue trend."""
-        payment_col = self._find_column(["payment_amount", "amount"])
-        date_col = self._find_column(["payment_date", "fecha_pago"])
+        payment_col = self._find_column(["payment_amount", "amount"], self.payments)
+        date_col = self._find_column(["payment_date", "fecha_pago"], self.payments)
         
         if not payment_col:
             return pd.Series()
@@ -126,11 +126,12 @@ class ABACOKPICalculator:
     def get_mom_growth_pct(self) -> float:
         """Month-over-Month growth percentage."""
         balance_col = self._find_column(["outstanding_loan_value", "outstanding_balance"])
-        if not balance_col:
+        disb_date_col = self._find_column(["disbursement_date", "disburse_date"])
+        if not balance_col or not disb_date_col:
             return 0.0
         
         try:
-            self.loans["month"] = self.loans["disbursement_date"].dt.to_period("M")
+            self.loans["month"] = self.loans[disb_date_col].dt.to_period("M")
             aum_by_month = self.loans.groupby("month")[balance_col].sum().sort_index()
             
             if len(aum_by_month) < 2:
@@ -145,11 +146,12 @@ class ABACOKPICalculator:
     def get_yoy_growth_pct(self) -> float:
         """Year-over-Year growth percentage."""
         balance_col = self._find_column(["outstanding_loan_value", "outstanding_balance"])
-        if not balance_col:
+        disb_date_col = self._find_column(["disbursement_date", "disburse_date"])
+        if not balance_col or not disb_date_col:
             return 0.0
         
         try:
-            self.loans["month"] = self.loans["disbursement_date"].dt.to_period("M")
+            self.loans["month"] = self.loans[disb_date_col].dt.to_period("M")
             aum_by_month = self.loans.groupby("month")[balance_col].sum().sort_index()
             
             if len(aum_by_month) < 13:
@@ -297,10 +299,17 @@ class ABACOKPICalculator:
         # This will be overridden in usage
         return column_names[0] if column_names else None
     
-    def _find_column(self, aliases: list) -> Optional[str]:
-        """Find actual column name from list of aliases."""
+    def _find_column(self, aliases: list, dataframe=None) -> Optional[str]:
+        """Find actual column name from list of aliases.
+        
+        Args:
+            aliases: List of column name aliases to search for
+            dataframe: Optional dataframe to search in. Defaults to self.loans.
+                      Pass self.payments to search payments dataframe.
+        """
+        df = dataframe if dataframe is not None else self.loans
         for alias in aliases:
-            if alias in self.loans.columns:
+            if alias in df.columns:
                 return alias
         logger.warning(f"Column not found. Searched for: {aliases}")
         return None

@@ -87,10 +87,10 @@ test-kpi-parity:
 
 # Analytics validation and execution
 analytics-run:
-	python3 run_complete_analytics.py
+	. .venv/bin/activate && python3 run_complete_analytics.py
 
 analytics-sync:
-	python3 tools/check_kpi_sync.py --print-json
+	. .venv/bin/activate && python3 tools/check_kpi_sync.py --print-json
 
 # ------------------------------------------------------------------------------
 # Gradle / Java helpers
