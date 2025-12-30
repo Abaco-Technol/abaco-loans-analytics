@@ -11,6 +11,58 @@ logger = logging.getLogger(__name__)
 
 
 class KPICatalogProcessor:
+        def get_churn_90d_metrics(self) -> pd.DataFrame:
+            """
+            Calculate 90d churn KPIs per month:
+            - Active_90d: clients with last disbursement ≤90d at month end
+            - Inactive_90d: clients with last disbursement >90d at month end
+            - Churn90d%: Inactive_90d / (Active_90d + Inactive_90d)
+            - Newly_90d-inactive: clients who crossed 90d inactivity that month
+            - Churn$: Inactive_90d × revenue per active_90d
+            """
+            if self.loans.empty:
+                return pd.DataFrame()
+
+            # Prepare disbursement data
+            loans = self.loans.copy()
+            loans["disbursement_date"] = pd.to_datetime(loans["disbursement_date"])
+            # Get last disbursement per customer up to each month
+            all_months = pd.date_range(loans["disbursement_date"].min(), loans["disbursement_date"].max(), freq="M")
+            results = []
+            for m in all_months:
+                # For each customer, get their last disbursement up to month m
+                last_disb = loans[loans["disbursement_date"] <= m].groupby("customer_id")["disbursement_date"].max()
+                # Active: last disbursement ≤90d before m
+                active_90d = last_disb[last_disb >= (m - pd.Timedelta(days=90))].index
+                # Inactive: last disbursement >90d before m
+                inactive_90d = last_disb[last_disb < (m - pd.Timedelta(days=90))].index
+                # Newly 90d-inactive: last disb in (m-120d, m-90d]
+                newly_90d = last_disb[(last_disb > (m - pd.Timedelta(days=120))) & (last_disb <= (m - pd.Timedelta(days=90)))].index
+                n_active = len(active_90d)
+                n_inactive = len(inactive_90d)
+                n_newly = len(newly_90d)
+                churn_pct = n_inactive / (n_active + n_inactive) if (n_active + n_inactive) > 0 else 0.0
+                # Revenue per active_90d: use payments in last 90d
+                if not self.payments.empty:
+                    recent_payments = self.payments[
+                        (self.payments["true_payment_date"] >= (m - pd.Timedelta(days=90))) &
+                        (self.payments["true_payment_date"] <= m)
+                    ]
+                    rev_90d = recent_payments["true_total_payment"].sum() if "true_total_payment" in recent_payments.columns else 0.0
+                else:
+                    rev_90d = 0.0
+                rev_per_active = rev_90d / n_active if n_active > 0 else 0.0
+                churn_dollar = n_inactive * rev_per_active
+                results.append({
+                    "month": m,
+                    "active_90d": n_active,
+                    "inactive_90d": n_inactive,
+                    "churn90d_pct": churn_pct,
+                    "newly_90d_inactive": n_newly,
+                    "revenue_per_active_90d": rev_per_active,
+                    "churn_dollar": churn_dollar
+                })
+            return pd.DataFrame(results)
     """Processor for the unified KPI command catalog for ABACO."""
 
     def __init__(
@@ -1197,6 +1249,10 @@ class KPICatalogProcessor:
             kpis["monthly_risk"] = self.get_monthly_risk().to_dict("records")
         except Exception:
             pass
+        try:
+            kpis["churn_90d_metrics"] = self.get_churn_90d_metrics().to_dict("records")
+        except Exception as e:
+            logger.error(f"Error in churn_90d_metrics: {e}")
         try:
             kpis["customer_types"] = self.get_customer_types().to_dict(
                 "records"

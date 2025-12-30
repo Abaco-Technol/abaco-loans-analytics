@@ -1,0 +1,98 @@
+# Upgraded KPI Definitions (v2)
+# All KPIs now include window, basis, unit, direction, thresholds, data_contract, snapshot_boundary, owner_agent, version
+
+version: "2.0"
+namespace: fintech.factory
+last_updated: "2025-12-30T00:00:00Z"
+audit_required: true
+
+kpis:
+  risk.par_90:
+    name: "Portfolio at Risk (90+ days)"
+    description: "Percentage of portfolio delinquent beyond 90 days"
+    formula: "SUM(loans.balance WHERE days_past_due >= 90) / SUM(loans.balance)"
+    window: trailing_30d
+    basis: principal_outstanding
+    unit: percent
+    direction: lower_is_better
+    thresholds:
+      green: 3.0
+      yellow: 5.0
+      red: 8.0
+    data_contract:
+      source_tables: ["cascade.loan_status"]
+      required_columns: ["balance", "days_past_due"]
+      null_handling: "treat as 0"
+    snapshot_boundary: snapshot_id
+    owner_agent: risk-ai
+    version: "2.0"
+
+  growth.origination_volume:
+    name: "Monthly Origination Volume"
+    description: "Total principal amount of new loans originated"
+    formula: "SUM(new_loans.principal_amount WHERE date_approved IN current_month)"
+    window: MTD
+    basis: funded_amount
+    unit: usd
+    direction: higher_is_better
+    thresholds:
+      green: 1000000
+      yellow: 500000
+      red: 250000
+    data_contract:
+      source_tables: ["cascade.loan_origination"]
+      required_columns: ["principal_amount", "date_approved"]
+      null_handling: "exclude"
+    snapshot_boundary: snapshot_id
+    owner_agent: sales-ai
+    version: "2.0"
+
+  finance.arr:
+    name: "Annualized Recurring Revenue"
+    description: "Expected annual revenue from current outstanding loans"
+    formula: "SUM(loans.interest_rate * loans.balance * 12)"
+    window: point_in_time
+    basis: revenue
+    unit: usd
+    direction: higher_is_better
+    thresholds:
+      green: 500000
+      yellow: 250000
+      red: 100000
+    data_contract:
+      source_tables: ["cascade.loan_performance"]
+      required_columns: ["interest_rate", "balance"]
+      null_handling: "treat as 0"
+    snapshot_boundary: snapshot_id
+    owner_agent: finance-ai
+    version: "2.0"
+
+  compliance.data_quality_score:
+    name: "Data Quality Score"
+    description: "Percentage of data passing validation checks"
+    formula: "SUM(validation_passed) / SUM(validation_total)"
+    window: trailing_30d
+    basis: count
+    unit: percent
+    direction: higher_is_better
+    thresholds:
+      green: 98.0
+      yellow: 95.0
+      red: 90.0
+    data_contract:
+      source_tables: ["data.validation_results"]
+      required_columns: ["validation_passed", "validation_total"]
+      null_handling: "exclude"
+    snapshot_boundary: snapshot_id
+    owner_agent: compliance-ai
+    version: "2.0"
+
+departmental_kpi_mappings:
+  risk:
+    - risk.par_90
+  growth:
+    - growth.origination_volume
+  finance:
+    - finance.arr
+  compliance:
+    - compliance.data_quality_score
