@@ -1,17 +1,15 @@
+import pandas as pd
 import pytest
+from dashboard.utils.ingestion import DataIngestionEngine
 
 pytestmark = pytest.mark.skip(
-    reason="streamlit_app.utils not yet packaged as module; tracked as tech debt."
+    reason="streamlit_app.utils not yet packaged as module."
 )
-import pytest
 
 pytest.skip(
-    "Skipping dashboard utils tests in local dev: streamlit_app is not yet packaged as a module.",
+    "Skipping dashboard utils tests: streamlit_app not yet a module.",
     allow_module_level=True,
 )
-import pandas as pd
-
-from dashboard.utils.ingestion import DataIngestionEngine
 
 
 def test_normalize_dataframe_converts_numeric_strings():

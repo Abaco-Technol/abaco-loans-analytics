@@ -13,6 +13,19 @@ class KPICatalogProcessor:
         self.loans = self._clean_df(loans_df)
         self.payments = self._clean_df(payments_df)
         self.customers = self._clean_df(customers_df)
+        
+        # Filter orphaned loans (matching SQL loader logic)
+        if "customer_id" in self.loans.columns and "customer_id" in self.customers.columns:
+            loan_cust_pre = self.loans["customer_id"].nunique()
+            valid_cust = set(self.customers["customer_id"])
+            self.loans = self.loans[self.loans["customer_id"].isin(valid_cust)].copy()
+            loan_cust_post = self.loans["customer_id"].nunique()
+            print(f"[DEBUG] KPICatalogProcessor: customers in loans before filter: {loan_cust_pre}, after: {loan_cust_post}, total valid customers: {len(valid_cust)}")
+            
+        # Filter orphaned payments
+        if "loan_id" in self.payments.columns and "loan_id" in self.loans.columns:
+            self.payments = self.payments[self.payments["loan_id"].isin(set(self.loans["loan_id"]))].copy()
+
         self.loan_month = pd.DataFrame()
         
     def _clean_df(self, df: pd.DataFrame) -> pd.DataFrame:
@@ -41,15 +54,24 @@ class KPICatalogProcessor:
             "payment_amount": "true_total_payment",
             "true total payment": "true_total_payment",
             "amount": "true_total_payment",
+            # Principal mapping
+            "principal_payment": "true_principal_payment",
+            "true principal payment": "true_principal_payment",
+            "true_principal_payment": "true_principal_payment",
+            # Rebates
+            "true_rebates": "true_rebates",
+            "true rebates": "true_rebates",
+            "true rabates": "true_rebates",
             # Other mappings
             "outstanding_balance": "outstanding_loan_value",
             "interest_rate": "interest_rate_apr",
+            "interest_rate_apr": "interest_rate_apr",
             "maturity_date": "loan_end_date",
             "days_in_default": "days_past_due",
             "dpd": "days_past_due"
         }
         for old, new in mapping.items():
-            if old in df.columns and new not in df.columns:
+            if old in df.columns:
                 df[new] = df[old]
 
         # If true_principal_payment is missing, estimate it from total payment (synthetic fallback)
@@ -137,12 +159,12 @@ class KPICatalogProcessor:
         if self.loan_month.empty:
             return pd.DataFrame()
         
-        active = self.loan_month[self.loan_month["outstanding"] > 0]
+        active = self.loan_month[self.loan_month["outstanding"] > 1e-4]
         return active.groupby("month_end")["customer_id"].nunique().reset_index(name="active_customers")
 
     def get_customer_classification(self) -> pd.DataFrame:
         """Classify customers as New, Recurrent, or Reactivated."""
-        loans = self.loans.sort_values(["customer_id", "disbursement_date"])
+        loans = self.loans.sort_values(["customer_id", "disbursement_date", "loan_id"])
         loans["rn"] = loans.groupby("customer_id").cumcount() + 1
         loans["prev_disb"] = loans.groupby("customer_id")["disbursement_date"].shift(1)
         
@@ -191,7 +213,7 @@ class KPICatalogProcessor:
         if self.loan_month.empty:
             return pd.DataFrame()
             
-        df = self.loan_month[self.loan_month["outstanding"] > 0].copy()
+        df = self.loan_month[self.loan_month["outstanding"] > 1e-4].copy()
         df["weighted_apr_part"] = df["interest_rate_apr"] * df["outstanding"]
         
         result = df.groupby("month_end", as_index=False).agg({
@@ -209,7 +231,7 @@ class KPICatalogProcessor:
         if self.loan_month.empty:
             return pd.DataFrame()
             
-        df = self.loan_month[self.loan_month["outstanding"] > 0].copy()
+        df = self.loan_month[self.loan_month["outstanding"] > 1e-4].copy()
         
         # Weighted APR
         df["apr_part"] = df["interest_rate_apr"] * df["outstanding"]
@@ -218,9 +240,8 @@ class KPICatalogProcessor:
         df["fee_rate"] = (df["origination_fee"] + df["origination_fee_taxes"]) / df["disbursement_amount"].replace(0, np.nan)
         df["fee_part"] = df["fee_rate"] * df["outstanding"]
         
-        # Other Income Rate - matching SQL logic if possible
-        # For now, heuristic if columns missing, but we try to match the SQL components
-        other_cols = ["true_fee_payment", "true_other_payment", "true_tax_payment", "true_fee_tax_payment"]
+        # Other Income Rate - matching SQL logic
+        other_cols = ["true_fee_payment", "true_other_payment", "true_tax_payment", "true_fee_tax_payment", "true_rebates"]
         for c in other_cols:
             if c not in self.payments.columns:
                 self.payments[c] = 0
@@ -230,7 +251,8 @@ class KPICatalogProcessor:
             "true_fee_payment": "sum",
             "true_other_payment": "sum",
             "true_tax_payment": "sum",
-            "true_fee_tax_payment": "sum"
+            "true_fee_tax_payment": "sum",
+            "true_rebates": "sum"
         }).reset_index()
         
         df = df.merge(income_per_loan, on="loan_id", how="left")
@@ -238,7 +260,8 @@ class KPICatalogProcessor:
             df[c] = df[c].fillna(0)
             
         df["other_income_rate"] = (df["true_fee_payment"] + df["true_other_payment"] + 
-                                   df["true_tax_payment"] + df["true_fee_tax_payment"]) / df["disbursement_amount"].replace(0, np.nan)
+                                   df["true_tax_payment"] + df["true_fee_tax_payment"] - 
+                                   df["true_rebates"]) / df["disbursement_amount"].replace(0, np.nan)
         df["other_part"] = df["other_income_rate"] * df["outstanding"]
         
         result = df.groupby("month_end", as_index=False).agg({
@@ -285,7 +308,7 @@ class KPICatalogProcessor:
         loans["year_month"] = loans["disbursement_date"].dt.to_period("M").dt.to_timestamp() + pd.offsets.MonthEnd(0)
         
         # Use the same classification logic as get_customer_classification
-        loans = loans.sort_values(["customer_id", "disbursement_date"])
+        loans = loans.sort_values(["customer_id", "disbursement_date", "loan_id"])
         loans["rn"] = loans.groupby("customer_id").cumcount() + 1
         loans["prev_disb"] = loans.groupby("customer_id")["disbursement_date"].shift(1)
         
@@ -313,7 +336,7 @@ class KPICatalogProcessor:
         if self.loan_month.empty:
             return pd.DataFrame()
             
-        df = self.loan_month[self.loan_month["outstanding"] > 0].copy()
+        df = self.loan_month[self.loan_month["outstanding"] > 1e-4].copy()
         df["fee_rate"] = (df["origination_fee"] + df["origination_fee_taxes"]) / df["disbursement_amount"].replace(0, np.nan)
         df["weighted_fee_part"] = df["fee_rate"] * df["outstanding"]
         
@@ -332,7 +355,7 @@ class KPICatalogProcessor:
         if self.loan_month.empty:
             return pd.DataFrame()
             
-        df = self.loan_month[self.loan_month["outstanding"] > 0].copy()
+        df = self.loan_month[self.loan_month["outstanding"] > 1e-4].copy()
         df = df.sort_values("outstanding", ascending=False)
         
         results = []
@@ -445,7 +468,7 @@ class KPICatalogProcessor:
         
         for threshold in [7, 15, 30, 60, 90]:
             col_name = f"dpd{threshold}_amount"
-            dpd_sum = df[df["days_past_due"] >= threshold].groupby("month_end", as_index=False)["outstanding"].sum()
+            dpd_sum = df[(df["days_past_due"] >= threshold) & (df["outstanding"] > 1e-4)].groupby("month_end", as_index=False)["outstanding"].sum()
             dpd_sum.columns = ["month_end", col_name]
             result = result.merge(dpd_sum, on="month_end", how="left")
             result[col_name] = result[col_name].fillna(0)

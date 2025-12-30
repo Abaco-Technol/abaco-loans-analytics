@@ -58,11 +58,11 @@ def load_data():
             # Insert
             cols = list(df_cust_mapped.columns)
             col_names = ', '.join(cols)
-            param_names = ', '.join([f":{col}" for col in cols])
-            query = sqlalchemy.text(f"INSERT INTO customer_data ({col_names}) VALUES ({param_names})")
+            placeholders = ', '.join(['%s'] * len(cols))
+            query = f"INSERT INTO customer_data ({col_names}) VALUES ({placeholders})"
             for i, row in enumerate(df_cust_mapped.itertuples(index=False, name=None)):
                 try:
-                    cur.execute(query, {col: val for col, val in zip(cols, row)})
+                    cur.execute(query, row)
                 except Exception as e:
                     print(f"Failed at row {i}: {row}")
                     raise e
@@ -106,11 +106,11 @@ def load_data():
             # Insert
             cols = list(df_loan_mapped.columns)
             col_names = ', '.join(cols)
-            param_names = ', '.join([f":{col}" for col in cols])
-            query = sqlalchemy.text(f"INSERT INTO loan_data ({col_names}) VALUES ({param_names})")
+            placeholders = ', '.join(['%s'] * len(cols))
+            query = f"INSERT INTO loan_data ({col_names}) VALUES ({placeholders})"
             for i, row in enumerate(df_loan_mapped.itertuples(index=False, name=None)):
                 try:
-                    cur.execute(query, {col: val for col, val in zip(cols, row)})
+                    cur.execute(query, row)
                 except Exception as e:
                     print(f"Failed at row {i}: {row}")
                     raise e
@@ -148,11 +148,11 @@ def load_data():
             # Insert
             cols = list(df_pay_mapped.columns)
             col_names = ', '.join(cols)
-            param_names = ', '.join([f":{col}" for col in cols])
-            query = sqlalchemy.text(f"INSERT INTO real_payment ({col_names}) VALUES ({param_names})")
+            placeholders = ', '.join(['%s'] * len(cols))
+            query = f"INSERT INTO real_payment ({col_names}) VALUES ({placeholders})"
             for i, row in enumerate(df_pay_mapped.itertuples(index=False, name=None)):
                 try:
-                    cur.execute(query, {col: val for col, val in zip(cols, row)})
+                    cur.execute(query, row)
                 except Exception as e:
                     print(f"Failed at row {i}: {row}")
                     raise e

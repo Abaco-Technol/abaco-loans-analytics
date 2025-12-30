@@ -40,6 +40,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
       - name: Run Financial Analysis Demo
+        id: run_demo
         continue-on-error: true
         env:
           DATA_FILE: ${{ inputs.DATA_FILE }}
@@ -53,8 +54,11 @@ jobs:
             ARGS=""
           fi
           python scripts/demo_financial_analysis.py $ARGS > demo_output.txt || true
+          if [ -s demo_output.txt ]; then
+            echo "has_output=true" >> $GITHUB_OUTPUT
+          fi
       - name: Generate Report
-        if: always() && hashFiles('demo_output.txt') != ''
+        if: always() && steps.run_demo.outputs.has_output == 'true'
         continue-on-error: true
         run: |
           python scripts/generate_markdown_report.py \

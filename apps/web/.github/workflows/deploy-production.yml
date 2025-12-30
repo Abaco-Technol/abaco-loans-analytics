@@ -37,8 +37,7 @@ jobs:
 
   approval-gate:
     runs-on: ubuntu-latest
-    environment:
-      name: production
+    environment: production
     steps:
       - name: Manual approval
         run: echo "✅ Production deployment approved"
@@ -174,8 +173,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [deploy-production, post-deployment-validation]
     if: failure() && needs.deploy-production.result == 'success'
-    environment:
-      name: production
+    environment: production
     steps:
       - name: Trigger rollback
         run: |

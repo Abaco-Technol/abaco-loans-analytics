@@ -142,7 +142,7 @@ SELECT
     SUM((apr + fee_rate + other_income_rate) * outstanding)
         / NULLIF(SUM(outstanding), 0)   AS weighted_effective_rate
 FROM loan_rates
-WHERE outstanding > 0
+WHERE outstanding > 1e-4
 GROUP BY 1
 ORDER BY 1;
 
@@ -186,8 +186,8 @@ WITH ranked_loans AS (
         customer_id,
         disbursement_date::date AS disbursement_date,
         disbursement_amount,
-        ROW_NUMBER() OVER (PARTITION BY customer_id ORDER BY disbursement_date) AS rn,
-        LAG(disbursement_date::date) OVER (PARTITION BY customer_id ORDER BY disbursement_date) AS prev_disb
+        ROW_NUMBER() OVER (PARTITION BY customer_id ORDER BY disbursement_date, loan_id) AS rn,
+        LAG(disbursement_date::date) OVER (PARTITION BY customer_id ORDER BY disbursement_date, loan_id) AS prev_disb
     FROM loan_data
 ),
 classified AS (
@@ -210,5 +210,160 @@ SELECT
 FROM classified
 GROUP BY 1, 2
 ORDER BY 1, 2;
+
+-- ---------------------------------------------------------------------
+-- 6. ACTIVE UNIQUE CUSTOMERS KPI VIEW
+-- ---------------------------------------------------------------------
+CREATE OR REPLACE VIEW analytics.kpi_active_unique_customers AS
+SELECT
+    month_end AS year_month,
+    COUNT(DISTINCT customer_id) AS active_customers
+FROM analytics.loan_month
+WHERE outstanding > 1e-4
+GROUP BY 1
+ORDER BY 1;
+
+-- ---------------------------------------------------------------------
+-- 7. AVERAGE TICKET KPI VIEW
+-- ---------------------------------------------------------------------
+CREATE OR REPLACE VIEW analytics.kpi_average_ticket AS
+WITH src AS (
+    SELECT
+        (date_trunc('month', disbursement_date) + INTERVAL '1 month - 1 day')::date AS year_month,
+        loan_id,
+        disbursement_amount,
+        CASE
+            WHEN disbursement_amount < 10000 THEN '< 10K'
+            WHEN disbursement_amount <= 25000 THEN '10-25K'
+            WHEN disbursement_amount <= 50000 THEN '25-50K'
+            WHEN disbursement_amount <= 100000 THEN '50-100K'
+            ELSE '> 100K'
+        END AS ticket_band
+    FROM loan_data
+)
+SELECT
+    year_month,
+    ticket_band,
+    COUNT(loan_id) AS num_loans,
+    AVG(disbursement_amount) AS avg_ticket,
+    SUM(disbursement_amount) AS total_disbursement
+FROM src
+GROUP BY 1, 2
+ORDER BY 1, 2;
+
+-- ---------------------------------------------------------------------
+-- 8. INTENSITY SEGMENTATION KPI VIEW
+-- ---------------------------------------------------------------------
+CREATE OR REPLACE VIEW analytics.kpi_intensity_segmentation AS
+WITH loans_per_cust AS (
+    SELECT
+        customer_id,
+        COUNT(DISTINCT loan_id) AS loans_count
+    FROM loan_data
+    GROUP BY 1
+),
+intensity AS (
+    SELECT
+        customer_id,
+        CASE
+            WHEN loans_count <= 1 THEN 'Low'
+            WHEN loans_count <= 3 THEN 'Medium'
+            ELSE 'Heavy'
+        END AS use_intensity
+    FROM loans_per_cust
+)
+SELECT
+    (date_trunc('month', l.disbursement_date) + INTERVAL '1 month - 1 day')::date AS year_month,
+    i.use_intensity,
+    COUNT(DISTINCT l.customer_id) AS unique_customers,
+    SUM(l.disbursement_amount) AS disbursement_amount
+FROM loan_data l
+JOIN intensity i ON l.customer_id = i.customer_id
+GROUP BY 1, 2
+ORDER BY 1, 2;
+
+-- ---------------------------------------------------------------------
+-- 9. LINE SIZE SEGMENTATION KPI VIEW
+-- ---------------------------------------------------------------------
+CREATE OR REPLACE VIEW analytics.kpi_line_size_segmentation AS
+WITH src AS (
+    SELECT
+        (date_trunc('month', disbursement_date) + INTERVAL '1 month - 1 day')::date AS year_month,
+        customer_id,
+        disbursement_amount,
+        CASE
+            WHEN disbursement_amount < 10000 THEN '< 10K'
+            WHEN disbursement_amount <= 25000 THEN '10-25K'
+            WHEN disbursement_amount <= 50000 THEN '25-50K'
+            ELSE '> 50K'
+        END AS line_band
+    FROM loan_data
+)
+SELECT
+    year_month,
+    line_band,
+    COUNT(DISTINCT customer_id) AS unique_customers,
+    SUM(disbursement_amount) AS disbursement_amount
+FROM src
+GROUP BY 1, 2
+ORDER BY 1, 2;
+
+-- ---------------------------------------------------------------------
+-- 10. CONCENTRATION KPI VIEW
+-- ---------------------------------------------------------------------
+CREATE OR REPLACE VIEW analytics.kpi_concentration AS
+WITH ranked AS (
+    SELECT
+        month_end,
+        outstanding,
+        ROW_NUMBER() OVER (PARTITION BY month_end ORDER BY outstanding DESC) AS rn,
+        COUNT(*) OVER (PARTITION BY month_end) AS total_n,
+        SUM(outstanding) OVER (PARTITION BY month_end) AS total_outstanding
+    FROM analytics.loan_month
+    WHERE outstanding > 1e-4
+),
+bands AS (
+    SELECT
+        month_end,
+        total_outstanding,
+        SUM(CASE WHEN rn <= ceil(0.10 * total_n) THEN outstanding ELSE 0 END) AS top10_amount,
+        SUM(CASE WHEN rn <= ceil(0.03 * total_n) THEN outstanding ELSE 0 END) AS top3_amount,
+        SUM(CASE WHEN rn <= ceil(0.01 * total_n) THEN outstanding ELSE 0 END) AS top1_amount
+    FROM ranked
+    GROUP BY 1, 2
+)
+SELECT
+    month_end AS year_month,
+    total_outstanding,
+    top10_amount / NULLIF(total_outstanding, 0) AS top10_concentration,
+    top3_amount / NULLIF(total_outstanding, 0) AS top3_concentration,
+    top1_amount / NULLIF(total_outstanding, 0) AS top1_concentration
+FROM bands
+ORDER BY 1;
+
+-- ---------------------------------------------------------------------
+-- 11. WEIGHTED APR KPI VIEW
+-- ---------------------------------------------------------------------
+CREATE OR REPLACE VIEW analytics.kpi_weighted_apr AS
+SELECT
+    month_end AS year_month,
+    SUM(interest_rate_apr * outstanding) / NULLIF(SUM(outstanding), 0) AS weighted_apr
+FROM analytics.loan_month
+WHERE outstanding > 1e-4
+GROUP BY 1
+ORDER BY 1;
+
+-- ---------------------------------------------------------------------
+-- 12. WEIGHTED FEE RATE KPI VIEW
+-- ---------------------------------------------------------------------
+CREATE OR REPLACE VIEW analytics.kpi_weighted_fee_rate AS
+SELECT
+    month_end AS year_month,
+    SUM(((origination_fee + origination_fee_taxes) / NULLIF(disbursement_amount, 0)) * outstanding) 
+        / NULLIF(SUM(outstanding), 0) AS weighted_fee_rate
+FROM analytics.loan_month
+WHERE outstanding > 1e-4
+GROUP BY 1
+ORDER BY 1;
 
 COMMIT;

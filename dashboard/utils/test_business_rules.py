@@ -1,21 +1,18 @@
 import pytest
-
-pytestmark = pytest.mark.skip(
-    reason="streamlit_app.utils not yet packaged as module; tracked as tech debt."
-)
-import pytest
-
-pytest.skip(
-    "Skipping dashboard utils tests in local dev: streamlit_app is not yet packaged as a module.",
-    allow_module_level=True,
-)
-import pytest
-
 from dashboard.utils.business_rules import (
     ApprovalDecision,
     IndustryType,
     MYPEBusinessRules,
     RiskLevel,
+)
+
+pytestmark = pytest.mark.skip(
+    reason="streamlit_app.utils not yet packaged as module."
+)
+
+pytest.skip(
+    "Skipping dashboard utils tests: streamlit_app not yet a module.",
+    allow_module_level=True,
 )
 
 

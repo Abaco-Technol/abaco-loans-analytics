@@ -66,7 +66,8 @@ def load_real_data():
             "Outstanding Loan Value": "outstanding_loan_value",
             "Loan Status": "loan_status",
             "Product Type": "product_type",
-            "Days in Default": "dpd"
+            "Days in Default": "days_past_due",
+            "Interest Rate APR": "interest_rate_apr"
         }
         for old, new in rename_map.items():
             if old in loans_df.columns:
@@ -102,10 +103,11 @@ def load_real_data():
         # Map specific columns
         rename_map = {
             "Loan ID": "loan_id",
-            "True Payment Date": "payment_date",
-            "True Total Payment": "payment_amount",
-            "True Principal Payment": "principal_payment",
-            "True Interest Payment": "interest_payment"
+            "True Payment Date": "true_payment_date",
+            "True Total Payment": "true_total_payment",
+            "True Principal Payment": "true_principal_payment",
+            "True Interest Payment": "true_interest_payment",
+            "True Rabates": "true_rebates"
         }
         for old, new in rename_map.items():
             if old in payments_df.columns:
