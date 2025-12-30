@@ -1,3 +1,19 @@
+---
+
+## ⚠️ Technical Notes & Outstanding Work
+
+- **Revenue and Growth KPIs**: Current values are zero because payment and disbursement columns in the CSVs do not match the expected names in `python/analytics/kpi_catalog_processor.py`. To fix:
+  - Align the code’s column maps to the actual CSV headers, or
+  - Rename headers in `data/payments.csv` and `data/loans.csv` to match the code’s expectations.
+  - See logs for missing columns (e.g., `payment_amount`, `payment_date`, `disbursement_date`).
+
+- **Dashboard Test Suite**: The following tests are currently skipped due to import/package structure issues:
+  - `dashboard/utils/test_business_rules.py`
+  - `dashboard/utils/test_feature_engineering.py`
+  - `dashboard/utils/test_ingestion.py`
+  These tests require `streamlit_app.utils` to be a proper package. This is tracked as tech debt and will be addressed in a future refactor.
+
+---
 # 📊 ABACO Loans Analytics - Delivery Summary
 **Date**: December 30, 2025  
 **Status**: ✅ DELIVERED

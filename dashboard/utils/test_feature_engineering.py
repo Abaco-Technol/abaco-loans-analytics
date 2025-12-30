@@ -1,5 +1,10 @@
 import pytest
 
+pytestmark = pytest.mark.skip(
+    reason="streamlit_app.utils not yet packaged as module; tracked as tech debt."
+)
+import pytest
+
 pytest.skip(
     "Skipping dashboard utils tests in local dev: streamlit_app is not yet packaged as a module.",
     allow_module_level=True,
