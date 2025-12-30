@@ -1,0 +1,535 @@
+import pandas as pd
+import numpy as np
+from datetime import datetime
+from typing import Dict, Optional
+import logging
+
+logger = logging.getLogger(__name__)
+
+class KPICatalogProcessor:
+    """Processor for the unified KPI command catalog for ABACO."""
+    
+    def __init__(self, loans_df: pd.DataFrame, payments_df: pd.DataFrame, customers_df: pd.DataFrame):
+        self.loans = self._clean_df(loans_df)
+        self.payments = self._clean_df(payments_df)
+        self.customers = self._clean_df(customers_df)
+        self.loan_month = pd.DataFrame()
+        
+    def _clean_df(self, df: pd.DataFrame) -> pd.DataFrame:
+        df = df.copy()
+        df.columns = [c.strip().lower().replace(" ", "_").replace("(", "").replace(")", "") for c in df.columns]
+        
+        # Standardize main columns
+        mapping = {
+            "disburse_date": "disbursement_date",
+            "disburse_principal": "disbursement_amount",
+            "outstanding_balance": "outstanding_loan_value",
+            "interest_rate": "interest_rate_apr",
+            "maturity_date": "loan_end_date",
+            "days_in_default": "days_past_due",
+            "dpd": "days_past_due",
+            "payment_date": "true_payment_date",
+            "payment_amount": "true_total_payment",
+            "amount": "true_total_payment"
+        }
+        for old, new in mapping.items():
+            if old in df.columns and new not in df.columns:
+                df[new] = df[old]
+        
+        # If true_principal_payment is missing, estimate it from total payment (simplified)
+        if "true_total_payment" in df.columns and "true_principal_payment" not in df.columns:
+            df["true_principal_payment"] = df["true_total_payment"] * 0.9 # heuristic for synthetic data
+        
+        # Date conversion
+        date_cols = [col for col in df.columns if any(x in col for x in ["date", "fecha"])]
+        for col in date_cols:
+            df[col] = pd.to_datetime(df[col], errors="coerce")
+            
+        return df
+
+    # 0. Base extracts (building blocks)
+    def build_loan_month(self, start_date: str = "2024-01-01", end_date: Optional[str] = None) -> pd.DataFrame:
+        """
+        Builds a monthly loan snapshot with outstanding principal and days past due.
+        Optimized version using vectorized operations.
+        """
+        if end_date is None:
+            end_date = datetime.now().strftime("%Y-%m-%d")
+            
+        # Create month-end series
+        month_ends = pd.date_range(start=start_date, end=end_date, freq="ME")
+        
+        # Prepare principal cumulative payments at each month end
+        if "true_payment_date" not in self.payments.columns:
+            # Fallback if no payments found
+            self.loan_month = pd.DataFrame()
+            return self.loan_month
+            
+        payments = self.payments.sort_values(["loan_id", "true_payment_date"])
+        
+        # Standardize columns to avoid missing keys
+        cols_needed = [
+            "loan_id", "customer_id", "disbursement_amount", "disbursement_date",
+            "interest_rate_apr", "origination_fee", "origination_fee_taxes", "days_past_due"
+        ]
+        for col in cols_needed:
+            if col not in self.loans.columns:
+                self.loans[col] = 0
+                
+        loans_base = self.loans[cols_needed].copy()
+        
+        # Create a dataframe of all (loan_id, month_end) pairs where loan was disbursed
+        grid = []
+        for me in month_ends:
+            temp = loans_base[loans_base["disbursement_date"] <= me].copy()
+            temp["month_end"] = me
+            grid.append(temp)
+        
+        if not grid:
+            self.loan_month = pd.DataFrame(columns=cols_needed + ["month_end", "outstanding", "cum_principal"])
+            return self.loan_month
+            
+        df_grid = pd.concat(grid)
+        
+        # Calculate cumulative principal paid for each loan up to each month end
+        # 1. Get all payments, assign them to the month they occurred in
+        payments["month_end_pay"] = payments["true_payment_date"].dt.to_period("M").dt.to_timestamp() + pd.offsets.MonthEnd(0)
+        
+        # 2. Sum principal by loan and month
+        monthly_payments = payments.groupby(["loan_id", "month_end_pay"])["true_principal_payment"].sum().reset_index()
+        monthly_payments.rename(columns={"month_end_pay": "month_end"}, inplace=True)
+        
+        # 3. For each loan, get cumulative sum across months
+        monthly_payments = monthly_payments.sort_values(["loan_id", "month_end"])
+        monthly_payments["cum_principal"] = monthly_payments.groupby("loan_id")["true_principal_payment"].cumsum()
+        
+        # 4. Join grid with monthly_payments to get cum_principal at each month end
+        df_grid = df_grid.merge(
+            monthly_payments[["loan_id", "month_end", "cum_principal"]],
+            on=["loan_id", "month_end"],
+            how="left"
+        )
+        df_grid = df_grid.sort_values(["loan_id", "month_end"])
+        df_grid["cum_principal"] = df_grid.groupby("loan_id")["cum_principal"].ffill().fillna(0)
+        
+        # Calculate outstanding
+        df_grid["outstanding"] = (df_grid["disbursement_amount"] - df_grid["cum_principal"]).clip(lower=0)
+        
+        self.loan_month = df_grid
+        return self.loan_month
+
+    # 1. Customer Model & Growth
+    def get_active_unique_customers(self) -> pd.DataFrame:
+        """Count distinct active customers per month."""
+        if self.loan_month.empty:
+            self.build_loan_month()
+        if self.loan_month.empty:
+            return pd.DataFrame()
+        
+        active = self.loan_month[self.loan_month["outstanding"] > 0]
+        return active.groupby("month_end")["customer_id"].nunique().reset_index(name="active_customers")
+
+    def get_customer_classification(self) -> pd.DataFrame:
+        """Classify customers as New, Recurrent, or Reactivated."""
+        loans = self.loans.sort_values(["customer_id", "disbursement_date"])
+        loans["rn"] = loans.groupby("customer_id").cumcount() + 1
+        loans["prev_disb"] = loans.groupby("customer_id")["disbursement_date"].shift(1)
+        
+        def classify(row):
+            if row["rn"] == 1:
+                return "New"
+            if pd.notnull(row["prev_disb"]) and (row["disbursement_date"] - row["prev_disb"]).days > 180:
+                return "Reactivated"
+            return "Recurrent"
+            
+        loans["customer_type"] = loans.apply(classify, axis=1)
+        loans["year_month"] = loans["disbursement_date"].dt.to_period("M").dt.to_timestamp() + pd.offsets.MonthEnd(0)
+        
+        return loans.groupby(["year_month", "customer_type"])["customer_id"].nunique().reset_index(name="unique_customers")
+
+    def get_intensity_segmentation(self) -> pd.DataFrame:
+        """Classify customers into Low / Medium / Heavy users."""
+        loans_per_cust = self.loans.groupby("customer_id")["loan_id"].nunique().reset_index(name="loans_count")
+        
+        def intensity(count):
+            if count <= 1:
+                return "Low"
+            if count <= 3:
+                return "Medium"
+            return "Heavy"
+            
+        loans_per_cust["use_intensity"] = loans_per_cust["loans_count"].apply(intensity)
+        
+        # Merge back with monthly disbursement
+        df = self.loans.copy()
+        df["year_month"] = df["disbursement_date"].dt.to_period("M").dt.to_timestamp() + pd.offsets.MonthEnd(0)
+        df = df.merge(loans_per_cust[["customer_id", "use_intensity"]], on="customer_id", how="left")
+        
+        summary = df.groupby(["year_month", "use_intensity"]).agg(
+            customers=("customer_id", "nunique"),
+            disbursement_amount=("disbursement_amount", "sum")
+        ).reset_index()
+        
+        return summary
+
+    # 2. Portfolio & Pricing
+    def get_weighted_apr(self) -> pd.DataFrame:
+        """Calculate portfolio-weighted APR per month."""
+        if self.loan_month.empty:
+            self.build_loan_month()
+        if self.loan_month.empty:
+            return pd.DataFrame()
+            
+        df = self.loan_month[self.loan_month["outstanding"] > 0].copy()
+        df["weighted_apr_part"] = df["interest_rate_apr"] * df["outstanding"]
+        
+        result = df.groupby("month_end").apply(
+            lambda x: x["weighted_apr_part"].sum() / x["outstanding"].sum() if x["outstanding"].sum() > 0 else 0
+        ).reset_index(name="weighted_apr")
+        
+        return result
+
+    def get_monthly_pricing(self) -> pd.DataFrame:
+        """Combined pricing metrics per month (weighted APR, fee rate, etc.)."""
+        if self.loan_month.empty:
+            self.build_loan_month()
+        if self.loan_month.empty:
+            return pd.DataFrame()
+            
+        df = self.loan_month[self.loan_month["outstanding"] > 0].copy()
+        
+        # Weighted APR
+        df["apr_part"] = df["interest_rate_apr"] * df["outstanding"]
+        
+        # Fee Rate
+        df["fee_rate"] = (df["origination_fee"] + df["origination_fee_taxes"]) / df["disbursement_amount"].replace(0, np.nan)
+        df["fee_part"] = df["fee_rate"] * df["outstanding"]
+        
+        # Other Income Rate - matching SQL logic if possible
+        # For now, heuristic if columns missing, but we try to match the SQL components
+        other_cols = ["true_fee_payment", "true_other_payment", "true_tax_payment", "true_fee_tax_payment"]
+        for c in other_cols:
+            if c not in self.payments.columns:
+                self.payments[c] = 0
+        
+        # Aggregate income per loan from payments
+        income_per_loan = self.payments.groupby("loan_id").agg({
+            "true_fee_payment": "sum",
+            "true_other_payment": "sum",
+            "true_tax_payment": "sum",
+            "true_fee_tax_payment": "sum"
+        }).reset_index()
+        
+        df = df.merge(income_per_loan, on="loan_id", how="left")
+        for c in other_cols:
+            df[c] = df[c].fillna(0)
+            
+        df["other_income_rate"] = (df["true_fee_payment"] + df["true_other_payment"] + 
+                                   df["true_tax_payment"] + df["true_fee_tax_payment"]) / df["disbursement_amount"].replace(0, np.nan)
+        df["other_part"] = df["other_income_rate"] * df["outstanding"]
+        
+        # Group by month_end
+        def weighted_avg(group):
+            total_out = group["outstanding"].sum()
+            if total_out == 0:
+                return pd.Series({
+                    "weighted_apr": 0.0,
+                    "weighted_fee_rate": 0.0,
+                    "weighted_other_income_rate": 0.0,
+                    "weighted_effective_rate": 0.0
+                })
+            apr = group["apr_part"].sum() / total_out
+            fee = group["fee_part"].sum() / total_out
+            other = group["other_part"].sum() / total_out
+            return pd.Series({
+                "weighted_apr": apr,
+                "weighted_fee_rate": fee,
+                "weighted_other_income_rate": other,
+                "weighted_effective_rate": apr + fee + other
+            })
+            
+        result = df.groupby("month_end").apply(weighted_avg).reset_index()
+        result.rename(columns={"month_end": "year_month"}, inplace=True)
+        return result
+
+    def get_monthly_risk(self) -> pd.DataFrame:
+        """Combined risk metrics per month (amounts and percentages)."""
+        df = self.get_dpd_buckets()
+        if df.empty:
+            return df
+        
+        # Match SQL column names exactly
+        df.rename(columns={"month_end": "year_month"}, inplace=True)
+        # Calculate percentages matching SQL
+        for days in [7, 15, 30, 60]:
+            df[f"dpd{days}_pct"] = df[f"dpd{days}_amount"] / df["total_outstanding"].replace(0, np.nan)
+        df["default_pct"] = df["dpd90_amount"] / df["total_outstanding"].replace(0, np.nan)
+        
+        return df
+
+    def get_customer_types(self) -> pd.DataFrame:
+        """Customer types summary (New, Recurrent, Reactivated)."""
+        df = self.get_customer_classification()
+        if df.empty:
+            return df
+        
+        # Need to add disbursement_amount per customer type
+        loans = self.loans.copy()
+        loans["year_month"] = loans["disbursement_date"].dt.to_period("M").dt.to_timestamp() + pd.offsets.MonthEnd(0)
+        
+        # Use the same classification logic as get_customer_classification
+        loans = loans.sort_values(["customer_id", "disbursement_date"])
+        loans["rn"] = loans.groupby("customer_id").cumcount() + 1
+        loans["prev_disb"] = loans.groupby("customer_id")["disbursement_date"].shift(1)
+        
+        def classify(row):
+            if row["rn"] == 1:
+                return "New"
+            if pd.notnull(row["prev_disb"]) and (row["disbursement_date"] - row["prev_disb"]).days > 180:
+                return "Reactivated"
+            return "Recurrent"
+            
+        loans["customer_type"] = loans.apply(classify, axis=1)
+        
+        summary = loans.groupby(["year_month", "customer_type"]).agg({
+            "customer_id": "nunique",
+            "disbursement_amount": "sum"
+        }).reset_index()
+        
+        summary.rename(columns={"customer_id": "unique_customers"}, inplace=True)
+        return summary
+
+    def get_weighted_fee_rate(self) -> pd.DataFrame:
+        """Compute origination fee weighted average per month."""
+        if self.loan_month.empty:
+            self.build_loan_month()
+        if self.loan_month.empty:
+            return pd.DataFrame()
+            
+        df = self.loan_month[self.loan_month["outstanding"] > 0].copy()
+        df["fee_rate"] = (df["origination_fee"] + df["origination_fee_taxes"]) / df["disbursement_amount"].replace(0, np.nan)
+        df["weighted_fee_part"] = df["fee_rate"] * df["outstanding"]
+        
+        result = df.groupby("month_end").apply(
+            lambda x: x["weighted_fee_part"].sum() / x["outstanding"].sum() if x["outstanding"].sum() > 0 else 0
+        ).reset_index(name="weighted_fee_rate")
+        
+        return result
+
+    def get_concentration(self) -> pd.DataFrame:
+        """Compute portfolio concentration for top x% of loans."""
+        if self.loan_month.empty:
+            self.build_loan_month()
+        if self.loan_month.empty:
+            return pd.DataFrame()
+            
+        df = self.loan_month[self.loan_month["outstanding"] > 0].copy()
+        
+        def calc_top_pct(group):
+            group = group.sort_values("outstanding", ascending=False)
+            total = group["outstanding"].sum()
+            n = len(group)
+            
+            top10_n = max(1, int(np.ceil(0.10 * n)))
+            top3_n = max(1, int(np.ceil(0.03 * n)))
+            top1_n = max(1, int(np.ceil(0.01 * n)))
+            
+            return pd.Series({
+                "total_outstanding": total,
+                "top10_concentration": group.head(top10_n)["outstanding"].sum() / total if total > 0 else 0,
+                "top3_concentration": group.head(top3_n)["outstanding"].sum() / total if total > 0 else 0,
+                "top1_concentration": group.head(top1_n)["outstanding"].sum() / total if total > 0 else 0
+            })
+            
+        return df.groupby("month_end").apply(calc_top_pct).reset_index()
+
+    def get_average_ticket(self) -> pd.DataFrame:
+        """Compute average disbursement ticket and distribution by band."""
+        df = self.loans.copy()
+        df["year_month"] = df["disbursement_date"].dt.to_period("M").dt.to_timestamp() + pd.offsets.MonthEnd(0)
+        
+        def ticket_band(amount):
+            if amount < 10000:
+                return "< 10K"
+            if amount <= 25000:
+                return "10-25K"
+            if amount <= 50000:
+                return "25-50K"
+            if amount <= 100000:
+                return "50-100K"
+            return "> 100K"
+            
+        df["ticket_band"] = df["disbursement_amount"].apply(ticket_band)
+        
+        summary = df.groupby(["year_month", "ticket_band"]).agg(
+            num_loans=("loan_id", "count"),
+            avg_ticket=("disbursement_amount", "mean"),
+            total_disbursement=("disbursement_amount", "sum")
+        ).reset_index()
+        
+        return summary
+
+    def get_line_size_segmentation(self) -> pd.DataFrame:
+        """Segment customers by approved credit line bands."""
+        df = self.loans.copy()
+        # Fallback to disbursement if approved_line_amount not found
+        line_col = "approved_line_amount" if "approved_line_amount" in df.columns else "disbursement_amount"
+        
+        df["year_month"] = df["disbursement_date"].dt.to_period("M").dt.to_timestamp() + pd.offsets.MonthEnd(0)
+        
+        def line_band(amount):
+            if amount < 10000:
+                return "< 10K"
+            if amount <= 25000:
+                return "10-25K"
+            if amount <= 50000:
+                return "25-50K"
+            return "> 50K"
+            
+        df["line_band"] = df[line_col].apply(line_band)
+        
+        summary = df.groupby(["year_month", "line_band"]).agg(
+            customers=("customer_id", "nunique"),
+            disbursement_amount=("disbursement_amount", "sum")
+        ).reset_index()
+        
+        return summary
+
+    # 3. Replines Model
+    def get_replines_metrics(self) -> pd.DataFrame:
+        """Measure % of customers whose line/loan is renewed within 90 days after closing."""
+        loans = self.loans.sort_values(["customer_id", "disbursement_date"])
+        loans["next_disb_date"] = loans.groupby("customer_id")["disbursement_date"].shift(-1)
+        
+        # We need an estimate of "close_date".
+        end_col = "loan_end_date" if "loan_end_date" in self.loans.columns else "disbursement_date"
+        
+        loans["is_replined"] = (pd.notnull(loans["next_disb_date"])) & \
+                               ((loans["next_disb_date"] - loans[end_col]).dt.days <= 90)
+                               
+        loans["year_month"] = loans[end_col].dt.to_period("M").dt.to_timestamp() + pd.offsets.MonthEnd(0)
+        
+        summary = loans.groupby("year_month").agg(
+            closed_customers=("customer_id", "nunique"),
+            replined_customers=("is_replined", "sum")
+        ).reset_index()
+        
+        summary["replines_pct_90d"] = summary["replined_customers"] / summary["closed_customers"].replace(0, np.nan)
+        
+        return summary
+
+    # 4. Risk & DPD Buckets
+    def get_dpd_buckets(self) -> pd.DataFrame:
+        """Compute monthly delinquency by DPD thresholds."""
+        if self.loan_month.empty:
+            self.build_loan_month()
+        if self.loan_month.empty:
+            return pd.DataFrame()
+            
+        df = self.loan_month.copy()
+        
+        def calc_buckets(group):
+            total = group["outstanding"].sum()
+            return pd.Series({
+                "total_outstanding": total,
+                "dpd7_amount": group[group["days_past_due"] >= 7]["outstanding"].sum(),
+                "dpd15_amount": group[group["days_past_due"] >= 15]["outstanding"].sum(),
+                "dpd30_amount": group[group["days_past_due"] >= 30]["outstanding"].sum(),
+                "dpd60_amount": group[group["days_past_due"] >= 60]["outstanding"].sum(),
+                "dpd90_amount": group[group["days_past_due"] >= 90]["outstanding"].sum(),
+            })
+            
+        result = df.groupby("month_end").apply(calc_buckets).reset_index()
+        
+        result["dpd30_pct"] = result["dpd30_amount"] / result["total_outstanding"].replace(0, np.nan)
+        result["dpd90_pct"] = result["dpd90_amount"] / result["total_outstanding"].replace(0, np.nan)
+        
+        return result
+
+    # 5. Payor, LTV & CAC
+    def get_payor_concentration(self) -> pd.DataFrame:
+        """Measure portfolio concentration and risk per payor."""
+        if self.loan_month.empty:
+            self.build_loan_month()
+        if self.loan_month.empty:
+            return pd.DataFrame()
+            
+        # Join with payor info
+        pagador_col = "pagador" if "pagador" in self.loans.columns else "customer_id"
+        df = self.loan_month.merge(
+            self.loans[["loan_id", pagador_col]],
+            on="loan_id",
+            how="left"
+        )
+        
+        summary = df.groupby(["month_end", pagador_col]).agg(
+            outstanding=("outstanding", "sum"),
+            dpd30_amount=("outstanding", lambda x: df.loc[x.index, "outstanding"][df.loc[x.index, "days_past_due"] >= 30].sum()),
+            dpd90_amount=("outstanding", lambda x: df.loc[x.index, "outstanding"][df.loc[x.index, "days_past_due"] >= 90].sum())
+        ).reset_index()
+        
+        return summary
+
+    def get_all_kpis(self) -> Dict:
+        """Run all calculations and return a consolidated dictionary."""
+        kpis = {}
+        # Core aggregated views for parity tests
+        try:
+            kpis["monthly_pricing"] = self.get_monthly_pricing().to_dict("records")
+        except Exception:
+            pass
+        try:
+            kpis["monthly_risk"] = self.get_monthly_risk().to_dict("records")
+        except Exception:
+            pass
+        try:
+            kpis["customer_types"] = self.get_customer_types().to_dict("records")
+        except Exception:
+            pass
+
+        # Detailed/Granular views
+        try:
+            kpis["active_unique_customers"] = self.get_active_unique_customers().to_dict("records")
+        except Exception:
+            pass
+        try:
+            kpis["customer_classification"] = self.get_customer_classification().to_dict("records")
+        except Exception:
+            pass
+        try:
+            kpis["intensity_segmentation"] = self.get_intensity_segmentation().to_dict("records")
+        except Exception:
+            pass
+        try:
+            kpis["weighted_apr"] = self.get_weighted_apr().to_dict("records")
+        except Exception:
+            pass
+        try:
+            kpis["weighted_fee_rate"] = self.get_weighted_fee_rate().to_dict("records")
+        except Exception:
+            pass
+        try:
+            kpis["concentration"] = self.get_concentration().to_dict("records")
+        except Exception:
+            pass
+        try:
+            kpis["average_ticket"] = self.get_average_ticket().to_dict("records")
+        except Exception:
+            pass
+        try:
+            kpis["line_size_segmentation"] = self.get_line_size_segmentation().to_dict("records")
+        except Exception:
+            pass
+        try:
+            kpis["replines_metrics"] = self.get_replines_metrics().to_dict("records")
+        except Exception:
+            pass
+        try:
+            kpis["dpd_buckets"] = self.get_dpd_buckets().to_dict("records")
+        except Exception:
+            pass
+        try:
+            kpis["payor_concentration"] = self.get_payor_concentration().to_dict("records")
+        except Exception:
+            pass
+        return kpis

@@ -14,34 +14,39 @@ from agents.base_agent import AgentConfig, AgentContext
 
 app = func.FunctionApp()
 
-def _initialize_and_run_agent(trigger_type: str, user_id: str, name_suffix: str) -> dict:
+
+def _initialize_and_run_agent(trigger_type: str, user_id: str,
+                              name_suffix: str) -> dict:
     """
-    Initializes the SegmentManagerAgent, executes the tool, and returns the result.
-    This helper function centralizes agent logic to avoid code duplication.
+    Initializes the SegmentManagerAgent, executes the tool, and returns
+    the result. This helper function centralizes agent logic to avoid code
+    duplication.
     """
     model_name = os.getenv("AGENT_MODEL", "gpt-4")
-    temperature = float(os.getenv("AGENT_TEMPERATURE", 0.3))
-
+    temperature = float(os.getenv("AGENT_TEMPERATURE", "0.3"))
     config = AgentConfig(
         name="HubSpotSegmentManager",
         description="Creates daily contact segments in HubSpot",
         model=model_name,
         temperature=temperature
     )
-    
     context = AgentContext(
         user_id=user_id,
-        session_id=f"{trigger_type}-{datetime.utcnow().strftime('%Y%m%d%H%M%S')}",
+        session_id="{}-{}".format(
+            trigger_type, datetime.utcnow().strftime('%Y%m%d%H%M%S')
+        ),
         metadata={"trigger": trigger_type}
     )
-    
     agent = SegmentManagerAgent(config=config, context=context)
-    
-    logging.info(f"Executing tool 'create_today_segment' with suffix: '{name_suffix}'")
+    logging.info(
+        "Executing tool 'create_today_segment' with suffix: '%s'",
+        name_suffix
+    )
     return agent.execute_tool(
         tool_name="create_today_segment",
         tool_input={"name_suffix": name_suffix}
     )
+
 
 @app.schedule(
     schedule="0 0 8 * * *",  # Daily at 8:00 AM UTC
@@ -53,70 +58,90 @@ def _initialize_and_run_agent(trigger_type: str, user_id: str, name_suffix: str)
 def hubspot_daily_segment_trigger(timer: func.TimerRequest) -> None:
     """Timer-triggered function for daily HubSpot segment creation."""
     timestamp = datetime.utcnow().isoformat()
-    
     if timer.past_due:
-        logging.warning(f'Timer trigger is running late. Timestamp: {timestamp}')
-    
-    logging.info(f'Starting HubSpot daily segment creation at {timestamp}')
-    
+        logging.warning(
+            'Timer trigger is running late. Timestamp: %s', timestamp
+        )
+    logging.info(
+        'Starting HubSpot daily segment creation at %s', timestamp
+    )
     try:
         result = _initialize_and_run_agent(
             trigger_type="timer",
             user_id="system",
             name_suffix="Auto"
         )
-        
         if result.get("success"):
-            logging.info(f"✅ Successfully created segment: {result.get('name')} (ID: {result.get('list_id')})")
-            logging.info(f"   URL: {result.get('url')}")
+            logging.info(
+                "✅ Successfully created segment: %s (ID: %s)",
+                result.get('name'), result.get('list_id')
+            )
+            logging.info("   URL: %s", result.get('url'))
         else:
-            error_msg = result.get("error", "Unknown error during segment creation.")
-            logging.error(f"❌ Failed to create segment: {error_msg}")
-            raise Exception(f"Segment creation failed: {error_msg}")
-    
+            error_msg = result.get(
+                "error", "Unknown error during segment creation."
+            )
+            logging.error(
+                "❌ Failed to create segment: %s", error_msg
+            )
+            raise RuntimeError(
+                "Segment creation failed: {}".format(error_msg)
+            )
     except Exception as e:
-        logging.exception(f"❌ An unhandled error occurred in hubspot_daily_segment: {e}")
+        logging.exception(
+            "❌ An unhandled error occurred in hubspot_daily_segment: %s", e
+        )
         raise
-    
-    logging.info(f"Completed HubSpot daily segment creation at {datetime.utcnow().isoformat()}")
+    logging.info(
+        "Completed HubSpot daily segment creation at %s",
+        datetime.utcnow().isoformat()
+    )
 
 
-@app.route(route="create-segment", methods=["POST"], auth_level=func.AuthLevel.FUNCTION)
+@app.route(
+    route="create-segment",
+    methods=["POST"],
+    auth_level=func.AuthLevel.FUNCTION
+)
 @app.function_name(name="HttpTriggerManualSegment")
-def manual_segment_creation_trigger(req: func.HttpRequest) -> func.HttpResponse:
+def manual_segment_creation_trigger(
+    req: func.HttpRequest
+) -> func.HttpResponse:
     """HTTP-triggered function for manual segment creation."""
     logging.info('HTTP trigger: Manual HubSpot segment creation requested.')
-    
     try:
         req_body = req.get_json() if req.get_body() else {}
         name_suffix = req_body.get('name_suffix', 'Manual')
     except ValueError:
         name_suffix = 'Manual'
-    
     try:
         result = _initialize_and_run_agent(
             trigger_type="http",
             user_id="http-trigger",
             name_suffix=name_suffix
         )
-        
         if result.get("success"):
             return func.HttpResponse(
-                body=f"Successfully created segment: {result.get('name')}\nURL: {result.get('url')}",
+                body="Successfully created segment: {}\nURL: {}".format(
+                    result.get('name'), result.get('url')
+                ),
                 status_code=200,
                 mimetype="text/plain"
             )
         else:
             return func.HttpResponse(
-                body=f"Failed to create segment: {result.get('error')}",
+                body="Failed to create segment: {}".format(
+                    result.get('error')
+                ),
                 status_code=500,
                 mimetype="text/plain"
             )
-    
     except Exception as e:
-        logging.exception(f"An unhandled error occurred in manual_segment_creation: {e}")
+        logging.exception(
+            "An unhandled error occurred in manual_segment_creation: %s", e
+        )
         return func.HttpResponse(
-            body=f"Internal Server Error: {str(e)}",
+            body="Internal Server Error: {}".format(str(e)),
             status_code=500,
             mimetype="text/plain"
         )

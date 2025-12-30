@@ -1,26 +1,60 @@
-# Git and version control
-git*
-.vscode/
+# Version Control
+.git/
+.gitignore
+.github/
+
+# Virtual Environments & Packages
+.venv/
 .venv*/
+node_modules/
 __pycache__/
 *.pyc
 
-apps/
-node_modules/
-node/
-services/
+# Build & Cache
+.gradle/
+.mvn/
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+.sonarqube/
+.zencoder/
+.zenflow/
+.vercel/
+.rollback/
+build/
+dist/
+org.eclipse.*/
+
+# Project Specific Data & Docs
 data/
+data_samples/
+exports/
+archives/
+docs/
 tests/
 htmlcov/
-python/
-scripts/
-streamlit_app/
-org.eclipse.*/
-archives/
-exports/
+logs/
+demo_bak*/
 
+# App Folders
+apps/
+node/
+services/
+dashboard/
+orchestration/
+sql/
+scripts/
+python/
+
+# Config & Secrets
 local.settings.json
 .env*
 *.md
 package-lock.json
+pnpm-lock.yaml
 tsconfig.tsbuildinfo
+Makefile
+alembic.ini
+Dockerfile*
+compose*.yaml
+sonar-project.properties

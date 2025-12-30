@@ -1,6 +1,6 @@
 """HubSpot Segment Manager Agent - Creates and manages contact segments."""
 
-from typing import Dict, List, Any, Optional
+from typing import Any, Optional
 from datetime import datetime
 import os
 import requests
@@ -77,7 +77,7 @@ class SegmentManagerAgent(BaseAgent):
             "- Handle errors with clear messages\n"
         )
     
-    def get_available_tools(self) -> List[Dict[str, Any]]:
+    def get_available_tools(self) -> list[dict]:
         """Return list of available HubSpot tools.
         
         Returns:
@@ -121,7 +121,7 @@ class SegmentManagerAgent(BaseAgent):
             }
         ]
     
-    def execute_tool(self, tool_name: str, tool_input: Dict[str, Any]) -> Any:
+    def execute_tool(self, tool_name: str, tool_input: dict) -> Any:
         """Execute a HubSpot segment management tool.
         
         Args:
@@ -137,35 +137,29 @@ class SegmentManagerAgent(BaseAgent):
                     name=tool_input.get("name"),
                     filters=tool_input.get("filters", [])
                 )
-            
             elif tool_name == "create_today_segment":
                 return self._create_today_segment(
                     name_suffix=tool_input.get("name_suffix", "")
                 )
-            
             elif tool_name == "list_segments":
                 return self._list_segments()
-            
             elif tool_name == "get_segment_contacts":
                 return self._get_segment_contacts(
                     list_id=tool_input.get("list_id")
                 )
-            
             elif tool_name == "update_segment":
                 return self._update_segment(
                     list_id=tool_input.get("list_id"),
                     updates=tool_input.get("updates", {})
                 )
-            
             else:
                 return {"error": f"Unknown tool: {tool_name}"}
-        
         except Exception as e:
-                return {"error": f"Tool execution failed: {str(e)}"}
+            return {"error": f"Tool execution failed: {str(e)}"}
     
     def _get_auth_headers_and_params(
         self
-    ) -> tuple[Dict[str, str], Dict[str, str]]:
+    ) -> tuple[dict, dict]:
         """Get authentication headers and parameters based on API key type."""
         headers = {"Content-Type": "application/json"}
         params = {}
@@ -182,8 +176,8 @@ class SegmentManagerAgent(BaseAgent):
     def _create_segment(
         self,
         name: str,
-        filters: List[Dict]
-    ) -> Dict[str, Any]:
+        filters: list[dict]
+    ) -> dict:
         """Create a new contact segment.
         
         Args:
@@ -217,7 +211,10 @@ class SegmentManagerAgent(BaseAgent):
                 "success": True,
                 "list_id": data.get("listId"),
                 "name": data.get("name"),
-                "url": f"https://app.hubspot.com/contacts/lists/{data.get('listId')}",
+                "url": (
+                    f"https://app.hubspot.com/contacts/lists/"
+                    f"{data.get('listId')}"
+                ),
                 "filters": data.get("filters")
             }
         else:
@@ -229,7 +226,7 @@ class SegmentManagerAgent(BaseAgent):
                 )
             }
     
-    def _create_today_segment(self, name_suffix: str = "") -> Dict[str, Any]:
+    def _create_today_segment(self, name_suffix: str = "") -> dict:
         """Create a segment for contacts created today.
         
         Args:
@@ -252,7 +249,7 @@ class SegmentManagerAgent(BaseAgent):
 
         return self._create_segment(name=segment_name, filters=filters)
     
-    def _list_segments(self) -> Dict[str, Any]:
+    def _list_segments(self) -> dict:
         """List all contact segments.
         
         Returns:
@@ -292,7 +289,7 @@ class SegmentManagerAgent(BaseAgent):
                 "error": f"Failed to list segments: {response.status_code}"
             }
     
-    def _get_segment_contacts(self, list_id: str) -> Dict[str, Any]:
+    def _get_segment_contacts(self, list_id: str) -> dict:
         """Get contacts in a specific segment.
         
         Args:
@@ -325,7 +322,9 @@ class SegmentManagerAgent(BaseAgent):
                 "contacts": [
                     {
                         "id": contact.get("vid"),
-                        "email": contact.get("identity-profiles", [{}])[0].get("identities", [{}])[0].get("value"),
+                        "email": contact.get("identity-profiles", [{}])[0]
+                        .get("identities", [{}])[0]
+                        .get("value"),
                         "properties": contact.get("properties", {})
                     }
                     for contact in contacts
@@ -340,8 +339,8 @@ class SegmentManagerAgent(BaseAgent):
     def _update_segment(
         self,
         list_id: str,
-        updates: Dict[str, Any]
-    ) -> Dict[str, Any]:
+        updates: dict
+    ) -> dict:
         """Update segment properties.
         
         Args:
@@ -355,7 +354,13 @@ class SegmentManagerAgent(BaseAgent):
         
         headers, params = self._get_auth_headers_and_params()
         
-        response = requests.post(url, json=updates, headers=headers, params=params, timeout=10)
+        response = requests.post(
+            url,
+            json=updates,
+            headers=headers,
+            params=params,
+            timeout=10
+        )
         
         if response.status_code == 200:
             return {
