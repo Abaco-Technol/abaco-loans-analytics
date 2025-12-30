@@ -58,11 +58,12 @@ def load_data():
             # Insert
             cols = list(df_cust_mapped.columns)
             col_names = ', '.join(cols)
-            placeholders = ', '.join(['%s'] * len(cols))
+            placeholders = ', '.join([f'%({col})s' for col in cols])
             query = f"INSERT INTO customer_data ({col_names}) VALUES ({placeholders})"
             for i, row in enumerate(df_cust_mapped.itertuples(index=False, name=None)):
                 try:
-                    cur.execute(query, row)
+                    row_dict = dict(zip(cols, row))
+                    cur.execute(query, row_dict)
                 except Exception as e:
                     print(f"Failed at row {i}: {row}")
                     raise e
@@ -106,11 +107,12 @@ def load_data():
             # Insert
             cols = list(df_loan_mapped.columns)
             col_names = ', '.join(cols)
-            placeholders = ', '.join(['%s'] * len(cols))
+            placeholders = ', '.join([f'%({col})s' for col in cols])
             query = f"INSERT INTO loan_data ({col_names}) VALUES ({placeholders})"
             for i, row in enumerate(df_loan_mapped.itertuples(index=False, name=None)):
                 try:
-                    cur.execute(query, row)
+                    row_dict = dict(zip(cols, row))
+                    cur.execute(query, row_dict)
                 except Exception as e:
                     print(f"Failed at row {i}: {row}")
                     raise e
@@ -148,11 +150,12 @@ def load_data():
             # Insert
             cols = list(df_pay_mapped.columns)
             col_names = ', '.join(cols)
-            placeholders = ', '.join(['%s'] * len(cols))
+            placeholders = ', '.join([f'%({col})s' for col in cols])
             query = f"INSERT INTO real_payment ({col_names}) VALUES ({placeholders})"
             for i, row in enumerate(df_pay_mapped.itertuples(index=False, name=None)):
                 try:
-                    cur.execute(query, row)
+                    row_dict = dict(zip(cols, row))
+                    cur.execute(query, row_dict)
                 except Exception as e:
                     print(f"Failed at row {i}: {row}")
                     raise e
