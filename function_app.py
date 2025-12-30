@@ -1,22 +1,25 @@
-"""Azure Function App for HubSpot Segment Manager Agent.
+
+from typing import Dict
+import logging
+import os
+from datetime import datetime
+import azure.functions as func
+from agents.hubspot.segment_manager import SegmentManagerAgent
+from agents.base_agent import AgentConfig, AgentContext
+
+
+"""
+Azure Function App for HubSpot Segment Manager Agent.
 
 This function runs on a schedule to create daily HubSpot segments for contacts
 created today (Fecha de creación = Hoy).
 """
 
-import azure.functions as func
-import logging
-import os
-from datetime import datetime
-
-from agents.hubspot.segment_manager import SegmentManagerAgent
-from agents.base_agent import AgentConfig, AgentContext
-
 app = func.FunctionApp()
 
 
 def _initialize_and_run_agent(trigger_type: str, user_id: str,
-                              name_suffix: str) -> dict:
+                              name_suffix: str) -> Dict:
     """
     Initializes the SegmentManagerAgent, executes the tool, and returns
     the result. This helper function centralizes agent logic to avoid code

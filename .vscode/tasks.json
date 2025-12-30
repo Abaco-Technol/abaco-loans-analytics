@@ -55,6 +55,13 @@
         "package": "${workspaceFolder}/services/slack_bot/package.json",
         "enableDebugging": true
       }
+    },
+    {
+      "type": "func",
+      "label": "func: host start",
+      "command": "host start",
+      "problemMatcher": "$func-powershell-watch",
+      "isBackground": true
     }
   ]
 }

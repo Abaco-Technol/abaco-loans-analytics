@@ -57,5 +57,9 @@
   "chat.disableAIFeatures": false,
   "chat.checkpoints.showFileChanges": true,
   "chat.customAgentInSubagent.enabled": true,
-  "chat.allowAnonymousAccess": true
+  "chat.allowAnonymousAccess": true,
+  "azureFunctions.deploySubpath": ".",
+  "azureFunctions.projectLanguage": "PowerShell",
+  "azureFunctions.projectRuntime": "~4",
+  "debug.internalConsoleOptions": "neverOpen"
 }
