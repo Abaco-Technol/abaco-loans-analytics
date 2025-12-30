@@ -2,6 +2,9 @@
 
 from datetime import datetime
 from typing import Dict, Optional
+
+# Built-ins para Pylance/Flake8
+from builtins import len, any, all, max, Exception, list
 import logging
 import pandas as pd
 import numpy as np
@@ -11,6 +14,7 @@ logger = logging.getLogger(__name__)
 
 
 class ABACOKPICalculator:
+
     """Comprehensive KPI calculator for ABACO loan portfolio."""
 
     def __init__(
