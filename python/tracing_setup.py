@@ -31,6 +31,7 @@ from opentelemetry.instrumentation.urllib3 import URLLib3Instrumentor
 logger = logging.getLogger(__name__)
 
 _configured = False
+_instrumented = False
 
 
 def configure_tracing(connection_string: Optional[str] = None) -> None:
@@ -44,7 +45,7 @@ def configure_tracing(connection_string: Optional[str] = None) -> None:
                           If not provided, will read from APPLICATIONINSIGHTS_CONNECTION_STRING 
                           environment variable.
     """
-    global _configured
+    global _configured, _instrumented
     
     if _configured:
         logger.debug("Tracing already configured, skipping")
@@ -64,9 +65,11 @@ def configure_tracing(connection_string: Optional[str] = None) -> None:
         # Configure Azure Monitor with OpenTelemetry
         configure_azure_monitor(connection_string=conn_string)
         
-        # Instrument common HTTP libraries
-        RequestsInstrumentor().instrument()
-        URLLib3Instrumentor().instrument()
+        # Instrument common HTTP libraries (only once)
+        if not _instrumented:
+            RequestsInstrumentor().instrument()
+            URLLib3Instrumentor().instrument()
+            _instrumented = True
         
         _configured = True
         logger.info("Azure Monitor tracing configured successfully")

@@ -14,6 +14,19 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
+def _calculate_success_rate(metrics):
+    """Calculate success rate from metrics."""
+    pipeline = metrics.get('pipeline', {})
+    total = pipeline.get('total_runs', 0)
+    failed = pipeline.get('failed_runs', 0)
+    
+    if total == 0:
+        return 0
+    
+    success_rate = ((total - failed) / total) * 100
+    return round(success_rate, 1)
+
+
 def generate_dashboard(pipeline_status=None, agent_status=None, quality_trend=None):
     """Generate observability dashboard HTML."""
     output_dir = Path("outputs")
@@ -26,6 +39,9 @@ def generate_dashboard(pipeline_status=None, agent_status=None, quality_trend=No
             metrics = json.load(f)
     else:
         metrics = {}
+    
+    # Calculate success rate before using it in HTML
+    success_rate = _calculate_success_rate(metrics)
     
     # Generate HTML dashboard
     html = f"""
@@ -150,7 +166,7 @@ def generate_dashboard(pipeline_status=None, agent_status=None, quality_trend=No
             
             <div class="metric-card">
                 <div class="metric-label">Success Rate</div>
-                <div class="metric-value">{_calculate_success_rate(metrics)}%</div>
+                <div class="metric-value">{success_rate}%</div>
             </div>
             
             <div class="metric-card">
@@ -190,19 +206,6 @@ def generate_dashboard(pipeline_status=None, agent_status=None, quality_trend=No
     return dashboard_file
 
 
-def _calculate_success_rate(metrics):
-    """Calculate success rate from metrics."""
-    pipeline = metrics.get('pipeline', {})
-    total = pipeline.get('total_runs', 0)
-    failed = pipeline.get('failed_runs', 0)
-    
-    if total == 0:
-        return 0
-    
-    success_rate = ((total - failed) / total) * 100
-    return round(success_rate, 1)
-
-
 if __name__ == "__main__":
     import sys
     
@@ -213,12 +216,15 @@ if __name__ == "__main__":
         quality_trend = None
         
         for arg in sys.argv[1:]:
-            if arg.startswith("--pipeline-status"):
-                pipeline_status = arg.split("=")[1] if "=" in arg else None
-            elif arg.startswith("--agent-status"):
-                agent_status = arg.split("=")[1] if "=" in arg else None
-            elif arg.startswith("--quality-trend"):
-                quality_trend = arg.split("=")[1] if "=" in arg else None
+            if arg.startswith("--pipeline-status") and "=" in arg:
+                value = arg.split("=", 1)[1]
+                pipeline_status = value if value else None
+            elif arg.startswith("--agent-status") and "=" in arg:
+                value = arg.split("=", 1)[1]
+                agent_status = value if value else None
+            elif arg.startswith("--quality-trend") and "=" in arg:
+                value = arg.split("=", 1)[1]
+                quality_trend = value if value else None
         
         dashboard_file = generate_dashboard(pipeline_status, agent_status, quality_trend)
         print(f"✓ Dashboard generated: {dashboard_file}")
