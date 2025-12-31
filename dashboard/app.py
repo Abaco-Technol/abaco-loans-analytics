@@ -7,6 +7,7 @@ import streamlit as st
 from datetime import datetime
 from pathlib import Path
 import logging
+import sys
 
 st.set_page_config(layout="wide", page_title="Abaco Loans Analytics - Executive Dashboard")
 
@@ -14,7 +15,10 @@ logger = logging.getLogger(__name__)
 
 # Initialize tracing early; tolerate missing exporters in dev
 try:
-    import python.tracing_setup  # type: ignore
+    sys.path.insert(0, str(Path(__file__).parent.parent))
+    from python.tracing_setup import init_tracing, enable_auto_instrumentation
+    init_tracing(service_name="abaco-dashboard")
+    enable_auto_instrumentation()
 except Exception as tracing_err:  # pragma: no cover - defensive
     logger.warning("Tracing not initialized: %s", tracing_err)
 
