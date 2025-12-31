@@ -18,6 +18,12 @@ try:
 except Exception as tracing_err:  # pragma: no cover - defensive
     logger.warning("Tracing not initialized: %s", tracing_err)
 
+# Health check page - responds to /?page=health
+query_params = st.query_params
+if query_params.get("page") == ["health"]:
+    st.write("ok")
+    st.stop()
+
 @st.cache_data
 def load_loan_data():
     """Load real loan data from CSV files."""
