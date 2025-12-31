@@ -97,10 +97,14 @@ def get_tracer(name: str):
         name: Name of the tracer, typically __name__ of the calling module
 
     Returns:
-        Tracer instance for creating spans
+        Tracer instance for creating spans, or None if tracing is not available
     """
-    from opentelemetry import trace
-    return trace.get_tracer(name)
+    try:
+        from opentelemetry import trace
+        return trace.get_tracer(name)
+    except ImportError:
+        logger.warning("OpenTelemetry not available. Tracing disabled.")
+        return None
 
 
 # Convenience function for backward compatibility
