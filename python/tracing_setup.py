@@ -105,13 +105,3 @@ def get_tracer(name: str):
     except ImportError:
         logger.warning("OpenTelemetry not available. Tracing disabled.")
         return None
-
-
-# Convenience function for backward compatibility
-def traced_function_example():
-    """Example of using tracing in a function."""
-    tracer = get_tracer(__name__)
-    with tracer.start_as_current_span("example-operation"):
-        logger.info("This operation is being traced")
-        # Your code here
-        pass

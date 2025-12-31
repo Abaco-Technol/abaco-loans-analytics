@@ -15,10 +15,14 @@ from python.pipeline.utils import ensure_dir, load_yaml, resolve_placeholders, u
 # Import tracing utilities
 try:
     from python.tracing_setup import get_tracer
+    from opentelemetry import trace
     tracer = get_tracer(__name__)
+    TRACING_AVAILABLE = True
 except ImportError:
     # If tracing not available, create no-op tracer
     tracer = None
+    trace = None
+    TRACING_AVAILABLE = False
 
 logger = logging.getLogger(__name__)
 
@@ -294,9 +298,8 @@ class UnifiedPipeline:
 
             write_json(run_dir / f"{self.run_id}_summary.json", summary)
             
-            if tracer:
+            if tracer and TRACING_AVAILABLE:
                 # Add summary attributes to the parent span
-                from opentelemetry import trace
                 current_span = trace.get_current_span()
                 if current_span:
                     current_span.set_attribute("pipeline.status", "success")
@@ -307,8 +310,7 @@ class UnifiedPipeline:
         except Exception as exc:
             logger.error("Pipeline execution failed: %s", str(exc), exc_info=True)
             
-            if tracer:
-                from opentelemetry import trace
+            if tracer and TRACING_AVAILABLE:
                 current_span = trace.get_current_span()
                 if current_span:
                     current_span.set_attribute("pipeline.status", "failed")
