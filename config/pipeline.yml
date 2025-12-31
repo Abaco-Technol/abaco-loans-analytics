@@ -43,6 +43,23 @@ pipeline:
       source: file
       file:
         default_path: data/raw/cascade/loan_tape.csv
+      looker:
+        loans_par_path: data/raw/looker_exports/loan_par_balances.csv
+        loans_path: data/raw/looker_exports/loans.csv
+        financials_path: data/raw/financial_statements
+        measurement_date_strategy: today
+        measurement_date_column: null
+        date_column_candidates:
+          - reporting_date
+          - as_of_date
+          - date
+          - fecha
+          - fecha_corte
+        cash_column_candidates:
+          - cash_balance_usd
+          - cash_balance
+          - cash_usd
+          - cash
       validation:
         strict: true
         schema_path: config/data_schemas/loan_tape.json
