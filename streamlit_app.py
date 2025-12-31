@@ -4,6 +4,13 @@ from typing import Optional
 
 import pandas as pd
 
+# Initialize tracing early for Streamlit app
+try:
+    from python.tracing_setup import configure_tracing
+    configure_tracing(service_name="abaco-streamlit-dashboard")
+except Exception:
+    pass  # Tracing is optional for Streamlit
+
 try:
     import plotly.express as px
 except ImportError as e:

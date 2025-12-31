@@ -8,6 +8,10 @@ from typing import Any, Dict, Optional
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
+# Initialize tracing early in the application lifecycle
+from python.tracing_setup import configure_tracing
+configure_tracing(service_name="abaco-data-pipeline")
+
 from python.compliance import build_compliance_report, write_compliance_report
 from python.pipeline.ingestion import UnifiedIngestion
 from python.kpi_engine_v2 import KPIEngineV2

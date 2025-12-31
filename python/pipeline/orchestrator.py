@@ -12,6 +12,14 @@ from python.pipeline.output import UnifiedOutput
 from python.pipeline.transformation import UnifiedTransformation
 from python.pipeline.utils import ensure_dir, load_yaml, resolve_placeholders, utc_now, write_json
 
+# Import tracing utilities
+try:
+    from python.tracing_setup import get_tracer
+    tracer = get_tracer(__name__)
+except ImportError:
+    # If tracing not available, create no-op tracer
+    tracer = None
+
 logger = logging.getLogger(__name__)
 
 
@@ -133,6 +141,26 @@ class UnifiedPipeline:
     def execute(
         self, input_file: Path, user: str = "system", action: str = "manual"
     ) -> Dict[str, Any]:
+        """Execute the unified pipeline with distributed tracing."""
+        
+        # Start a tracing span if available
+        if tracer:
+            with tracer.start_as_current_span(
+                "pipeline.execute",
+                attributes={
+                    "pipeline.input_file": str(input_file),
+                    "pipeline.user": user,
+                    "pipeline.action": action,
+                }
+            ):
+                return self._execute_internal(input_file, user, action)
+        else:
+            return self._execute_internal(input_file, user, action)
+    
+    def _execute_internal(
+        self, input_file: Path, user: str = "system", action: str = "manual"
+    ) -> Dict[str, Any]:
+        """Internal execution method with tracing support."""
         logger.info("Starting unified pipeline execution")
         run_started = utc_now()
         run_cfg = self.config.get("run", default={}) or {}
@@ -143,6 +171,10 @@ class UnifiedPipeline:
         cascade_cfg = self.config.get("cascade", default={}) or {}
 
         try:
+            # Phase 1: Ingestion
+            if tracer:
+                span = tracer.start_as_current_span("pipeline.phase.ingestion")
+            
             ingestion = UnifiedIngestion(self.config.config)
             if ingest_source == "cascade_http":
                 base_url = cascade_cfg.get("base_url", "")
@@ -155,16 +187,39 @@ class UnifiedPipeline:
             else:
                 ingestion_result = ingestion.ingest_file(input_file, archive_dir=raw_archive_dir)
 
+            if tracer:
+                span.set_attribute("pipeline.ingestion.rows", len(ingestion_result.df))
+                span.end()
+
             self.run_id = self._generate_run_id(ingestion_result.source_hash)
             run_dir = ensure_dir(artifacts_dir / self.run_id)
 
+            # Phase 2: Transformation
+            if tracer:
+                span = tracer.start_as_current_span("pipeline.phase.transformation")
+            
             transformation = UnifiedTransformation(self.config.config, run_id=self.run_id)
             transformation_result = transformation.transform(ingestion_result.df, user=user)
+            
+            if tracer:
+                span.set_attribute("pipeline.transformation.rows", len(transformation_result.df))
+                span.set_attribute("pipeline.transformation.masked_columns", len(transformation_result.masked_columns))
+                span.end()
 
+            # Phase 3: Calculation
+            if tracer:
+                span = tracer.start_as_current_span("pipeline.phase.calculation")
+            
             baseline_metrics = self._load_previous_metrics(artifacts_dir, self.run_id)
             calculation = UnifiedCalculationV2(self.config.config, run_id=self.run_id)
             calculation_result = calculation.calculate(transformation_result.df, baseline_metrics)
+            
+            if tracer:
+                span.set_attribute("pipeline.calculation.metrics_count", len(calculation_result.metrics))
+                span.set_attribute("pipeline.calculation.anomalies_count", len(calculation_result.anomalies))
+                span.end()
 
+            # Compliance report
             compliance_report = build_compliance_report(
                 run_id=self.run_id,
                 access_log=transformation_result.access_log,
@@ -180,6 +235,10 @@ class UnifiedPipeline:
             compliance_path = run_dir / f"{self.run_id}_compliance.json"
             write_compliance_report(compliance_report, compliance_path)
 
+            # Phase 4: Output
+            if tracer:
+                span = tracer.start_as_current_span("pipeline.phase.output")
+            
             output = UnifiedOutput(self.config.config, run_id=self.run_id)
             output_result = output.persist(
                 transformation_result.df,
@@ -201,6 +260,10 @@ class UnifiedPipeline:
                 compliance_report_path=compliance_path,
                 timeseries=calculation_result.timeseries,
             )
+            
+            if tracer:
+                span.set_attribute("pipeline.output.manifest", str(output_result.manifest_path))
+                span.end()
 
             summary = {
                 "status": "success",
@@ -230,10 +293,27 @@ class UnifiedPipeline:
             }
 
             write_json(run_dir / f"{self.run_id}_summary.json", summary)
+            
+            if tracer:
+                # Add summary attributes to the parent span
+                from opentelemetry import trace
+                current_span = trace.get_current_span()
+                if current_span:
+                    current_span.set_attribute("pipeline.status", "success")
+                    current_span.set_attribute("pipeline.run_id", self.run_id)
+            
             return summary
 
         except Exception as exc:
             logger.error("Pipeline execution failed: %s", str(exc), exc_info=True)
+            
+            if tracer:
+                from opentelemetry import trace
+                current_span = trace.get_current_span()
+                if current_span:
+                    current_span.set_attribute("pipeline.status", "failed")
+                    current_span.record_exception(exc)
+            
             return {
                 "status": "failed",
                 "run_id": self.run_id,

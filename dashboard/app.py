@@ -7,6 +7,15 @@ import streamlit as st
 from datetime import datetime
 from pathlib import Path
 
+# Initialize tracing for dashboard
+try:
+    import sys
+    sys.path.insert(0, str(Path(__file__).parent.parent))
+    from python.tracing_setup import configure_tracing
+    configure_tracing(service_name="abaco-dashboard")
+except Exception:
+    pass  # Tracing is optional
+
 st.set_page_config(layout="wide", page_title="Abaco Loans Analytics - Executive Dashboard")
 
 @st.cache_data
