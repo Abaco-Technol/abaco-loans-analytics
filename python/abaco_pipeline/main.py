@@ -530,6 +530,11 @@ def build_parser() -> argparse.ArgumentParser:
     p_cfg.set_defaults(func=cmd_print_config)
 
     p_write = sub.add_parser("write-audit", help="Write audit payload to Supabase")
+    p_write.add_argument(
+        "--kpis-config",
+        default="config/kpis.yml",
+        help="Path to KPI config YAML (default: config/kpis.yml)",
+    )
     p_write.add_argument("--payload", required=True, help="Path to audit payload JSON")
     p_write.add_argument(
         "--dry-run", action="store_true", help="Print enriched payload without writing"

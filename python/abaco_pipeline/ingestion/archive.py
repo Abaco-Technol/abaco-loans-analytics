@@ -30,3 +30,14 @@ def write_raw_json(archive_dir: Path, name: str, obj: Any) -> ArchiveResult:
     out = archive_dir / f"{name}.{sha}.json"
     out.write_text(json.dumps(obj, indent=2, sort_keys=True), encoding="utf-8")
     return ArchiveResult(path=out, sha256=sha)
+
+
+def archive_file(archive_dir: Path, src: Path) -> ArchiveResult:
+    """Copy a source file into the archive dir with a content hash in the filename."""
+
+    archive_dir.mkdir(parents=True, exist_ok=True)
+    payload = src.read_bytes()
+    sha = sha256_bytes(payload)
+    out = archive_dir / f"{src.stem}.{sha}{src.suffix}"
+    out.write_bytes(payload)
+    return ArchiveResult(path=out, sha256=sha)
