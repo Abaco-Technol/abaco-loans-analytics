@@ -14,7 +14,7 @@ from typing import Any, Dict, Iterable, List, Optional, Tuple
 
 import pandas as pd
 from jsonschema import Draft202012Validator
-from pydantic import BaseModel, Field, ValidationError
+from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from python.pipeline.utils import CircuitBreaker, RateLimiter, RetryPolicy, hash_file, utc_now
 from python.validation import validate_dataframe
@@ -24,6 +24,8 @@ logger = logging.getLogger(__name__)
 
 class LoanRecord(BaseModel):
     """Schema enforcement for individual loan or portfolio records."""
+
+    model_config = ConfigDict(populate_by_name=True, extra="allow")
 
     loan_id: Optional[str] = Field(None, alias="loan_id")
     total_receivable_usd: float = Field(ge=0)
@@ -36,10 +38,6 @@ class LoanRecord(BaseModel):
     dpd_60_90_usd: float = Field(default=0.0, ge=0)
     dpd_90_plus_usd: float = Field(default=0.0, ge=0)
     measurement_date: Optional[str] = None
-
-    class Config:
-        populate_by_name = True
-        extra = "allow"
 
 
 @dataclass
