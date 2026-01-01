@@ -6,7 +6,7 @@ on:
 
 jobs:
   coderabbit-pr-review:
-    if: ${{ secrets.CODERABBIT_TOKEN != '' }}
+    
     runs-on: ubuntu-latest
     permissions:
       contents: read

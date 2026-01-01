@@ -7,7 +7,7 @@ on:
 
 jobs:
   export:
-    if: ${{ secrets.AZURE_STORAGE_CONNECTION_STRING != '' && secrets.FACEBOOK_ACCESS_TOKEN != '' && secrets.FACEBOOK_AD_ACCOUNT_ID != '' }}
+    
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

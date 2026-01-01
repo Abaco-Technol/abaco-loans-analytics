@@ -35,7 +35,7 @@ jobs:
 
       - name: Ingest Cascade Data
         id: cascade
-        if: ${{ hashFiles('scripts/ingest_cascade.py') != '' && secrets.CASCADEUSERNAME != '' && secrets.CASCADEPASSWORD != '' }}
+        
         continue-on-error: true
         run: |
           echo "Fetching loan data from Cascade..."
@@ -46,7 +46,7 @@ jobs:
 
       - name: Ingest HubSpot CRM Data
         id: hubspot
-        if: ${{ hashFiles('scripts/ingest_hubspot.py') != '' && secrets.HUBSPOT_API_TOKEN != '' }}
+        
         continue-on-error: true
         run: |
           echo "Fetching deals, contacts, and pipeline data from HubSpot..."
@@ -56,7 +56,7 @@ jobs:
 
       - name: Refresh Supabase Views
         id: supabase
-        if: ${{ hashFiles('scripts/refresh_supabase_views.py') != '' && secrets.SUPABASE_SERVICE_ROLE != '' }}
+        
         run: |
           echo "Refreshing materialized views for agent consumption..."
           python scripts/refresh_supabase_views.py
@@ -76,7 +76,7 @@ jobs:
           python scripts/generate_data_manifest.py
 
       - name: Signal Agents Data Ready
-        if: ${{ secrets.SLACK_BOT_TOKEN != '' }}
+        
         run: |
           echo "Broadcasting data-ready signal to agent workflows..."
           curl -X POST ${{ secrets.SLACK_BOT_TOKEN }} \
@@ -84,7 +84,7 @@ jobs:
             -d '{"text":"✅ Data pipeline completed at $(date). All agents can now run."}'
 
       - name: Log to Opik
-        if: ${{ always() && secrets.OPIK_TOKEN != '' && hashFiles('scripts/log_pipeline_metrics.py') != '' }}
+        
         run: |
           python scripts/log_pipeline_metrics.py \
             --cascade-status ${{ steps.cascade.outcome }} \
@@ -94,7 +94,7 @@ jobs:
           OPIK_TOKEN: ${{ secrets.OPIK_TOKEN }}
 
       - name: Alert on Critical Failure
-        if: ${{ failure() && secrets.SLACK_BOT_TOKEN != '' }}
+        
         run: |
           curl -X POST ${{ secrets.SLACK_BOT_TOKEN }} \
             -H 'Content-Type: application/json' \

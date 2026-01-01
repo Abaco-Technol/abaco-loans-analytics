@@ -14,7 +14,7 @@ env:
 jobs:
   # Job 1: Fetch system metrics from Opik
   fetch-opik-metrics:
-    if: ${{ secrets.OPIK_TOKEN != '' }}
+    
     runs-on: ubuntu-latest
     outputs:
       metrics-available: ${{ steps.fetch.outputs.available }}
@@ -211,7 +211,7 @@ jobs:
   # Job 6: Alert on critical issues
   alert-on-critical-issues:
     needs: [analyze-pipeline-health, analyze-agent-performance, check-data-quality-trends]
-    if: ${{ secrets.SLACK_BOT_TOKEN != '' && needs.analyze-pipeline-health.result == 'success' && needs.analyze-agent-performance.result == 'success' && needs.check-data-quality-trends.result == 'success' && (needs.analyze-pipeline-health.outputs.pipeline-status != 'healthy' || needs.analyze-agent-performance.outputs.agent-status != 'optimal' || needs.check-data-quality-trends.outputs.anomalies-detected == 'true') }}
+    
     runs-on: ubuntu-latest
     steps:
       - name: Send critical alert to Slack
@@ -229,7 +229,7 @@ jobs:
   # Job 7: Daily system health summary
   send-daily-summary:
     needs: [analyze-pipeline-health, analyze-agent-performance, check-data-quality-trends, generate-observability-dashboard]
-    if: ${{ secrets.SLACK_BOT_TOKEN != '' && needs.analyze-pipeline-health.result == 'success' && needs.analyze-agent-performance.result == 'success' && needs.check-data-quality-trends.result == 'success' && needs.generate-observability-dashboard.result == 'success' }}
+    
     runs-on: ubuntu-latest
     steps:
       - name: Send daily health summary to Slack

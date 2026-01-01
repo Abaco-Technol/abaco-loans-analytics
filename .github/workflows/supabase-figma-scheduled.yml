@@ -7,7 +7,7 @@ on:
 
 jobs:
   supabase-figma:
-    if: ${{ secrets.SUPABASE_URL != '' && secrets.SUPABASE_ANON_PUBLIC_KEY != '' && secrets.FIGMA_TOKEN != '' && secrets.FIGMA_FILE_KEY != '' }}
+    
     runs-on: ubuntu-latest
     env:
       SUPABASE_URL: ${{ secrets.SUPABASE_URL }}

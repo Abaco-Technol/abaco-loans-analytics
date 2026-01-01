@@ -15,7 +15,7 @@ on:
 
 jobs:
   export-and-sync-kpi-csv:
-    if: ${{ secrets.FIGMA_TOKEN != '' && secrets.FIGMA_FILE_KEY != '' }}
+    
     runs-on: ubuntu-latest
     env:
       FIGMA_TOKEN: ${{ secrets.FIGMA_TOKEN }}

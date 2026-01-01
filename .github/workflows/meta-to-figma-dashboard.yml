@@ -5,7 +5,7 @@ on:
     - cron: '0 6 * * *' # every day at 6am UTC
 jobs:
   meta-to-figma:
-    if: ${{ secrets.FIGMA_TOKEN != '' && secrets.FIGMA_FILE_KEY != '' && secrets.FIGMA_NODE_ID != '' && secrets.AWS_ACCESS_KEY_ID != '' && secrets.AWS_SECRET_ACCESS_KEY != '' && secrets.AWS_S3_BUCKET != '' }}
+    
     runs-on: ubuntu-latest
     env:
       FIGMA_TOKEN: ${{ secrets.FIGMA_TOKEN }}

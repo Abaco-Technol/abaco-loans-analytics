@@ -11,7 +11,7 @@ env:
 
 jobs:
     market-intelligence:
-        if: ${{ secrets.PERPLEXITY_API_KEY != '' && secrets.TAVILY_KEY != '' && secrets.GEMINI_API_KEY_SIMPLE != '' }}
+        
         runs-on: ubuntu-latest
         steps:
             - name: Checkout Repository

@@ -11,7 +11,7 @@ env:
 
 jobs:
     monitor:
-        if: ${{ secrets.OPIK_TOKEN != '' && secrets.PHOENIX_TOKEN != '' && secrets.FIGMA_TOKEN != '' }}
+        
         runs-on: ubuntu-latest
         steps:
             - uses: actions/checkout@v4
@@ -44,7 +44,7 @@ jobs:
               run: |
                   python scripts/update_figma_agent_dashboard.py
             - name: Post Summary to Slack #ops-alerts
-              if: ${{ secrets.SLACK_BOT_TOKEN != '' && hashFiles('scripts/post_to_slack.py') != '' }}
+              
               env:
                   SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
               run: |
