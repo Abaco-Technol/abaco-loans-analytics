@@ -6,10 +6,10 @@ from pathlib import Path
 from typing import Any, Dict, Optional
 
 from python.compliance import build_compliance_report, write_compliance_report
-from python.pipeline.calculation import UnifiedCalculationV2
-from python.pipeline.ingestion import UnifiedIngestion
+from python.pipeline.kpi_calculation import UnifiedCalculationV2
+from python.pipeline.data_ingestion import UnifiedIngestion
 from python.pipeline.output import UnifiedOutput
-from python.pipeline.transformation import UnifiedTransformation
+from python.pipeline.data_transformation import UnifiedTransformation
 from python.pipeline.utils import ensure_dir, load_yaml, resolve_placeholders, utc_now, write_json
 from python.agents.tools import send_slack_notification
 

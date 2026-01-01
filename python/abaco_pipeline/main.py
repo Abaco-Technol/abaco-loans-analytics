@@ -322,7 +322,7 @@ def cmd_run(args: argparse.Namespace) -> int:
         return 2
 
     try:
-        from python.pipeline.ingestion import UnifiedIngestion
+        from python.pipeline.data_ingestion import UnifiedIngestion
 
         ingestion = UnifiedIngestion(cfg)
         result = ingestion.ingest_looker(

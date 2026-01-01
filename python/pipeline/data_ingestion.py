@@ -13,11 +13,12 @@ from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Tuple
 
 import pandas as pd
+import polars as pl
 from jsonschema import Draft202012Validator
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from python.pipeline.utils import CircuitBreaker, RateLimiter, RetryPolicy, hash_file, utc_now
-from python.validation import validate_dataframe
+from python.pipeline.data_validation import validate_dataframe
 
 logger = logging.getLogger(__name__)
 
@@ -77,33 +78,15 @@ class UnifiedIngestion:
         self.circuit_breaker = self._build_circuit_breaker(root_cfg)
 
     def ingest_csv(self, filename: str) -> pd.DataFrame:
-        """Legacy helper used by unit tests: load a CSV from data_dir."""
+        """High-performance CSV ingestion using Polars."""
 
         path = self.data_dir / filename
         try:
-            df = pd.read_csv(path)
-        except pd.errors.EmptyDataError:
-            self.errors.append(
-                {
-                    "run_id": self.run_id,
-                    "timestamp": utc_now(),
-                    "file": filename,
-                    "stage": "ingestion_read",
-                    "error": "empty file",
-                }
-            )
-            return pd.DataFrame()
-        except FileNotFoundError as exc:
-            self.errors.append(
-                {
-                    "run_id": self.run_id,
-                    "timestamp": utc_now(),
-                    "file": filename,
-                    "stage": "ingestion_read",
-                    "error": str(exc),
-                }
-            )
-            return pd.DataFrame()
+            # Polars for high-speed reading
+            lf = pl.scan_csv(path)
+            df_polars = lf.collect()
+            # Convert to pandas for downstream compatibility
+            df = df_polars.to_pandas()
         except Exception as exc:
             self.errors.append(
                 {
@@ -152,6 +135,28 @@ class UnifiedIngestion:
             }
         )
         return ingested
+
+    def ingest_parquet(self, filename: str) -> pd.DataFrame:
+        """High-performance Parquet ingestion using Polars."""
+        path = self.data_dir / filename
+        try:
+            df_polars = pl.read_parquet(path)
+            df = df_polars.to_pandas()
+            return self.ingest_dataframe(df)
+        except Exception as exc:
+            logger.error(f"Parquet ingestion failed: {exc}")
+            return pd.DataFrame()
+
+    def ingest_excel(self, filename: str) -> pd.DataFrame:
+        """High-performance Excel ingestion using Polars."""
+        path = self.data_dir / filename
+        try:
+            df_polars = pl.read_excel(path)
+            df = df_polars.to_pandas()
+            return self.ingest_dataframe(df)
+        except Exception as exc:
+            logger.error(f"Excel ingestion failed: {exc}")
+            return pd.DataFrame()
 
     def ingest_dataframe(self, df: pd.DataFrame) -> pd.DataFrame:
         """Legacy helper used by unit tests: normalize and return a copy."""

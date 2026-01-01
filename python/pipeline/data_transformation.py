@@ -10,7 +10,7 @@ import pandas as pd
 
 from python.compliance import create_access_log_entry, mask_pii_in_dataframe
 from python.pipeline.utils import hash_dataframe, utc_now
-from python.validation import (
+from python.pipeline.data_validation import (
     validate_iso8601_dates,
     validate_no_nulls,
     validate_numeric_bounds,

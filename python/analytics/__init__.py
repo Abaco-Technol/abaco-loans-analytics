@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 
 from apps.analytics.src.enterprise_analytics_engine import LoanAnalyticsEngine
-from python.validation import (
+from python.pipeline.data_validation import (
     REQUIRED_ANALYTICS_COLUMNS,
     safe_numeric,
     validate_dataframe,
@@ -53,9 +53,21 @@ def project_growth(
     })
 
 
+from python.kpi_engine_v2 import KPIEngineV2
+
+REQUIRED_ANALYTICS_COLUMNS = [
+    "loan_amount",
+    "appraised_value",
+    "borrower_income",
+    "monthly_debt",
+    "interest_rate",
+    "principal_balance",
+]
+
+
 def portfolio_kpis(df: pd.DataFrame) -> tuple[dict[str, float], pd.DataFrame]:
     """
-    Calculate portfolio-level KPIs and enrich DataFrame with ratios.
+    Calculate portfolio-level KPIs and enrich DataFrame with ratios using KPIEngineV2.
     """
     enriched = df.copy()
     metrics = {
@@ -70,23 +82,36 @@ def portfolio_kpis(df: pd.DataFrame) -> tuple[dict[str, float], pd.DataFrame]:
 
     validate_dataframe(enriched, required_columns=REQUIRED_ANALYTICS_COLUMNS)
 
-    # Use Enterprise Engine for standardized calculation
-    engine = LoanAnalyticsEngine(enriched)
+    # Use KPIEngineV2 for centralized, standardized calculations
+    engine = KPIEngineV2(enriched, actor="portfolio_kpis_util")
+    results = engine.calculate_all()
+
+    # Get standardized KPIs from results
+    metrics["delinquency_rate"] = results.get("PAR30", {}).get("value", 0.0)
+    metrics["portfolio_yield"] = results.get("PortfolioYield", {}).get("value", 0.0)
+    metrics["average_ltv"] = results.get("LTV", {}).get("value", 0.0)
+    metrics["average_dti"] = results.get("DTI", {}).get("value", 0.0)
 
     # Enrich DataFrame with calculated ratios
-    enriched["ltv_ratio"] = engine.compute_loan_to_value()
-    enriched["dti_ratio"] = engine.compute_debt_to_income()
+    # Note: We calculate these specifically for enrichment as calculate_all returns scalars
+    _, ltv_ctx = engine.calculate_ltv()
+    _, dti_ctx = engine.calculate_dti()
 
-    # Get standardized KPIs
-    results = engine.run_full_analysis()
-    metrics["delinquency_rate"] = results["portfolio_delinquency_rate_percent"]
-    metrics["portfolio_yield"] = results["portfolio_yield_percent"]
-    metrics["average_ltv"] = results["average_ltv_ratio_percent"]
-    metrics["average_dti"] = results["average_dti_ratio_percent"]
+    # Recalculate series for enrichment (Engine V2 returns averages, but utility expects series)
+    enriched["ltv_ratio"] = np.where(
+        enriched["appraised_value"] > 0,
+        (enriched["loan_amount"] / enriched["appraised_value"]) * 100.0,
+        np.nan
+    )
+    enriched["dti_ratio"] = np.where(
+        enriched["borrower_income"] > 0,
+        (enriched["monthly_debt"] / (enriched["borrower_income"] / 12.0)) * 100.0,
+        np.nan
+    )
 
     # Fill NaNs in metrics
     for k in metrics:
-        if pd.isna(metrics[k]):
+        if metrics[k] is None or pd.isna(metrics[k]):
             metrics[k] = 0.0
 
     return metrics, enriched

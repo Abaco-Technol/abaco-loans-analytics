@@ -1,8 +1,8 @@
 import pandas as pd
 
-from python.pipeline.ingestion import UnifiedIngestion
+from python.pipeline.data_ingestion import UnifiedIngestion
 from python.kpi_engine import KPIEngine
-from python.pipeline.transformation import UnifiedTransformation
+from python.pipeline.data_transformation import UnifiedTransformation
 
 
 def sample_df():
