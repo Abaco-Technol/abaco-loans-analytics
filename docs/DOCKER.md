@@ -20,6 +20,18 @@ This repo contains multiple services. The simplest local stack is:
 
 - `docker compose -f docker-compose.yml up --build`
 
+## Development (hot reload)
+
+- `docker compose -f docker-compose.dev.yml up`
+
+This uses bind mounts for `apps/web` and `dashboard` and runs dev commands.
+
+## Optional local Postgres
+
+- `docker compose -f docker-compose.yml --profile db up --build`
+
+This starts a local Postgres container (for local testing only).
+
 ## URLs
 
 - Frontend: <http://localhost:3000>
