@@ -18,6 +18,12 @@ from python.validation import validate_dataframe
 
 logger = logging.getLogger(__name__)
 
+# DPD (Days Past Due) threshold constants aligned with loan tape bucket definitions
+DPD_THRESHOLD_7 = 7
+DPD_THRESHOLD_30 = 30
+DPD_THRESHOLD_60 = 60
+DPD_THRESHOLD_90 = 90
+
 
 class LoanRecord(BaseModel):
     """Schema enforcement for individual loan or portfolio records."""
@@ -350,11 +356,11 @@ class UnifiedIngestion:
             {
                 "measurement_date": measurement_date,
                 "total_receivable_usd": balance,
-                "dpd_90_plus_usd": balance.where(dpd >= 90, 0.0),
-                "dpd_60_90_usd": balance.where((dpd >= 60) & (dpd < 90), 0.0),
-                "dpd_30_60_usd": balance.where((dpd >= 30) & (dpd < 60), 0.0),
-                "dpd_7_30_usd": balance.where((dpd >= 7) & (dpd < 30), 0.0),
-                "dpd_0_7_usd": balance.where(dpd < 7, 0.0),
+                "dpd_90_plus_usd": balance.where(dpd >= DPD_THRESHOLD_90, 0.0),
+                "dpd_60_90_usd": balance.where((dpd >= DPD_THRESHOLD_60) & (dpd < DPD_THRESHOLD_90), 0.0),
+                "dpd_30_60_usd": balance.where((dpd >= DPD_THRESHOLD_30) & (dpd < DPD_THRESHOLD_60), 0.0),
+                "dpd_7_30_usd": balance.where((dpd >= DPD_THRESHOLD_7) & (dpd < DPD_THRESHOLD_30), 0.0),
+                "dpd_0_7_usd": balance.where(dpd < DPD_THRESHOLD_7, 0.0),
             }
         ).dropna(subset=["measurement_date"])
 

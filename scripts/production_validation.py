@@ -19,7 +19,7 @@ from python.kpi_engine_v2 import KPIEngineV2
 # Initialize tracing early
 try:
     from python.azure_tracing import setup_azure_tracing
-    logger, tracer = setup_azure_tracing()
+    logger, _ = setup_azure_tracing()
     logger.info("Azure tracing initialized for production_validation")
 except (ImportError, Exception) as tracing_err:
     # Fallback to basic logging if tracing setup fails
