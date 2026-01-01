@@ -67,9 +67,8 @@ jobs:
 
       - name: Install
         run: |
-          cd apps/analytics
           pip install -r requirements.txt
-          pip install pytest pytest-cov pandera
+          pip install pytest pytest-cov
 
       - name: Validate
         run: |
