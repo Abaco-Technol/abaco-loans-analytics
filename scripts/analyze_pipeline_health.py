@@ -34,7 +34,7 @@ def analyze_pipeline_health():
         health_status = "unknown"
         issues = 1
     else:
-        failure_rate = failed_runs / total_runs if total_runs > 0 else 0
+        failure_rate = failed_runs / total_runs
         
         if failure_rate < 0.05:
             health_status = "healthy"
