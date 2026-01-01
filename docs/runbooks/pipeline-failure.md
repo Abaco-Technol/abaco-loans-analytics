@@ -31,6 +31,11 @@ Common secrets referenced by workflows:
 - `HUBSPOT_API_KEY`
 - `AZURE_CREDENTIALS` / publish profiles (deploy workflows)
 
+Quick validation:
+
+- Run `python scripts/validate_secrets.py --presence-only` locally, or
+- Run the GitHub Actions workflow **Verify Secrets and Integrations**.
+
 ## Decision flow
 
 ```mermaid

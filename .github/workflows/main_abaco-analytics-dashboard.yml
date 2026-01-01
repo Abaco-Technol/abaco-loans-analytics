@@ -62,14 +62,13 @@ jobs:
       - name: Login to Azure
         uses: azure/login@v2
         with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_742E267D06D7400587FFCE8FCE72EF73 }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_FF801DB858DD4428ABE049BF2452D93B }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_FD78785242884080BF16F5557FBAA911 }}
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
 
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
         with:
           app-name: abaco-analytics-dashboard
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
           slot-name: Production
           package: ./python-app
 

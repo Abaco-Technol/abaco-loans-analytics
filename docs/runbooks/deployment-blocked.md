@@ -32,6 +32,11 @@ Typical deploy secrets:
 - `AZURE_CREDENTIALS` (Azure CLI config steps)
 - `AZURE_STATIC_WEB_APPS_TOKEN_*` (SWA deploy)
 
+Quick validation:
+
+- Run `python scripts/validate_secrets.py --presence-only`, or
+- Run the GitHub Actions workflow **Verify Secrets and Integrations**.
+
 ## Decision flow
 
 ```mermaid
@@ -58,6 +63,8 @@ flowchart TD
 - **Wrong health check host**: use App Service `defaultHostName` via Azure CLI (or a secret override) instead of assuming `https://<name>.azurewebsites.net`.
 - **Secrets unavailable on PRs from forks**: guard deploy jobs to only run on `push` to `main` and/or internal PRs.
 - **Action version doesn’t exist**: use a known major (e.g., `actions/setup-node@v4`).
+- **Publish profile missing**: ensure SCM/FTP basic auth is enabled for the App Service, then regenerate `AZURE_WEBAPP_PUBLISH_PROFILE`.
+- **azure/webapps-deploy: No credentials found**: confirm `AZURE_WEBAPP_PUBLISH_PROFILE` is set and non-empty in repo secrets; otherwise add an `azure/login` step with `AZURE_CREDENTIALS`.
 
 ## Follow-up hardening
 

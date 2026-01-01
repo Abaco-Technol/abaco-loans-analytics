@@ -7,6 +7,7 @@ This guide lists the **exact GitHub Actions secrets** referenced by workflows in
 - Never paste secret values into PRs/issues/logs.
 - Prefer **Repository secrets** for shared production workflows.
 - For environment separation, use *distinct* secrets for staging vs production (already supported by `apps/web` workflows).
+- If using GitHub CLI, ensure your token has permission to manage Actions secrets.
 
 ## Quick-start (minimum for “core operations”)
 
@@ -16,6 +17,29 @@ If you only do one pass, start with these:
 - `AZURE_CREDENTIALS` (dashboard deploy config + hostname resolution)
 - `DATABASE_URL` (KPI parity + pipeline DB writes)
 - `OPENAI_API_KEY` (multiple analytics/agent workflows)
+
+## Managing secrets via GitHub CLI
+
+Recommended scopes for `gh secret set`:
+
+- `repo`
+- `workflow`
+
+If you see `Resource not accessible by personal access token`:
+
+1. Refresh token scopes:
+
+```bash
+gh auth refresh -s repo,workflow
+```
+
+2. If the repo is in an org with SSO, authorize the token for that org.
+
+3. Retry with an explicit repo target:
+
+```bash
+gh secret set <NAME> --repo <OWNER>/<REPO>
+```
 
 ## Secrets by component
 
@@ -30,6 +54,69 @@ Used by `.github/workflows/deploy-dashboard.yml`.
 - `AZURE_CREDENTIALS`
   - Purpose: `azure/login` + `az webapp config set` and resolving the App Service `defaultHostName`.
   - Notes: Must be valid JSON credentials for a service principal with access to the resource group.
+
+**How to create App Service deploy secrets**
+
+1) Enable basic auth for SCM and FTP (required to view publish profiles):
+
+```bash
+az resource update --resource-group "<RESOURCE_GROUP>" --name "<APP_NAME>/scm" \
+  --resource-type "Microsoft.Web/sites/basicPublishingCredentialsPolicies" \
+  --set properties.allow=true
+
+az resource update --resource-group "<RESOURCE_GROUP>" --name "<APP_NAME>/ftp" \
+  --resource-type "Microsoft.Web/sites/basicPublishingCredentialsPolicies" \
+  --set properties.allow=true
+```
+
+2) Generate publish profile and store as a repo secret:
+
+```bash
+az webapp deployment list-publishing-profiles \
+  --resource-group "<RESOURCE_GROUP>" \
+  --name "<APP_NAME>" \
+  --xml > publishProfile.xml
+
+gh secret set AZURE_WEBAPP_PUBLISH_PROFILE -f publishProfile.xml
+```
+
+3) Create a service principal (used by `AZURE_CREDENTIALS`) and store as a repo secret:
+
+```bash
+az ad sp create-for-rbac \
+  --name "<SP_NAME>" \
+  --role contributor \
+  --scopes /subscriptions/<SUBSCRIPTION_ID>/resourceGroups/<RESOURCE_GROUP> \
+  --sdk-auth > azure-credentials.json
+
+gh secret set AZURE_CREDENTIALS -f azure-credentials.json
+```
+
+**Optional: local Git/FTP credentials**
+
+- User-scope credentials (shared across apps):
+
+```bash
+az webapp deployment user set --user-name "<DEPLOY_USER>" --password "<DEPLOY_PASS>"
+```
+
+- App-scope credentials (per app). For Git, append `/<APP_NAME>.git` to the `scmUri`:
+
+```bash
+az webapp deployment list-publishing-credentials \
+  --resource-group "<RESOURCE_GROUP>" \
+  --name "<APP_NAME>" \
+  --query scmUri -o tsv
+```
+
+- Reset app-scope password:
+
+```bash
+az resource invoke-action --action newpassword \
+  --resource-group "<RESOURCE_GROUP>" \
+  --name "<APP_NAME>" \
+  --resource-type Microsoft.Web/sites
+```
 
 ### B) Web app (Next.js in `apps/web`)
 
@@ -132,3 +219,29 @@ For stability, don’t rename secrets during incident recovery. After stabilizat
 1. Re-run a previously failing workflow.
 2. If it fails, confirm the missing secret name matches this file.
 3. Add the missing secret and re-run.
+
+## Validate secrets and tokens
+
+Run the verifier locally (presence + API checks):
+
+```bash
+python scripts/validate_secrets.py
+```
+
+Presence/format only:
+
+```bash
+python scripts/validate_secrets.py --presence-only
+```
+
+Fail on missing optional secrets:
+
+```bash
+python scripts/validate_secrets.py --strict
+```
+
+GitHub Actions (manual):
+
+```bash
+gh workflow run "Verify Secrets and Integrations" -f presence_only=false -f strict=true
+```
