@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import hashlib
 import json
 import logging
@@ -54,15 +56,198 @@ class IngestionResult:
 class UnifiedIngestion:
     """Phase 1: Robust ingestion with validation, checksum, and auditability."""
 
-    def __init__(self, config: Dict[str, Any], run_id: Optional[str] = None):
-        self.config = config.get("pipeline", {}).get("phases", {}).get("ingestion", {})
+    def __init__(
+        self,
+        config: Optional[Dict[str, Any]] = None,
+        run_id: Optional[str] = None,
+        data_dir: str | Path | None = None,
+        strict_validation: bool = False,
+    ):
+        root_cfg: Dict[str, Any] = config or {}
+        self.config = root_cfg.get("pipeline", {}).get("phases", {}).get("ingestion", {})
         self.run_id = run_id or f"ingest_{uuid.uuid4().hex[:12]}"
+        self.data_dir = Path(data_dir) if data_dir is not None else Path(".")
+        self.strict_validation = strict_validation
+        self.timestamp = utc_now()
         self.audit_log: List[Dict[str, Any]] = []
         self.errors: List[Dict[str, Any]] = []
+        self.raw_files: List[Dict[str, Any]] = []
+        self._summary: Dict[str, Any] = {"rows_ingested": 0, "files": {}}
         self.schema_validator = self._load_schema_validator()
-        self.rate_limiter = self._build_rate_limiter(config)
-        self.retry_policy = self._build_retry_policy(config)
-        self.circuit_breaker = self._build_circuit_breaker(config)
+        self.rate_limiter = self._build_rate_limiter(root_cfg)
+        self.retry_policy = self._build_retry_policy(root_cfg)
+        self.circuit_breaker = self._build_circuit_breaker(root_cfg)
+
+    def ingest_csv(self, filename: str) -> pd.DataFrame:
+        """Legacy helper used by unit tests: load a CSV from data_dir."""
+
+        path = self.data_dir / filename
+        try:
+            df = pd.read_csv(path)
+        except pd.errors.EmptyDataError:
+            self.errors.append(
+                {
+                    "run_id": self.run_id,
+                    "timestamp": utc_now(),
+                    "file": filename,
+                    "stage": "ingestion_read",
+                    "error": "empty file",
+                }
+            )
+            return pd.DataFrame()
+        except FileNotFoundError as exc:
+            self.errors.append(
+                {
+                    "run_id": self.run_id,
+                    "timestamp": utc_now(),
+                    "file": filename,
+                    "stage": "ingestion_read",
+                    "error": str(exc),
+                }
+            )
+            return pd.DataFrame()
+        except Exception as exc:
+            self.errors.append(
+                {
+                    "run_id": self.run_id,
+                    "timestamp": utc_now(),
+                    "file": filename,
+                    "stage": "ingestion_read",
+                    "error": str(exc),
+                }
+            )
+            return pd.DataFrame()
+
+        ingested = self.ingest_dataframe(df)
+
+        if self.strict_validation:
+            required_numeric = [
+                "total_receivable_usd",
+                "total_eligible_usd",
+                "discounted_balance_usd",
+                "dpd_0_7_usd",
+                "dpd_7_30_usd",
+                "dpd_30_60_usd",
+                "dpd_60_90_usd",
+                "dpd_90_plus_usd",
+            ]
+            missing_numeric = [c for c in required_numeric if c not in ingested.columns]
+            if missing_numeric:
+                self.errors.append(
+                    {
+                        "run_id": self.run_id,
+                        "timestamp": utc_now(),
+                        "file": filename,
+                        "stage": "ingestion_validation",
+                        "error": "missing required numeric columns",
+                    }
+                )
+                return pd.DataFrame()
+
+        self._update_summary(len(ingested), filename)
+        self.raw_files.append(
+            {
+                "file": filename,
+                "status": "ingested",
+                "rows": int(len(ingested)),
+                "timestamp": utc_now(),
+            }
+        )
+        return ingested
+
+    def ingest_dataframe(self, df: pd.DataFrame) -> pd.DataFrame:
+        """Legacy helper used by unit tests: normalize and return a copy."""
+
+        ingested = df.copy()
+        ingested.columns = [str(c).strip() for c in ingested.columns]
+
+        self._update_summary(len(ingested))
+        ts = utc_now()
+        ingested["_ingest_run_id"] = self.run_id
+        ingested["_ingest_timestamp"] = ts
+        return ingested
+
+    def validate_loans(self, df: pd.DataFrame) -> pd.DataFrame:
+        """Legacy helper used by unit tests.
+
+        Adds a boolean `_validation_passed` column; does not raise.
+        """
+
+        required_columns = [
+            "loan_id",
+            "period",
+            "measurement_date",
+            "total_receivable_usd",
+            "total_eligible_usd",
+            "discounted_balance_usd",
+            "dpd_0_7_usd",
+            "dpd_7_30_usd",
+            "dpd_30_60_usd",
+            "dpd_60_90_usd",
+            "dpd_90_plus_usd",
+        ]
+        numeric_columns = [
+            "total_receivable_usd",
+            "total_eligible_usd",
+            "discounted_balance_usd",
+            "dpd_0_7_usd",
+            "dpd_7_30_usd",
+            "dpd_30_60_usd",
+            "dpd_60_90_usd",
+            "dpd_90_plus_usd",
+        ]
+
+        validated = df.copy()
+        passed = True
+
+        missing = [c for c in required_columns if c not in validated.columns]
+        if missing:
+            passed = False
+            self.errors.append(
+                {
+                    "run_id": self.run_id,
+                    "timestamp": utc_now(),
+                    "stage": "validation_schema_assertion",
+                    "error": f"missing required columns: {', '.join(missing)}",
+                }
+            )
+
+        for col in numeric_columns:
+            if col not in validated.columns:
+                continue
+            try:
+                pd.to_numeric(validated[col], errors="raise")
+            except Exception as exc:
+                passed = False
+                self.errors.append(
+                    {
+                        "run_id": self.run_id,
+                        "timestamp": utc_now(),
+                        "stage": "validation_schema_assertion",
+                        "error": f"non-numeric column: {col} ({exc})",
+                    }
+                )
+
+        validated["_validation_passed"] = passed
+        return validated
+
+    def _update_summary(self, rows: int, filename: str | None = None) -> None:
+        self._summary["rows_ingested"] = int(self._summary.get("rows_ingested", 0)) + int(
+            rows
+        )
+        files = self._summary.setdefault("files", {})
+        if filename:
+            files[filename] = int(files.get(filename, 0)) + int(rows)
+
+    def get_ingest_summary(self) -> Dict[str, Any]:
+        return {
+            "run_id": self.run_id,
+            "timestamp": self.timestamp,
+            "rows_ingested": int(self._summary.get("rows_ingested", 0)),
+            "files": dict(self._summary.get("files", {})),
+            "total_errors": len(self.errors),
+            "errors": list(self.errors),
+        }
 
     def _build_retry_policy(self, config: Dict[str, Any]) -> RetryPolicy:
         retry_cfg = config.get("cascade", {}).get("http", {}).get("retry", {})

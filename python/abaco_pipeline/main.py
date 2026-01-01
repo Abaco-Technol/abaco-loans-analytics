@@ -28,7 +28,7 @@ from python.compliance import (
 
 def _load_yaml_config(path: Path) -> dict:
     try:
-        import yaml  # type: ignore
+        import yaml
     except Exception as exc:  # pragma: no cover
         raise RuntimeError(
             "YAML config requested but PyYAML is not installed. Install pyyaml to use this command."
@@ -216,8 +216,9 @@ def cmd_run(args: argparse.Namespace) -> int:
     elif ingest_source == "looker":
         looker_cfg = ingestion_cfg.get("looker", {}) or {}
         loans_path = _select_looker_source(looker_cfg, endpoints or None)
-        if looker_cfg.get("financials_path"):
-            financials_path = Path(looker_cfg.get("financials_path"))
+        financials_value = looker_cfg.get("financials_path")
+        if financials_value:
+            financials_path = Path(str(financials_value))
     elif ingest_source == "file":
         file_cfg = ingestion_cfg.get("file", {}) or {}
         default_path = file_cfg.get("default_path")
@@ -277,7 +278,7 @@ def cmd_run(args: argparse.Namespace) -> int:
     schema_drift = False
     if ingest_source == "looker":
         try:
-            import pandas as pd  # type: ignore
+            import pandas as pd
 
             header_cols = pd.read_csv(loans_path, nrows=0).columns
             schema_diff = _detect_looker_schema_drift({c.lower() for c in header_cols})
@@ -362,7 +363,7 @@ def cmd_run(args: argparse.Namespace) -> int:
     freshness_hours = 0.0
     if "measurement_date" in df.columns:
         try:
-            import pandas as pd  # type: ignore
+            import pandas as pd
 
             as_of = pd.to_datetime(df["measurement_date"], errors="coerce").max()
             if pd.notna(as_of):

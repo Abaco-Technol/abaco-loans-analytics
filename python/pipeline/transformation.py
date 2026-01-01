@@ -34,10 +34,136 @@ class TransformationResult:
 class UnifiedTransformation:
     """Phase 2: Data transformation, normalization, and compliance masking."""
 
-    def __init__(self, config: Dict[str, Any], run_id: Optional[str] = None):
-        self.config = config.get("pipeline", {}).get("phases", {}).get("transformation", {})
+    def __init__(self, config: Optional[Dict[str, Any]] = None, run_id: Optional[str] = None):
+        root_cfg: Dict[str, Any] = config or {}
+        self.config = (
+            root_cfg.get("pipeline", {}).get("phases", {}).get("transformation", {})
+        )
         self.run_id = run_id or f"tx_{uuid.uuid4().hex[:12]}"
         self.lineage: List[Dict[str, Any]] = []
+        self.transformations_count = 0
+
+    def calculate_receivables_metrics(self, df: pd.DataFrame) -> Dict[str, float]:
+        required = [
+            "total_receivable_usd",
+            "total_eligible_usd",
+            "discounted_balance_usd",
+        ]
+        missing = [col for col in required if col not in df.columns]
+        if missing:
+            raise ValueError(f"missing required columns: {missing}")
+        return {
+            "total_receivable": float(pd.to_numeric(df["total_receivable_usd"]).sum()),
+            "total_eligible": float(pd.to_numeric(df["total_eligible_usd"]).sum()),
+            "discounted_balance": float(pd.to_numeric(df["discounted_balance_usd"]).sum()),
+        }
+
+    def calculate_dpd_ratios(self, df: pd.DataFrame) -> Dict[str, float]:
+        dpd_cols = [
+            "dpd_0_7_usd",
+            "dpd_7_30_usd",
+            "dpd_30_60_usd",
+            "dpd_60_90_usd",
+            "dpd_90_plus_usd",
+        ]
+        missing = [col for col in (dpd_cols + ["total_receivable_usd"]) if col not in df.columns]
+        if missing:
+            raise ValueError(f"missing required columns: {missing}")
+
+        total = float(pd.to_numeric(df["total_receivable_usd"], errors="raise").sum())
+        if total <= 0:
+            return {col: 0.0 for col in dpd_cols}
+
+        ratios: Dict[str, float] = {}
+        for col in dpd_cols:
+            amt = float(pd.to_numeric(df[col], errors="raise").sum())
+            ratios[col] = (amt / total) * 100.0
+        return ratios
+
+    def _select_column_case_insensitive(self, df: pd.DataFrame, name: str) -> Optional[str]:
+        lower_map = {str(c).lower(): str(c) for c in df.columns}
+        return lower_map.get(name.lower())
+
+    def transform_to_kpi_dataset(self, df: pd.DataFrame) -> pd.DataFrame:
+        if "_validation_passed" in df.columns:
+            try:
+                if not bool(df["_validation_passed"].all()):
+                    raise ValueError("missing required columns")
+            except Exception as exc:
+                if isinstance(exc, ValueError):
+                    raise
+                raise ValueError("missing required columns") from exc
+
+        required = [
+            "total_receivable_usd",
+            "total_eligible_usd",
+            "discounted_balance_usd",
+            "dpd_0_7_usd",
+            "dpd_7_30_usd",
+            "dpd_30_60_usd",
+            "dpd_60_90_usd",
+            "dpd_90_plus_usd",
+        ]
+        missing = [col for col in required if col not in df.columns]
+        if missing:
+            raise ValueError(f"missing required columns: {missing}")
+
+        numeric_required = [c for c in required]
+        for col in numeric_required:
+            try:
+                pd.to_numeric(df[col], errors="raise")
+            except Exception as exc:
+                raise ValueError(f"non-numeric required column: {col}") from exc
+
+        out = pd.DataFrame(index=df.index)
+        # Preserve raw columns expected by KPIEngine (v1)
+        out["total_receivable_usd"] = pd.to_numeric(df["total_receivable_usd"], errors="raise")
+        out["total_eligible_usd"] = pd.to_numeric(df["total_eligible_usd"], errors="raise")
+        out["discounted_balance_usd"] = pd.to_numeric(
+            df["discounted_balance_usd"], errors="raise"
+        )
+        out["dpd_0_7_usd"] = pd.to_numeric(df["dpd_0_7_usd"], errors="raise")
+        out["dpd_7_30_usd"] = pd.to_numeric(df["dpd_7_30_usd"], errors="raise")
+        out["dpd_30_60_usd"] = pd.to_numeric(df["dpd_30_60_usd"], errors="raise")
+        out["dpd_60_90_usd"] = pd.to_numeric(df["dpd_60_90_usd"], errors="raise")
+        out["dpd_90_plus_usd"] = pd.to_numeric(df["dpd_90_plus_usd"], errors="raise")
+
+        out["receivable_amount"] = pd.to_numeric(df["total_receivable_usd"], errors="raise")
+        out["eligible_amount"] = pd.to_numeric(df["total_eligible_usd"], errors="raise")
+        out["discounted_amount"] = pd.to_numeric(df["discounted_balance_usd"], errors="raise")
+
+        denom = out["receivable_amount"].replace({0: np.nan})
+        for col in [
+            "dpd_0_7_usd",
+            "dpd_7_30_usd",
+            "dpd_30_60_usd",
+            "dpd_60_90_usd",
+            "dpd_90_plus_usd",
+        ]:
+            pct_name = f"{col}_pct"
+            out[pct_name] = (out[col] / denom) * 100.0
+            out[pct_name] = out[pct_name].fillna(0.0)
+
+        apr_col = self._select_column_case_insensitive(df, "avg_apr_pct")
+        if apr_col is not None:
+            out["interest_rate"] = df[apr_col]
+
+        out["_transform_run_id"] = self.run_id
+        out["_transform_timestamp"] = utc_now()
+        self.transformations_count += 1
+        return out
+
+    def validate_transformations(self, original: pd.DataFrame, transformed: pd.DataFrame) -> bool:
+        if len(original) != len(transformed):
+            return False
+        if "receivable_amount" not in transformed.columns:
+            return False
+        try:
+            orig_total = float(pd.to_numeric(original["total_receivable_usd"], errors="raise").sum())
+            new_total = float(pd.to_numeric(transformed["receivable_amount"], errors="raise").sum())
+        except Exception:
+            return False
+        return abs(orig_total - new_total) < 1e-6
 
     def _log_step(self, step: str, status: str, **details: Any) -> None:
         entry = {

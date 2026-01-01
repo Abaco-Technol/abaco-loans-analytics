@@ -141,6 +141,17 @@ The `ingest_looker()` function in `python/pipeline/ingestion.py`:
 4. **Archive raw files** — Copy to `data/archive/looker/{date}/` with metadata
 5. **Emit snapshot** — Output normalized loan tape ready for staging layer
 
+## Ingestion Metadata (Legacy Helpers)
+
+The legacy helpers used by `scripts/run_data_pipeline.py` enrich ingested rows with run metadata:
+
+- `_ingest_run_id` — unique run identifier for the ingestion call
+- `_ingest_timestamp` — ISO 8601 UTC timestamp for the ingestion call
+
+If you need strict schema enforcement for local CSVs, initialize
+`UnifiedIngestion(..., strict_validation=True)` to fail fast when required numeric
+columns are missing (the ingest returns an empty frame and records an error).
+
 ## Troubleshooting
 
 ### Missing PAR File (Uses Fallback)

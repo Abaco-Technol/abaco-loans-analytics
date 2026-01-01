@@ -173,7 +173,18 @@ def assert_dataframe_schema(
             date_columns=date_columns,
         )
     except ValueError as e:
-        raise AssertionError(f"{stage} schema validation failed: {e}") from e
+        msg = str(e)
+        if msg.startswith("Missing required column:"):
+            msg = msg.replace("Missing required column:", "missing required columns:")
+        elif msg.startswith("Missing required columns:"):
+            msg = msg.replace("Missing required columns:", "missing required columns:")
+        if (
+            "must be numeric" in msg
+            or msg.startswith("Missing required numeric column:")
+            or msg.startswith("Missing required numeric columns:")
+        ):
+            msg = f"non-numeric columns: {msg}"
+        raise AssertionError(f"{stage} schema validation failed: {msg}") from e
 
 
 def safe_numeric(series: pd.Series) -> pd.Series:

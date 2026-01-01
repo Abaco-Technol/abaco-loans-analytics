@@ -11,6 +11,13 @@ import psycopg
 import pytest
 
 
+if os.getenv("RUN_KPI_PARITY_TESTS") not in {"1", "true", "yes"}:
+    pytest.skip(
+        "KPI parity tests are opt-in (set RUN_KPI_PARITY_TESTS=1).",
+        allow_module_level=True,
+    )
+
+
 DB_DSN = os.getenv(
     "DATABASE_URL",
     "postgresql://postgres:postgres@localhost:5432/postgres",

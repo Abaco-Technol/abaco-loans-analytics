@@ -13,7 +13,7 @@ def configure_logging(level: str | None = None) -> None:
     logging.basicConfig(level=getattr(logging, log_level, logging.INFO))
 
     try:
-        import structlog  # type: ignore
+        import structlog
 
         structlog.configure(
             wrapper_class=structlog.make_filtering_bound_logger(
