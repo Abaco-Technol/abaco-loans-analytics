@@ -43,7 +43,7 @@ jobs:
                   images: |
                       ${{ env.REGISTRY }}/${{ env.IMAGE_WEB }}
                   tags: |
-                        type=raw,value=${{ github.sha }}
+                      type=raw,value=${{ github.sha }}
                       type=raw,value=latest,enable={{is_default_branch}}
 
             - name: Build & push (web)
@@ -62,7 +62,7 @@ jobs:
                   images: |
                       ${{ env.REGISTRY }}/${{ env.IMAGE_DASHBOARD }}
                   tags: |
-                        type=raw,value=${{ github.sha }}
+                      type=raw,value=${{ github.sha }}
                       type=raw,value=latest,enable={{is_default_branch}}
 
             - name: Build & push (dashboard)
