@@ -25,6 +25,9 @@ class KPIEngineV2:
         "PAR30": calculate_par_30,
         "PAR90": calculate_par_90,
         "CollectionRate": calculate_collection_rate,
+    }
+
+    ON_DEMAND_KPI_FUNCTIONS = {
         "LTV": calculate_ltv,
         "DTI": calculate_dti,
         "PortfolioYield": calculate_portfolio_yield,
@@ -109,9 +112,9 @@ class KPIEngineV2:
         if name in self.metrics:
             return self.metrics[name].get("value")
         
-        # If not calculated, try to find in functions
-        if name in self.KPI_FUNCTIONS:
-            val, _ = self.KPI_FUNCTIONS[name](self.df)
+        calculator = self.KPI_FUNCTIONS.get(name) or self.ON_DEMAND_KPI_FUNCTIONS.get(name)
+        if calculator is not None:
+            val, _ = calculator(self.df)
             return float(val) if val is not None else None
             
         raise ValueError(f"KPI '{name}' not supported by engine")

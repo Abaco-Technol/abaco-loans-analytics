@@ -84,18 +84,20 @@ def portfolio_kpis(df: pd.DataFrame) -> tuple[dict[str, float], pd.DataFrame]:
 
     # Use KPIEngineV2 for centralized, standardized calculations
     engine = KPIEngineV2(enriched, actor="portfolio_kpis_util")
-    results = engine.calculate_all()
 
-    # Get standardized KPIs from results
+    # calculate_all() is intentionally limited to the stable core KPIs
+    results = engine.calculate_all()
     metrics["delinquency_rate"] = results.get("PAR30", {}).get("value", 0.0)
-    metrics["portfolio_yield"] = results.get("PortfolioYield", {}).get("value", 0.0)
-    metrics["average_ltv"] = results.get("LTV", {}).get("value", 0.0)
-    metrics["average_dti"] = results.get("DTI", {}).get("value", 0.0)
+
+    # Compute additional KPIs on-demand for analytics
+    metrics["portfolio_yield"] = engine.get_metric("PortfolioYield") or 0.0
+    metrics["average_ltv"] = engine.get_metric("LTV") or 0.0
+    metrics["average_dti"] = engine.get_metric("DTI") or 0.0
 
     # Enrich DataFrame with calculated ratios
     # Note: We calculate these specifically for enrichment as calculate_all returns scalars
-    _, ltv_ctx = engine.calculate_ltv()
-    _, dti_ctx = engine.calculate_dti()
+    engine.calculate_ltv()
+    engine.calculate_dti()
 
     # Recalculate series for enrichment (Engine V2 returns averages, but utility expects series)
     enriched["ltv_ratio"] = np.where(

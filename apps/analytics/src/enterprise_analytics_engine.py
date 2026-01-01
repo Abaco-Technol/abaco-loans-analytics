@@ -229,9 +229,9 @@ class LoanAnalyticsEngine:
 
         dashboard = {
             "portfolio_delinquency_rate_percent": results.get("PAR30", {}).get("value", 0.0),
-            "portfolio_yield_percent": results.get("PortfolioYield", {}).get("value", 0.0),
-            "average_ltv_ratio_percent": results.get("LTV", {}).get("value", 0.0),
-            "average_dti_ratio_percent": results.get("DTI", {}).get("value", 0.0),
+            "portfolio_yield_percent": engine_v2.get_metric("PortfolioYield") or 0.0,
+            "average_ltv_ratio_percent": engine_v2.get_metric("LTV") or 0.0,
+            "average_dti_ratio_percent": engine_v2.get_metric("DTI") or 0.0,
         }
 
         quality = self.data_quality_profile()
