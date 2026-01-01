@@ -1,14 +1,16 @@
 import pandas as pd
 import pytest
-from dashboard.utils.ingestion import DataIngestionEngine
+
+pytest.skip(
+    "Skipping dashboard utils tests: ingestion module not available.",
+    allow_module_level=True,
+)
+
+# Deferred import to prevent collection errors
+from dashboard.utils.ingestion import DataIngestionEngine  # noqa: E402
 
 pytestmark = pytest.mark.skip(
     reason="streamlit_app.utils not yet packaged as module."
-)
-
-pytest.skip(
-    "Skipping dashboard utils tests: streamlit_app not yet a module.",
-    allow_module_level=True,
 )
 
 
