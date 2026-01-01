@@ -8,7 +8,6 @@ Handles:
 - Azure Cosmos DB for time-series data (optional)
 """
 
-import json
 import logging
 import os
 from datetime import datetime

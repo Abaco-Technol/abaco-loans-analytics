@@ -8,7 +8,6 @@ Handles:
 - Audit logs and compliance records
 """
 
-import json
 import logging
 import os
 from datetime import datetime
