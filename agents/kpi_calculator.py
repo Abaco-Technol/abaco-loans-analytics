@@ -2,9 +2,9 @@ from __future__ import annotations
 import hashlib
 import json
 from dataclasses import dataclass
-from datetime import date, datetime, timedelta, timezone
+from datetime import date, datetime, timezone
 from decimal import Decimal
-from typing import Any, Callable, Dict, Optional
+from typing import Any, Dict, Optional
 import asyncpg
 
 @dataclass(frozen=True)

@@ -2,7 +2,6 @@
 """Generate Executive Summary Report from Real Loan Data."""
 
 import pandas as pd
-import numpy as np
 from datetime import datetime
 from pathlib import Path
 import json

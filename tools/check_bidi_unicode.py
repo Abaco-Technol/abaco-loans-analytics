@@ -5,7 +5,6 @@ This prevents supply-chain attacks and accidental parser bypass issues.
 """
 
 import sys
-import re
 from pathlib import Path
 
 # Unicode bidirectional markers that are security risks

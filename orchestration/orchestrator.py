@@ -195,7 +195,7 @@ class Orchestrator:
         Returns:
             List of task groups (levels) that can be executed in parallel
         """
-        task_map = {task.id: task for task in tasks}
+        {task.id: task for task in tasks}
         levels: List[List[AgentTask]] = []
         completed_tasks = set()
         

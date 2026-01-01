@@ -134,10 +134,10 @@ def test_validate_percentage_bounds():
     results = validate_percentage_bounds(
         df, columns=["valid_pct", "invalid_pct", "rate", "bad_rate"]
     )
-    assert results["valid_pct_in_0_100"] == True
-    assert results["invalid_pct_in_0_100"] == False
-    assert results["rate_in_0_100"] == True
-    assert results["bad_rate_in_0_100"] == False
+    assert results["valid_pct_in_0_100"]
+    assert not results["invalid_pct_in_0_100"]
+    assert results["rate_in_0_100"]
+    assert not results["bad_rate_in_0_100"]
 
 
 def test_validate_iso8601_dates():
@@ -155,8 +155,8 @@ def test_validate_iso8601_dates():
     results = validate_iso8601_dates(
         df, columns=["good_date", "bad_date", "iso_datetime", "mixed", "nulls"]
     )
-    assert results["good_date_iso8601"] == True
-    assert results["bad_date_iso8601"] == False
-    assert results["iso_datetime_iso8601"] == True
-    assert results["mixed_iso8601"] == False
-    assert results["nulls_iso8601"] == True
+    assert results["good_date_iso8601"]
+    assert not results["bad_date_iso8601"]
+    assert results["iso_datetime_iso8601"]
+    assert not results["mixed_iso8601"]
+    assert results["nulls_iso8601"]
