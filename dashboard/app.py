@@ -22,7 +22,11 @@ except Exception as tracing_err:  # pragma: no cover - defensive
     logger.warning("Tracing not initialized: %s", tracing_err)
 
 # Health check page - responds to /?page=health
-query_params = st.query_params
+try:
+    query_params = st.query_params
+except AttributeError:
+    query_params = st.experimental_get_query_params()
+
 page = query_params.get("page")
 if page == "health" or page == ["health"] or (isinstance(page, list) and "health" in page):
     st.write("ok")
