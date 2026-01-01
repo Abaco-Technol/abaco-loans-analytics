@@ -1,6 +1,8 @@
 import logging
 import uuid
+import yaml
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 import numpy as np
@@ -42,6 +44,17 @@ class UnifiedTransformation:
         self.run_id = run_id or f"tx_{uuid.uuid4().hex[:12]}"
         self.lineage: List[Dict[str, Any]] = []
         self.transformations_count = 0
+        self.pii_config = self._load_pii_config()
+
+    def _load_pii_config(self) -> Dict[str, Any]:
+        config_path = Path("config/pii_fields.yaml")
+        if config_path.exists():
+            try:
+                with open(config_path, "r") as f:
+                    return yaml.safe_load(f) or {}
+            except Exception as exc:
+                logger.error("Failed to load PII config: %s", exc)
+        return {}
 
     def calculate_receivables_metrics(self, df: pd.DataFrame) -> Dict[str, float]:
         required = [
@@ -223,9 +236,7 @@ class UnifiedTransformation:
             if normalization.get("lowercase_columns", True):
                 clean_df.columns = [str(c).lower().strip() for c in clean_df.columns]
             if normalization.get("strip_whitespace", True):
-                clean_df = clean_df.applymap(
-                    lambda val: val.strip() if isinstance(val, str) else val
-                )
+                clean_df = clean_df.map(lambda val: val.strip() if isinstance(val, str) else val)
             self._log_step("normalization", "success", columns=list(clean_df.columns))
 
             clean_df = self._handle_nulls(clean_df)
@@ -241,7 +252,10 @@ class UnifiedTransformation:
             pii_cfg = self.config.get("pii_masking", {})
             if pii_cfg.get("enabled", True):
                 clean_df, masked_columns = mask_pii_in_dataframe(
-                    clean_df, keywords=pii_cfg.get("keywords")
+                    clean_df, 
+                    keywords=self.pii_config.get("keywords") or pii_cfg.get("keywords"),
+                    pii_columns=self.pii_config.get("explicit_columns"),
+                    action=self.pii_config.get("default_action", "mask")
                 )
             self._log_step("pii_masking", "completed", masked_columns=masked_columns)
             access_log.append(

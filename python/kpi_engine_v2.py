@@ -86,6 +86,18 @@ class KPIEngineV2:
             return pd.DataFrame()
         return pd.DataFrame(self.audit_trail)
 
+    def get_metric(self, name: str) -> float:
+        """Helper to get a single metric value by name."""
+        if name in self.metrics:
+            return self.metrics[name].get("value")
+        
+        # If not calculated, try to find in functions
+        if name in self.KPI_FUNCTIONS:
+            val, _ = self.KPI_FUNCTIONS[name](self.df)
+            return float(val) if val is not None else None
+            
+        raise ValueError(f"KPI '{name}' not supported by engine")
+
     def _log_event(self, event: str, status: str, **details: Any) -> None:
         entry = {
             "event": event,

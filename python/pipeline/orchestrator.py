@@ -11,6 +11,7 @@ from python.pipeline.ingestion import UnifiedIngestion
 from python.pipeline.output import UnifiedOutput
 from python.pipeline.transformation import UnifiedTransformation
 from python.pipeline.utils import ensure_dir, load_yaml, resolve_placeholders, utc_now, write_json
+from python.agents.tools import send_slack_notification
 
 logger = logging.getLogger(__name__)
 
@@ -130,6 +131,34 @@ class UnifiedPipeline:
                 continue
         return None
 
+    def _handle_alerts(self, ingestion_summary: Dict[str, Any], calculation_result: Any) -> None:
+        """Evaluate DQ and KPI statuses to trigger alerts."""
+        alerts = []
+        
+        # 1. Data Quality Alerts
+        dq = ingestion_summary.get("data_quality", {})
+        dq_score = dq.get("data_quality_score", 100)
+        dq_threshold = 95 # Could be moved to config
+        
+        if dq_score < dq_threshold:
+            alerts.append(f"🔴 *Data Quality Alert*: Score is {dq_score}% (Threshold: {dq_threshold}%)")
+            
+        # 2. KPI Threshold Alerts
+        for name, metric in calculation_result.metrics.items():
+            status = metric.get("status")
+            val = metric.get("value")
+            disp = metric.get("display_name", name)
+            
+            if status == "critical":
+                alerts.append(f"🚨 *Critical KPI Alert*: {disp} is {val} (Status: CRITICAL)")
+            elif status == "warning":
+                alerts.append(f"⚠️ *KPI Warning*: {disp} is {val} (Status: WARNING)")
+                
+        if alerts:
+            message = f"📢 *Pipeline Alert - Run {self.run_id}*\n\n" + "\n".join(alerts)
+            logger.warning("Triggering Slack alerts: %s", alerts)
+            send_slack_notification(message, channel="kpi-compliance")
+
     def execute(
         self, input_file: Path, user: str = "system", action: str = "manual"
     ) -> Dict[str, Any]:
@@ -183,6 +212,9 @@ class UnifiedPipeline:
             baseline_metrics = self._load_previous_metrics(artifacts_dir, self.run_id)
             calculation = UnifiedCalculationV2(self.config.config, run_id=self.run_id)
             calculation_result = calculation.calculate(transformation_result.df, baseline_metrics)
+
+            # Evaluate alerts
+            self._handle_alerts(ingestion.get_ingest_summary(), calculation_result)
 
             compliance_report = build_compliance_report(
                 run_id=self.run_id,

@@ -1,7 +1,9 @@
 import importlib
 import logging
 import uuid
+import yaml
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 import pandas as pd
@@ -31,6 +33,25 @@ class UnifiedCalculationV2:
         self.config = config.get("pipeline", {}).get("phases", {}).get("calculation", {})
         self.run_id = run_id or f"calc_{uuid.uuid4().hex[:12]}"
         self.audit_log: List[Dict[str, Any]] = []
+        self.kpi_definitions = self._load_kpi_definitions()
+
+    def _load_kpi_definitions(self) -> Dict[str, Any]:
+        config_path = Path("config/kpis/kpi_definitions.yaml")
+        if config_path.exists():
+            try:
+                with open(config_path, "r") as f:
+                    return yaml.safe_load(f) or {}
+            except Exception as exc:
+                logger.error("Failed to load KPI definitions: %s", exc)
+        return {}
+
+    def _get_status(self, value: float, thresholds: Dict[str, List[float]]) -> str:
+        if not thresholds:
+            return "unknown"
+        for status, bounds in thresholds.items():
+            if len(bounds) == 2 and bounds[0] <= value <= bounds[1]:
+                return status
+        return "unknown"
 
     def _log_event(self, event: str, status: str, **details: Any) -> None:
         entry = {
@@ -50,17 +71,35 @@ class UnifiedCalculationV2:
 
     def _compute_metric(self, df: pd.DataFrame, metric_cfg: Dict[str, Any]) -> Dict[str, Any]:
         name = metric_cfg.get("name")
-        func_path = metric_cfg.get("function")
+        # Overlay with external definitions if available
+        ext_def = self.kpi_definitions.get("kpis", {}).get(name, {})
+        
+        func_path = metric_cfg.get("function") or ext_def.get("function")
         if not func_path:
-            raise ValueError(f"Missing function for metric {name}")
-        func = self._import_function(func_path)
-        value, context = func(df)  # type: ignore[misc]
+            # Fallback to KPIEngineV2 direct calculation if function path is missing but name exists
+            try:
+                from python.kpi_engine_v2 import KPIEngineV2
+                engine = KPIEngineV2(df)
+                # Map names to engine methods if needed
+                val = engine.get_metric(name)
+                context = {"source": "KPIEngineV2"}
+            except Exception as exc:
+                raise ValueError(f"Missing function for metric {name} and engine fallback failed: {exc}")
+        else:
+            func = self._import_function(func_path)
+            val, context = func(df)
+
+        value = float(val) if val is not None else None
+        status = self._get_status(value, ext_def.get("thresholds", {})) if value is not None else "unknown"
+
         return {
-            "value": float(value) if value is not None else None,
-            "formula": metric_cfg.get("formula"),
+            "value": value,
+            "status": status,
+            "display_name": ext_def.get("display_name", name),
+            "formula": ext_def.get("formula") or metric_cfg.get("formula"),
             "source_table": metric_cfg.get("source_table"),
-            "precision": metric_cfg.get("precision"),
-            "validation_range": metric_cfg.get("validation_range"),
+            "precision": ext_def.get("precision") or metric_cfg.get("precision"),
+            "validation_range": ext_def.get("validation_range"),
             **context,
         }
 
