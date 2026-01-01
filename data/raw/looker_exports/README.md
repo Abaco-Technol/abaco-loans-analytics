@@ -107,7 +107,7 @@ The following validations should be applied before files are considered ready fo
   - Numeric fields (e.g. principal, interest rate, balances) contain valid numeric values.
   - Date fields follow the agreed format (e.g. `YYYY-MM-DD`) and represent valid calendar dates.
 - **Range / consistency checks**:
-  - Payment records in `Abaco-Loan-Tape_Historic-Real-Payment_Table-6.csv` must reference valid loan identifiers present in the loan tape.
+  - Payment records in `historic_payment_data.csv` must reference valid loan identifiers present in the loan tape.
   - No records are present with future-dated payments beyond an acceptable configuration window.
 - Any failed checks should block publication of the file until resolved.
 
