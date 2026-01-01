@@ -8,7 +8,6 @@ and use it throughout your application.
 
 import logging
 import sys
-from pathlib import Path
 
 # Initialize tracing FIRST before importing any other application modules
 from python.tracing_setup import configure_tracing, is_tracing_enabled
