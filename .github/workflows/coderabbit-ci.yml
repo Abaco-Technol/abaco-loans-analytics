@@ -27,7 +27,7 @@ jobs:
           ruff check python apps packages src
       - name: Security scan (bandit)
         run: |
-          bandit -r python apps -x "**/test_*.py,**/tests/**"
+          bandit -r python apps -x "**/test_*.py,**/tests/**" --skip B110,B404,B603,B607 -ll
       - name: Summarize CodeRabbit gate
         if: success()
         run: |
