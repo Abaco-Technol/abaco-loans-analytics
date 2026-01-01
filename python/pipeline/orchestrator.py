@@ -200,28 +200,27 @@ class UnifiedPipeline:
 
             # Phase 2: Transformation
             if tracer:
-                span = tracer.start_as_current_span("pipeline.phase.transformation")
-            
-            transformation = UnifiedTransformation(self.config.config, run_id=self.run_id)
-            transformation_result = transformation.transform(ingestion_result.df, user=user)
-            
-            if tracer:
-                span.set_attribute("pipeline.transformation.rows", len(transformation_result.df))
-                span.set_attribute("pipeline.transformation.masked_columns", len(transformation_result.masked_columns))
-                span.end()
+                with tracer.start_as_current_span("pipeline.phase.transformation") as span:
+                    transformation = UnifiedTransformation(self.config.config, run_id=self.run_id)
+                    transformation_result = transformation.transform(ingestion_result.df, user=user)
+                    span.set_attribute("pipeline.transformation.rows", len(transformation_result.df))
+                    span.set_attribute("pipeline.transformation.masked_columns", len(transformation_result.masked_columns))
+            else:
+                transformation = UnifiedTransformation(self.config.config, run_id=self.run_id)
+                transformation_result = transformation.transform(ingestion_result.df, user=user)
 
             # Phase 3: Calculation
             if tracer:
-                span = tracer.start_as_current_span("pipeline.phase.calculation")
-            
-            baseline_metrics = self._load_previous_metrics(artifacts_dir, self.run_id)
-            calculation = UnifiedCalculationV2(self.config.config, run_id=self.run_id)
-            calculation_result = calculation.calculate(transformation_result.df, baseline_metrics)
-            
-            if tracer:
-                span.set_attribute("pipeline.calculation.metrics_count", len(calculation_result.metrics))
-                span.set_attribute("pipeline.calculation.anomalies_count", len(calculation_result.anomalies))
-                span.end()
+                with tracer.start_as_current_span("pipeline.phase.calculation") as span:
+                    baseline_metrics = self._load_previous_metrics(artifacts_dir, self.run_id)
+                    calculation = UnifiedCalculationV2(self.config.config, run_id=self.run_id)
+                    calculation_result = calculation.calculate(transformation_result.df, baseline_metrics)
+                    span.set_attribute("pipeline.calculation.metrics_count", len(calculation_result.metrics))
+                    span.set_attribute("pipeline.calculation.anomalies_count", len(calculation_result.anomalies))
+            else:
+                baseline_metrics = self._load_previous_metrics(artifacts_dir, self.run_id)
+                calculation = UnifiedCalculationV2(self.config.config, run_id=self.run_id)
+                calculation_result = calculation.calculate(transformation_result.df, baseline_metrics)
 
             # Compliance report
             compliance_report = build_compliance_report(
