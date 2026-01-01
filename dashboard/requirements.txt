@@ -17,12 +17,12 @@ opencensus-ext-logging==0.1.1
 opentelemetry-api>=1.20.0
 opentelemetry-sdk>=1.20.0
 azure-monitor-opentelemetry-exporter>=1.0.0b30
-opentelemetry-exporter-otlp>=0.40.0
-opentelemetry-instrumentation-httpx>=0.40.0
-opentelemetry-instrumentation-requests>=0.40.0
-opentelemetry-instrumentation-urllib3>=0.40.0
-opentelemetry-instrumentation-sqlite3>=0.40.0
-opentelemetry-instrumentation-psycopg2>=0.40.0
+opentelemetry-exporter-otlp>=0.40b0
+opentelemetry-instrumentation-httpx>=0.40b0
+opentelemetry-instrumentation-requests>=0.40b0
+opentelemetry-instrumentation-urllib3>=0.40b0
+opentelemetry-instrumentation-sqlite3>=0.40b0
+opentelemetry-instrumentation-psycopg2>=0.40b0
 
 # Azure SDK
 azure-identity>=1.12.0
