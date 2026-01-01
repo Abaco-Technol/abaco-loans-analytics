@@ -19,7 +19,7 @@ import pandas as pd
 logger = logging.getLogger(__name__)
 
 try:
-    from supabase import create_client
+    from supabase import create_client  # type: ignore
     HAS_SUPABASE = True
 except ImportError:
     HAS_SUPABASE = False

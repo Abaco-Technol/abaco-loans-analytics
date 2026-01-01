@@ -229,7 +229,7 @@ class MetaOutputClient:
             logger.warning("Meta export skipped: credentials not configured")
             return {}
 
-        results = {
+        results: Dict[str, Any] = {
             "pixel_events_tracked": {},
             "ads_insights_retrieved": [],
             "custom_audiences_created": {},

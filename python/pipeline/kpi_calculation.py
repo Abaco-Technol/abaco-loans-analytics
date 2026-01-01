@@ -78,7 +78,6 @@ class UnifiedCalculationV2:
         if not func_path:
             # Fallback to KPIEngineV2 direct calculation if function path is missing but name exists
             try:
-                from python.kpi_engine_v2 import KPIEngineV2
                 engine = KPIEngineV2(df)
                 # Map names to engine methods if needed
                 val = engine.get_metric(name)

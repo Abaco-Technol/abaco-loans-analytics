@@ -1,16 +1,16 @@
 import logging
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 import pandas as pd
 
-from python.kpis.collection_rate import calculate_collection_rate
-from python.kpis.dti import calculate_dti
-from python.kpis.ltv import calculate_ltv
-from python.kpis.par_30 import calculate_par_30
-from python.kpis.par_90 import calculate_par_90
-from python.kpis.portfolio_health import calculate_portfolio_health
-from python.kpis.portfolio_yield import calculate_portfolio_yield
+from python.kpis.collection_rate import calculate_collection_rate as calculate_collection_rate_logic
+from python.kpis.dti import calculate_dti as calculate_dti_logic
+from python.kpis.ltv import calculate_ltv as calculate_ltv_logic
+from python.kpis.par_30 import calculate_par_30 as calculate_par_30_logic
+from python.kpis.par_90 import calculate_par_90 as calculate_par_90_logic
+from python.kpis.portfolio_health import calculate_portfolio_health as calculate_portfolio_health_logic
+from python.kpis.portfolio_yield import calculate_portfolio_yield as calculate_portfolio_yield_logic
 
 logger = logging.getLogger(__name__)
 
@@ -22,15 +22,15 @@ class KPIEngineV2:
     """
 
     KPI_FUNCTIONS = {
-        "PAR30": calculate_par_30,
-        "PAR90": calculate_par_90,
-        "CollectionRate": calculate_collection_rate,
+        "PAR30": calculate_par_30_logic,
+        "PAR90": calculate_par_90_logic,
+        "CollectionRate": calculate_collection_rate_logic,
     }
 
     ON_DEMAND_KPI_FUNCTIONS = {
-        "LTV": calculate_ltv,
-        "DTI": calculate_dti,
-        "PortfolioYield": calculate_portfolio_yield,
+        "LTV": calculate_ltv_logic,
+        "DTI": calculate_dti_logic,
+        "PortfolioYield": calculate_portfolio_yield_logic,
     }
 
     def __init__(self, df: pd.DataFrame, actor: str = "system", action: str = "kpi"):
@@ -48,6 +48,7 @@ class KPIEngineV2:
             for kpi_name, calculator in self.KPI_FUNCTIONS.items():
                 try:
                     value, context = calculator(self.df)
+                    context.setdefault("metric", kpi_name)
                     self.metrics[kpi_name] = {
                         "value": float(value),
                         **context,
@@ -61,7 +62,7 @@ class KPIEngineV2:
                 try:
                     par30_val = self.metrics["PAR30"]["value"]
                     collection_val = self.metrics["CollectionRate"]["value"]
-                    health_val, health_ctx = calculate_portfolio_health(par30_val, collection_val)
+                    health_val, health_ctx = calculate_portfolio_health_logic(par30_val, collection_val)
                     self.metrics["PortfolioHealth"] = {
                         "value": float(health_val),
                         **health_ctx,
@@ -79,27 +80,33 @@ class KPIEngineV2:
 
     def calculate_par_30(self) -> Tuple[float, Dict[str, Any]]:
         """Calculate PAR30."""
-        return calculate_par_30(self.df)
+        val, ctx = calculate_par_30_logic(self.df)
+        ctx.setdefault("metric", "PAR30")
+        return val, ctx
 
     def calculate_par_90(self) -> Tuple[float, Dict[str, Any]]:
         """Calculate PAR90."""
-        return calculate_par_90(self.df)
+        val, ctx = calculate_par_90_logic(self.df)
+        ctx.setdefault("metric", "PAR90")
+        return val, ctx
 
     def calculate_collection_rate(self) -> Tuple[float, Dict[str, Any]]:
         """Calculate Collection Rate."""
-        return calculate_collection_rate(self.df)
+        val, ctx = calculate_collection_rate_logic(self.df)
+        ctx.setdefault("metric", "CollectionRate")
+        return val, ctx
 
     def calculate_ltv(self) -> Tuple[float, Dict[str, Any]]:
         """Calculate LTV."""
-        return calculate_ltv(self.df)
+        return calculate_ltv_logic(self.df)
 
     def calculate_dti(self) -> Tuple[float, Dict[str, Any]]:
         """Calculate DTI."""
-        return calculate_dti(self.df)
+        return calculate_dti_logic(self.df)
 
     def calculate_portfolio_yield(self) -> Tuple[float, Dict[str, Any]]:
         """Calculate Portfolio Yield."""
-        return calculate_portfolio_yield(self.df)
+        return calculate_portfolio_yield_logic(self.df)
 
     def get_audit_trail(self) -> pd.DataFrame:
         """Return audit trail as DataFrame."""
@@ -107,7 +114,7 @@ class KPIEngineV2:
             return pd.DataFrame()
         return pd.DataFrame(self.audit_trail)
 
-    def get_metric(self, name: str) -> float:
+    def get_metric(self, name: str) -> Optional[float]:
         """Helper to get a single metric value by name."""
         if name in self.metrics:
             return self.metrics[name].get("value")

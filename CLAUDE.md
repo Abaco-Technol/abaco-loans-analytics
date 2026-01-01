@@ -38,6 +38,7 @@ pytest -q tests/test_kpi_parity.py
 ✅ **Phase 1**: Repository Audit (100%)  
 ✅ **Phase 3A**: Module Consolidation (100%)  
 ✅ **Phase 3.4E-F**: Configuration Consolidation (100%)  
+✅ **Phase 3 Extended**: Remediation & Elimination (100%)  
 🔄 **Phase 4**: Engineering Standards (In Progress)  
 ⏳ **Phase 5**: Operational Deliverables (Pending)
 
@@ -49,6 +50,12 @@ pytest -q tests/test_kpi_parity.py
 ```bash
 # First time only: install development dependencies
 make install-dev
+```
+
+### Automated Reporting (Vibe Solutioning)
+```bash
+# Generate executive report from raw data
+python apps/analytics/run_report.py --data data/raw/looker_exports/loans.csv --output reports/executive_summary.md
 ```
 
 ### Code Quality Checks

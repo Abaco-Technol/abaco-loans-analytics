@@ -340,7 +340,7 @@ def daily_loan_intelligence_flow(input_file: str = "data/raw/abaco_portfolio.csv
     transform_res = transform_task(pipeline, ingest_res)
     
     # 3. Calculation Phase
-    calc_res = calculate_task(pipeline, transform_res)
+    calculate_task(pipeline, transform_res)
     
     # 4. Finalization (Compliance + Summary)
     # For now, we reuse the existing execution logic or wrap the remaining parts

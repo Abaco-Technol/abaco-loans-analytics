@@ -147,7 +147,7 @@ class UnifiedIngestion:
             df = df_polars.to_pandas()
             return self.ingest_dataframe(df)
         except Exception as exc:
-            logger.error(f"Parquet ingestion failed: {exc}")
+            logger.error("Parquet ingestion failed: %s", exc)
             return pd.DataFrame()
 
     def ingest_excel(self, filename: str) -> pd.DataFrame:
@@ -158,7 +158,7 @@ class UnifiedIngestion:
             df = df_polars.to_pandas()
             return self.ingest_dataframe(df)
         except Exception as exc:
-            logger.error(f"Excel ingestion failed: {exc}")
+            logger.error("Excel ingestion failed: %s", exc)
             return pd.DataFrame()
 
     def ingest_dataframe(self, df: pd.DataFrame) -> pd.DataFrame:
@@ -614,7 +614,7 @@ class UnifiedIngestion:
         ]
         for metric in metrics:
             df[metric] = df["measurement_date"].map(
-                lambda date: financials_by_date.get(str(date), {}).get(metric)
+                lambda date, m=metric: financials_by_date.get(str(date), {}).get(m)
             )
         if "cash_available_usd" not in df.columns:
             df["cash_available_usd"] = 0.0

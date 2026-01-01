@@ -302,7 +302,7 @@ class NotionOutputClient:
             logger.warning("Notion export skipped: credentials not configured")
             return {}
 
-        results = {
+        results: Dict[str, Any] = {
             "report_created": None,
             "kpi_metrics_logged": {},
             "success": False,

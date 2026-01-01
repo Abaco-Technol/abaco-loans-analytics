@@ -184,7 +184,7 @@ class FigmaClient:
             logger.warning("Figma sync skipped: credentials not configured")
             return {}
 
-        results = {
+        results: Dict[str, Any] = {
             "kpi_cards": {},
             "dashboard_snapshot": None,
             "success": False,

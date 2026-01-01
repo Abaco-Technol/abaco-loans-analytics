@@ -1,7 +1,7 @@
 import pandas as pd
 
 from python.pipeline.data_ingestion import UnifiedIngestion
-from python.kpi_engine import KPIEngine
+from python.kpi_engine_v2 import KPIEngineV2
 from python.pipeline.data_transformation import UnifiedTransformation
 
 
@@ -53,6 +53,6 @@ def test_calculate_kpis():
     df = sample_df()
     transformer = UnifiedTransformation()
     kpi_df = transformer.transform_to_kpi_dataset(df)
-    kpi_engine = KPIEngine(kpi_df)
+    kpi_engine = KPIEngineV2(kpi_df)
     par_30, _ = kpi_engine.calculate_par_30()
     assert isinstance(par_30, float)

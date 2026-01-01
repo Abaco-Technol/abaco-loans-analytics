@@ -105,7 +105,7 @@ class FinancialAnalyzer:
         return errors
 
     @resolve_column(["days_past_due", "dpd", "dias_mora", "days_late"])
-    def classify_dpd_buckets(self, df: pd.DataFrame, dpd_col: str) -> pd.DataFrame:
+    def classify_dpd_buckets(self, df: pd.DataFrame, dpd_col: str = "days_past_due") -> pd.DataFrame:
         """Classify days past due into standard buckets."""
         result = df.copy()
         try:
@@ -117,7 +117,9 @@ class FinancialAnalyzer:
         return result
 
     @resolve_column(["outstanding_balance", "balance", "saldo", "amount"])
-    def segment_clients_by_exposure(self, df: pd.DataFrame, exposure_col: str) -> pd.DataFrame:
+    def segment_clients_by_exposure(
+        self, df: pd.DataFrame, exposure_col: str = "outstanding_balance"
+    ) -> pd.DataFrame:
         """Segment clients by exposure level."""
         result = df.copy()
         try:
