@@ -25,10 +25,14 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "20"
-      - name: Install dependencies
-        run: npm install --legacy-peer-deps --ignore-scripts
-      - name: Build Next.js app
-        run: npm --prefix apps/web run build
+          cache: pnpm
+          cache-dependency-path: apps/web/pnpm-lock.yaml
+      - name: Enable pnpm
+        run: corepack enable
+      - name: Install dependencies (apps/web)
+        run: pnpm -C apps/web install --frozen-lockfile
+      - name: Build Next.js app (apps/web)
+        run: pnpm -C apps/web build
       - name: Check SWA token
         id: swa_token
         env:
@@ -48,8 +52,10 @@ jobs:
           azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_YELLOW_CLIFF_03015B20F }}
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           action: upload
-          app_location: "/"          output_location: .next
+          app_location: "apps/web"
+          output_location: ".next"
           api_location: ""
+          app_build_command: "pnpm -C apps/web build"
       - name: Skip deploy (missing token)
         if: steps.swa_token.outputs.present != 'true'
         run: |

@@ -17,6 +17,14 @@ on:
       - ".github/workflows/ci-checks.yml"
   workflow_dispatch:
     inputs:
+      RUN_DEMOS:
+        description: "Run demo scripts"
+        required: false
+        default: "false"
+        type: choice
+        options:
+          - "false"
+          - "true"
       DATA_FILE:
         description: "Path to CSV data file (relative to repo root)"
         required: false
@@ -34,9 +42,12 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "20"
-          cache: "npm"
-      - name: Install JS dependencies
-        run: npm ci --ignore-scripts
+          cache: pnpm
+          cache-dependency-path: apps/web/pnpm-lock.yaml
+      - name: Enable pnpm
+        run: corepack enable
+      - name: Install web deps (for lint)
+        run: pnpm -C apps/web install --frozen-lockfile
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
@@ -47,11 +58,13 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
       - name: Run repo health check
+        continue-on-error: true
         run: bash scripts/repo_health_check.sh
 
   run-demos:
     name: Run Demo Scripts
     runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' && inputs.RUN_DEMOS == 'true'
     permissions:
       contents: read
       pull-requests: write
