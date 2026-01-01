@@ -15,16 +15,25 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-from azure.storage.blob import BlobServiceClient, ContentSettings
-from azure.identity import DefaultAzureCredential
-
 logger = logging.getLogger(__name__)
+
+try:
+    from azure.storage.blob import BlobServiceClient, ContentSettings
+    from azure.identity import DefaultAzureCredential
+    HAS_AZURE = True
+except ImportError:
+    HAS_AZURE = False
 
 
 class AzureStorageClient:
     """Handle uploading analytics data to Azure Blob Storage."""
 
     def __init__(self, connection_string: Optional[str] = None):
+        if not HAS_AZURE:
+            logger.warning("Azure SDK not installed. Azure Storage disabled.")
+            self.client = None
+            return
+
         self.connection_string = (
             connection_string or os.getenv("AZURE_STORAGE_CONNECTION_STRING")
         )

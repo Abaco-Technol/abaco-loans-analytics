@@ -18,6 +18,12 @@ import pandas as pd
 
 logger = logging.getLogger(__name__)
 
+try:
+    from supabase import create_client
+    HAS_SUPABASE = True
+except ImportError:
+    HAS_SUPABASE = False
+
 
 class SupabaseOutputClient:
     """Sync analytics data to Supabase PostgreSQL database."""
@@ -28,13 +34,14 @@ class SupabaseOutputClient:
             service_role_key or os.getenv("SUPABASE_SERVICE_ROLE")
         )
 
-        if self.url and self.service_role_key:
+        if not HAS_SUPABASE:
+            logger.warning("supabase-py not installed. Supabase export disabled.")
+            self.client = None
+        elif self.url and self.service_role_key:
             try:
-                from supabase import create_client
-
                 self.client = create_client(self.url, self.service_role_key)
-            except ImportError:
-                logger.warning("supabase-py not installed. Supabase export disabled.")
+            except Exception as e:
+                logger.warning(f"Failed to initialize Supabase client: {e}")
                 self.client = None
         else:
             logger.warning("Supabase credentials not configured")

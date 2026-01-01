@@ -29,148 +29,60 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: '3.11'
-
-      - name: Cache Python dependencies
-        uses: actions/cache@v3
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-
+          cache: 'pip'
 
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Run KPI pipeline
+      - name: Run batch export
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE: ${{ secrets.SUPABASE_SERVICE_ROLE }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           HUBSPOT_API_KEY: ${{ secrets.HUBSPOT_API_KEY }}
           META_ACCESS_TOKEN: ${{ secrets.META_ACCESS_TOKEN }}
-        run: |
-          python run_complete_analytics.py --export
-
-      - name: Prepare export data
-        env:
-          EXPORT_TYPE: ${{ github.event.inputs.export_type || 'full' }}
-        run: |
-          python python/integrations/batch_export_runner.py \
-            --type $EXPORT_TYPE \
-            --output-dir data/exports
-
-      - name: Export to Figma
-        if: success()
-        env:
-          FIGMA_TOKEN: ${{ secrets.FIGMA_TOKEN }}
-          FIGMA_FILE_KEY: ${{ secrets.FIGMA_FILE_KEY }}
-        run: |
-          python -c "
-from python.integrations.figma_client import FigmaClient
-import json
-figma = FigmaClient()
-with open('data/exports/latest_metrics.json') as f:
-    data = json.load(f)
-result = figma.sync_batch_export(data, '${{ github.run_id }}')
-print(json.dumps(result, indent=2))
-"
-
-      - name: Export to Azure
-        if: success()
-        env:
-          AZURE_STORAGE_CONNECTION_STRING: ${{ secrets.AZURE_STORAGE_CONNECTION_STRING }}
-          AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
-        run: |
-          python -c "
-from python.integrations.azure_outputs import AzureStorageClient, AzureDashboardClient
-from pathlib import Path
-import json
-storage = AzureStorageClient()
-dashboard = AzureDashboardClient()
-results = {
-    'storage': storage.upload_batch_exports(Path('data/exports'), '${{ github.run_id }}')
-}
-print(json.dumps(results, indent=2))
-"
-
-      - name: Export to Supabase
-        if: success()
-        env:
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_SERVICE_ROLE: ${{ secrets.SUPABASE_SERVICE_ROLE }}
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-        run: |
-          python -c "
-from python.integrations.supabase_client import SupabaseOutputClient
-import json
-supabase = SupabaseOutputClient()
-with open('data/exports/latest_metrics.json') as f:
-    data = json.load(f)
-result = supabase.sync_batch_export(data, '${{ github.run_id }}')
-print(json.dumps(result, indent=2))
-"
-
-      - name: Export to Meta
-        if: success()
-        env:
-          META_ACCESS_TOKEN: ${{ secrets.META_ACCESS_TOKEN }}
           META_PIXEL_ID: ${{ secrets.META_PIXEL_ID }}
           META_AD_ACCOUNT_ID: ${{ secrets.META_AD_ACCOUNT_ID }}
-        run: |
-          python -c "
-from python.integrations.meta_client import MetaOutputClient
-import json
-meta = MetaOutputClient()
-with open('data/exports/latest_metrics.json') as f:
-    data = json.load(f)
-result = meta.sync_batch_export(data)
-print(json.dumps(result, indent=2))
-"
-
-      - name: Export to Notion
-        if: success()
-        env:
+          FIGMA_TOKEN: ${{ secrets.FIGMA_TOKEN }}
+          FIGMA_FILE_KEY: ${{ secrets.FIGMA_FILE_KEY }}
+          AZURE_STORAGE_CONNECTION_STRING: ${{ secrets.AZURE_STORAGE_CONNECTION_STRING }}
+          AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
           NOTION_API_KEY: ${{ secrets.NOTION_API_KEY }}
           NOTION_DATABASE_ID: ${{ secrets.NOTION_DATABASE_ID }}
           NOTION_REPORTS_PAGE_ID: ${{ secrets.NOTION_REPORTS_PAGE_ID }}
+          EXPORT_TYPE: ${{ github.event.inputs.export_type || 'full' }}
         run: |
-          python -c "
-from python.integrations.notion_client import NotionOutputClient
-import json
-notion = NotionOutputClient()
-with open('data/exports/latest_metrics.json') as f:
-    data = json.load(f)
-result = notion.sync_batch_export(data, '${{ github.run_id }}')
-print(json.dumps(result, indent=2))
-"
+          python python/integrations/batch_export_runner.py \
+            --type "$EXPORT_TYPE" \
+            --output-dir data/exports \
+            --verbose
 
-      - name: Upload export results
+      - name: Upload export artifacts
         if: always()
         uses: actions/upload-artifact@v3
         with:
-          name: batch-export-results
-          path: |
-            data/exports/
-            logs/
+          name: batch-export-results-${{ github.run_id }}
+          path: data/exports/
           retention-days: 30
-
-      - name: Notify on failure
-        if: failure()
-        uses: 8398a7/action-slack@v3
-        with:
-          status: ${{ job.status }}
-          text: 'Batch export workflow failed. Check artifacts for details.'
-          webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
-          fields: repo,message,commit
 
       - name: Notify on success
         if: success()
         uses: 8398a7/action-slack@v3
         with:
-          status: ${{ job.status }}
-          text: 'Batch export workflow completed successfully.'
+          status: success
+          text: 'Batch export workflow completed successfully'
           webhook_url: ${{ secrets.SLACK_WEBHOOK_OPS }}
           fields: repo,message,commit
+
+      - name: Notify on failure
+        if: failure()
+        uses: 8398a7/action-slack@v3
+        with:
+          status: failure
+          text: 'Batch export workflow failed'
+          webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
+          fields: repo,message,commit,author

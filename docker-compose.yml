@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  frontend:
+    build:
+      context: ./apps/web
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      # Next.js reads these at runtime/server and also may expose NEXT_PUBLIC_* to the client
+      NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY}
+    depends_on:
+      - backend
+
+  backend:
+    build:
+      context: ./dashboard
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      # Streamlit dashboard does not require Supabase by default, but supports env wiring if added later
+      PORT: 8000
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      HUBSPOT_API_KEY: ${HUBSPOT_API_KEY}
