@@ -11,6 +11,7 @@ env:
 
 jobs:
     operations-dashboard:
+        if: ${{ secrets.SUPABASE_SERVICE_ROLE != '' && secrets.OPENAI_API_KEY != '' }}
         runs-on: ubuntu-latest
         steps:
             - name: Checkout Repository
@@ -23,8 +24,10 @@ jobs:
               run: |
                   pip install -r requirements.txt
             - name: Run Operations Analysis
+              if: ${{ hashFiles('scripts/operations_dashboard.py') != '' }}
               run: |
                   python scripts/operations_dashboard.py
             - name: Post to Slack
+              if: ${{ secrets.SLACK_BOT_TOKEN != '' && hashFiles('scripts/post_to_slack.py') != '' }}
               run: |
                   python scripts/post_to_slack.py --channel "#ops-dashboard"

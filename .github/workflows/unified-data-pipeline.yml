@@ -35,6 +35,7 @@ jobs:
 
       - name: Ingest Cascade Data
         id: cascade
+        if: ${{ hashFiles('scripts/ingest_cascade.py') != '' && secrets.CASCADEUSERNAME != '' && secrets.CASCADEPASSWORD != '' }}
         continue-on-error: true
         run: |
           echo "Fetching loan data from Cascade..."
@@ -45,6 +46,7 @@ jobs:
 
       - name: Ingest HubSpot CRM Data
         id: hubspot
+        if: ${{ hashFiles('scripts/ingest_hubspot.py') != '' && secrets.HUBSPOTTOKEN != '' }}
         continue-on-error: true
         run: |
           echo "Fetching deals, contacts, and pipeline data from HubSpot..."
@@ -54,6 +56,7 @@ jobs:
 
       - name: Refresh Supabase Views
         id: supabase
+        if: ${{ hashFiles('scripts/refresh_supabase_views.py') != '' && secrets.SUPABASESERVICEROLE != '' }}
         run: |
           echo "Refreshing materialized views for agent consumption..."
           python scripts/refresh_supabase_views.py
@@ -61,16 +64,19 @@ jobs:
           SUPABASE_SERVICE_ROLE: ${{ secrets.SUPABASESERVICEROLE }}
 
       - name: Validate Data Quality
+        if: ${{ hashFiles('scripts/validate_data_quality.py') != '' }}
         run: |
           echo "Running data quality checks..."
           python scripts/validate_data_quality.py
 
       - name: Generate Data Manifest
+        if: ${{ hashFiles('scripts/generate_data_manifest.py') != '' }}
         run: |
           echo "Creating manifest with data freshness timestamps..."
           python scripts/generate_data_manifest.py
 
       - name: Signal Agents Data Ready
+        if: ${{ secrets.SLACKBOTTOKEN != '' }}
         run: |
           echo "Broadcasting data-ready signal to agent workflows..."
           curl -X POST ${{ secrets.SLACKBOTTOKEN }} \
@@ -78,7 +84,7 @@ jobs:
             -d '{"text":"✅ Data pipeline completed at $(date). All agents can now run."}'
 
       - name: Log to Opik
-        if: always()
+        if: ${{ always() && secrets.OPIKTOKEN != '' && hashFiles('scripts/log_pipeline_metrics.py') != '' }}
         run: |
           python scripts/log_pipeline_metrics.py \
             --cascade-status ${{ steps.cascade.outcome }} \
@@ -88,7 +94,7 @@ jobs:
           OPIK_TOKEN: ${{ secrets.OPIKTOKEN }}
 
       - name: Alert on Critical Failure
-        if: failure()
+        if: ${{ failure() && secrets.SLACKBOTTOKEN != '' }}
         run: |
           curl -X POST ${{ secrets.SLACKBOTTOKEN }} \
             -H 'Content-Type: application/json' \

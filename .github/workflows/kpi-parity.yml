@@ -8,6 +8,7 @@ on:
 
 jobs:
   kpi-parity:
+    if: ${{ secrets.DATABASE_URL != '' }}
     runs-on: ubuntu-latest
 
     env:

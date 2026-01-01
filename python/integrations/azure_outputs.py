@@ -253,7 +253,6 @@ class AzureDashboardClient:
 
         try:
             from azure.mgmt.portal import Portal
-            from azure.mgmt.portal.operations import DashboardsOperations
 
             client = Portal(self.credential, self.subscription_id)
 

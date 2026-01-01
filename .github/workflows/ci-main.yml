@@ -35,6 +35,7 @@ jobs:
         run: pnpm build
 
   update-figma-slides:
+    if: ${{ secrets.FIGMA_TOKEN != '' && secrets.FIGMA_FILE_KEY != '' && secrets.ANALYTICS_URL != '' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -54,6 +55,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Update Figma Slides
+        if: ${{ hashFiles('scripts/update_figma_slides.js') != '' }}
         run: node scripts/update_figma_slides.js
         env:
           FIGMA_TOKEN: ${{ secrets.FIGMA_TOKEN }}

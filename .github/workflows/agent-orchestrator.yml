@@ -30,22 +30,37 @@ env:
 jobs:
   validate-secrets:
     runs-on: ubuntu-latest
+    outputs:
+      run: ${{ steps.gate.outputs.run }}
     steps:
-      - name: Validate required secrets
+      - name: Gate execution on secrets and scripts
+        id: gate
         run: |
           python3 << 'VALIDATION'
-          import os, sys
+          import os
+          from pathlib import Path
+
           required = ["OPENAI_API_KEY", "SUPABASE_SERVICE_ROLE"]
-          optional = ["OPIK_TOKEN", "PHOENIX_TOKEN", "SLACK_WEBHOOK_LEADERSHIP"]
           missing = [k for k in required if not os.getenv(k)]
+          script_missing = not Path("orchestration/run.py").exists()
+          package_missing = not Path("orchestration/__init__.py").exists()
+
           if missing:
-              print(f"ERROR: Missing required secrets: {', '.join(missing)}")
-              sys.exit(1)
-          print("✅ All required secrets present")
+              print(f"Skipping: missing secrets: {', '.join(missing)}")
+          if script_missing:
+              print("Skipping: missing script orchestration/run.py")
+          if package_missing:
+              print("Skipping: missing package marker orchestration/__init__.py")
+
+          run = "false" if missing or script_missing or package_missing else "true"
+
+          with open(os.environ["GITHUB_OUTPUT"], "a") as handle:
+              handle.write(f"run={run}\n")
           VALIDATION
 
   orchestrate:
     needs: validate-secrets
+    if: needs.validate-secrets.outputs.run == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:

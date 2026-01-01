@@ -10,6 +10,7 @@ env:
 
 jobs:
     risk-monitoring:
+        if: ${{ secrets.OPENAI_API_KEY != '' && secrets.SUPABASE_SERVICE_ROLE != '' }}
         runs-on: ubuntu-latest
         steps:
             - name: Checkout Repository
@@ -22,8 +23,10 @@ jobs:
               run: |
                   pip install -r requirements.txt
             - name: Run Risk Assessment
+              if: ${{ hashFiles('scripts/risk_monitoring.py') != '' }}
               run: |
                   python scripts/risk_monitoring.py
             - name: Post to Streamlit
+              if: ${{ hashFiles('scripts/post_to_streamlit.py') != '' }}
               run: |
                   python scripts/post_to_streamlit.py

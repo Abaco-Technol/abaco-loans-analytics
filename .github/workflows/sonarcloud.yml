@@ -13,6 +13,7 @@ on:
 jobs:
   sonarcloud:
     name: SonarCloud Scan
+    if: ${{ secrets.SONAR_TOKEN != '' }}
     permissions:
       contents: read
       pull-requests: read

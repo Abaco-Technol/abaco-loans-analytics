@@ -2,12 +2,18 @@ import numpy as np
 import pandas as pd
 
 from apps.analytics.src.enterprise_analytics_engine import LoanAnalyticsEngine
-from python.pipeline.data_validation import (
-    REQUIRED_ANALYTICS_COLUMNS,
-    safe_numeric,
-    validate_dataframe,
-)
+from python.kpi_engine_v2 import KPIEngineV2
+from python.pipeline.data_validation import safe_numeric, validate_dataframe
 from .quality_score import calculate_quality_score as calculate_portfolio_quality_score
+
+REQUIRED_ANALYTICS_COLUMNS = [
+    "loan_amount",
+    "appraised_value",
+    "borrower_income",
+    "monthly_debt",
+    "interest_rate",
+    "principal_balance",
+]
 
 # Alias for backward compatibility
 standardize_numeric = safe_numeric
@@ -51,18 +57,6 @@ def project_growth(
         "yield": yields,
         "loan_volume": volumes
     })
-
-
-from python.kpi_engine_v2 import KPIEngineV2
-
-REQUIRED_ANALYTICS_COLUMNS = [
-    "loan_amount",
-    "appraised_value",
-    "borrower_income",
-    "monthly_debt",
-    "interest_rate",
-    "principal_balance",
-]
 
 
 def portfolio_kpis(df: pd.DataFrame) -> tuple[dict[str, float], pd.DataFrame]:
@@ -123,5 +117,7 @@ __all__ = [
     "calculate_portfolio_quality_score",
     "project_growth",
     "portfolio_kpis",
+    "LoanAnalyticsEngine",
+    "REQUIRED_ANALYTICS_COLUMNS",
     "standardize_numeric",
 ]

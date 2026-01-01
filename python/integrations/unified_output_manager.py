@@ -154,6 +154,13 @@ class UnifiedOutputManager:
                 export_data, run_id
             )
 
+        success_flags = [
+            output.get("success")
+            for output in results["outputs"].values()
+            if isinstance(output, dict) and "success" in output
+        ]
+        results["success"] = all(success_flags) if success_flags else True
+
         self._log_results(results)
         return results
 

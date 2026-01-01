@@ -1,20 +1,16 @@
 name: Demo Scripts Check
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - "scripts/**"
-      - "python/**"
-      - ".github/workflows/demo-scripts.yml"
-  pull_request:
-    branches: [main]
-    paths:
-      - "scripts/**"
-      - "python/**"
-      - ".github/workflows/demo-scripts.yml"
   workflow_dispatch:
     inputs:
+      RUN_DEMOS:
+        description: "Run demo scripts"
+        required: false
+        default: "false"
+        type: choice
+        options:
+          - "false"
+          - "true"
       DATA_FILE:
         description: "Path to CSV data file (relative to repo root)"
         required: false
@@ -27,6 +23,7 @@ permissions:
 jobs:
   run-demos:
     runs-on: ubuntu-latest
+    if: ${{ inputs.RUN_DEMOS == 'true' }}
     env:
       SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
     steps:

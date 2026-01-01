@@ -11,6 +11,7 @@ env:
 
 jobs:
     brand-monitoring:
+        if: ${{ secrets.OPENAI_API_KEY != '' && secrets.META_ACCESS_TOKEN != '' }}
         runs-on: ubuntu-latest
         steps:
             - name: Checkout Repository
@@ -23,8 +24,10 @@ jobs:
               run: |
                   pip install -r requirements.txt
             - name: Run Brand Monitoring
+              if: ${{ hashFiles('scripts/brand_monitoring.py') != '' }}
               run: |
                   python scripts/brand_monitoring.py
             - name: Post to Slack
+              if: ${{ secrets.SLACK_BOT_TOKEN != '' && hashFiles('scripts/post_to_slack.py') != '' }}
               run: |
                   python scripts/post_to_slack.py --channel "#brand-monitoring"

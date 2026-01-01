@@ -70,7 +70,7 @@ jobs:
           retention-days: 30
 
       - name: Notify on success
-        if: success()
+        if: success() && secrets.SLACK_WEBHOOK_OPS != ''
         uses: 8398a7/action-slack@v3
         with:
           status: success
@@ -79,7 +79,7 @@ jobs:
           fields: repo,message,commit
 
       - name: Notify on failure
-        if: failure()
+        if: failure() && secrets.SLACK_WEBHOOK_URL != ''
         uses: 8398a7/action-slack@v3
         with:
           status: failure

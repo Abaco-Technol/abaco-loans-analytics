@@ -343,6 +343,9 @@ export AZURE_STORAGE_CONNECTION_STRING="..."
 python python/integrations/batch_export_runner.py --type full --verbose
 ```
 
+Note: The batch export runner reports success as long as all enabled outputs succeed.
+Missing integrations (unset tokens or disabled outputs) are treated as skipped rather than failures.
+
 ---
 
 ## 🔄 Secret Rotation Schedule

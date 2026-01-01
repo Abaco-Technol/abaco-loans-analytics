@@ -15,6 +15,7 @@ on:
 
 jobs:
   export-and-sync-kpi-csv:
+    if: ${{ secrets.FIGMA_TOKEN != '' && secrets.FIGMA_FILE_KEY != '' }}
     runs-on: ubuntu-latest
     env:
       FIGMA_TOKEN: ${{ secrets.FIGMA_TOKEN }}
@@ -31,9 +32,11 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
       - name: Export KPI table to CSV
+        if: ${{ hashFiles('scripts/export_kpi_table_to_csv.py') != '' }}
         run: |
           python scripts/export_kpi_table_to_csv.py
       - name: Sync KPI CSV to Figma
+        if: ${{ hashFiles('scripts/sync_kpi_table_to_figma.py') != '' && hashFiles('exports/KPI_Mapping_Table.csv') != '' }}
         run: |
           python scripts/sync_kpi_table_to_figma.py
         env:

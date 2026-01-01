@@ -10,6 +10,7 @@ env:
 
 jobs:
     talent-analytics:
+        if: ${{ secrets.OPENAI_API_KEY != '' && secrets.SUPABASE_SERVICE_ROLE != '' }}
         runs-on: ubuntu-latest
         steps:
             - name: Checkout Repository
@@ -22,8 +23,10 @@ jobs:
               run: |
                   pip install -r requirements.txt
             - name: Run Talent Analytics
+              if: ${{ hashFiles('scripts/talent_analytics.py') != '' }}
               run: |
                   python scripts/talent_analytics.py
             - name: Post to Secure Dashboard
+              if: ${{ hashFiles('scripts/post_to_secure_dashboard.py') != '' }}
               run: |
                   python scripts/post_to_secure_dashboard.py

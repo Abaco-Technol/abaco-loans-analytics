@@ -7,6 +7,7 @@ on:
 
 jobs:
   meta-ingest:
+    if: ${{ secrets.META_SYSTEM_USER_TOKEN != '' }}
     runs-on: ubuntu-latest
     env:
       META_SYSTEM_USER_TOKEN: ${{ secrets.META_SYSTEM_USER_TOKEN }}

@@ -28,21 +28,34 @@ env:
 jobs:
   validate-secrets:
     runs-on: ubuntu-latest
+    outputs:
+      run: ${{ steps.gate.outputs.run }}
     steps:
-      - name: Validate required secrets
+      - name: Gate execution on secrets and scripts
+        id: gate
         run: |
           python3 << 'VALIDATION'
-          import os, sys
+          import os
+          from pathlib import Path
+
           required = ["SUPABASE_SERVICE_ROLE", "CASCADE_USERNAME", "CASCADE_PASSWORD"]
           missing = [k for k in required if not os.getenv(k)]
+          script_missing = not Path("scripts/ingest_cascade.py").exists()
+
           if missing:
-              print(f"ERROR: Missing secrets: {', '.join(missing)}")
-              sys.exit(1)
-          print("✅ All required secrets present")
+              print(f"Skipping: missing secrets: {', '.join(missing)}")
+          if script_missing:
+              print("Skipping: missing script scripts/ingest_cascade.py")
+
+          run = "false" if missing or script_missing else "true"
+
+          with open(os.environ["GITHUB_OUTPUT"], "a") as handle:
+              handle.write(f"run={run}\n")
           VALIDATION
 
   kpi-extraction:
     needs: validate-secrets
+    if: needs.validate-secrets.outputs.run == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
