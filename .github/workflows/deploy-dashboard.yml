@@ -41,7 +41,7 @@ jobs:
 
       - name: Configure App Service health check path
         if: secrets.AZURE_CREDENTIALS != ''
-        run: az webapp config set --resource-group $RESOURCE_GROUP --name $WEBAPP_NAME --health-check-path $HEALTH_CHECK_PATH
+        run: az webapp config set --resource-group ${{ env.RESOURCE_GROUP }} --name ${{ env.WEBAPP_NAME }} --health-check-path ${{ env.HEALTH_CHECK_PATH }}
 
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
