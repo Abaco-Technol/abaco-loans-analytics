@@ -30,8 +30,8 @@ jobs:
 
       - name: Install Dependencies
         run: |
-          pip install --upgrade pip
-          pip install supabase requests python-dotenv opik
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
 
       - name: Ingest Cascade Data
         id: cascade
