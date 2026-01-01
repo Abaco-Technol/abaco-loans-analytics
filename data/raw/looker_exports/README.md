@@ -108,7 +108,7 @@ The following validations should be applied before files are considered ready fo
   - Date fields follow the agreed format (e.g. `YYYY-MM-DD`) and represent valid calendar dates.
 - **Range / consistency checks**:
   - Payment records in `historic_payment_data.csv` must reference valid loan identifiers present in the loan tape.
-  - No records are present with future-dated payments beyond an acceptable configuration window.
+  - No records are present with payment dates more than 30 calendar days in the future relative to the file generation date.
 - Any failed checks should block publication of the file until resolved.
 
 ### Owner / responsible party
