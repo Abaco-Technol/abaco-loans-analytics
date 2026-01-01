@@ -39,7 +39,7 @@ jobs:
           print("Cascade records:", len(df), "file:", latest)
           PY
       - name: Validate Figma Dashboard Images
-        
+        if: secrets.AWS_S3_BUCKET != ''
         env:
           AWS_S3_BUCKET: ${{ secrets.AWS_S3_BUCKET }}
         run: |
@@ -60,7 +60,7 @@ jobs:
               print(f"Image OK: {url}")
           PY
       - name: Validate Figma API Node Update
-        
+        if: secrets.FIGMA_TOKEN != '' && secrets.FIGMA_FILE_KEY != '' && secrets.FIGMA_NODE_ID != ''
         env:
           FIGMA_TOKEN: ${{ secrets.FIGMA_TOKEN }}
           FIGMA_FILE_KEY: ${{ secrets.FIGMA_FILE_KEY }}

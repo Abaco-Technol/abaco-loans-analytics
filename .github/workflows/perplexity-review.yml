@@ -6,7 +6,7 @@ on:
 
 jobs:
   perplexity-review:
-    
+    if: secrets.PERPLEXITY_API_KEY != ''
     runs-on: ubuntu-latest
     permissions:
       pull-requests: write

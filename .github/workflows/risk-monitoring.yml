@@ -10,7 +10,7 @@ env:
 
 jobs:
     risk-monitoring:
-        
+        if: secrets.OPENAI_API_KEY != '' && secrets.SUPABASE_SERVICE_ROLE != ''
         runs-on: ubuntu-latest
         steps:
             - name: Checkout Repository

@@ -101,7 +101,7 @@ class AnalyticsReportRunner:
             "## 3. AUDIT & TRACEABILITY",
             f"- **Manifest Path**: `{phases.get('output', {}).get('manifest', 'N/A')}`",
             f"- **Audit Trail**: Immutable logs recorded in `logs/runs/{run_id}/`",
-            f"- **Compliance Level**: Enterprise Standard",
+            "- **Compliance Level**: Enterprise Standard",
             "",
             "## 4. ANOMALY DETECTION",
         ])

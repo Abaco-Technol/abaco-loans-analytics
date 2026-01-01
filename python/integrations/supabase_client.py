@@ -144,7 +144,7 @@ class SupabaseOutputClient:
 
                 response = (
                     self.client.table("analytics_timeseries")
-                    .upsert(ts_records, on_conflict=["run_id", "metric_name", "period"])
+                    .upsert(ts_records, on_conflict="run_id,metric_name,period")
                     .execute()
                 )
 
@@ -173,7 +173,7 @@ class SupabaseOutputClient:
                 .execute()
             )
 
-            return response.data or []
+            return response.data if response.data else []  # type: ignore
 
         except Exception as e:
             logger.error(f"Error retrieving metrics from Supabase: {e}")

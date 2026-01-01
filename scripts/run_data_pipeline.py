@@ -10,16 +10,12 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from python.compliance import build_compliance_report, write_compliance_report
 from python.pipeline.data_ingestion import UnifiedIngestion
-from python.kpi_engine import KPIEngine as KPIEngineLegacy
 from python.pipeline.orchestrator import UnifiedPipeline
 from python.pipeline.data_transformation import UnifiedTransformation
 
 # Legacy aliases for backward compatibility with tests/patching
 CascadeIngestion = UnifiedIngestion
 DataTransformation = UnifiedTransformation
-
-# Legacy patch target used by unit tests
-KPIEngine = KPIEngineLegacy
 
 logging.basicConfig(
     level=logging.INFO,
