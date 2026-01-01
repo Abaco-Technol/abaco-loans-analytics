@@ -9,9 +9,9 @@ on:
       - completed
 
 env:
-  SUPABASESERVICEROLE: ${{ secrets.SUPABASESERVICEROLE }}
-  OPIKTOKEN: ${{ secrets.OPIKTOKEN }}
-  SLACKBOTTOKEN: ${{ secrets.SLACKBOTTOKEN }}
+  SUPABASE_SERVICE_ROLE: ${{ secrets.SUPABASESERVICEROLE }}
+  OPIK_TOKEN: ${{ secrets.OPIKTOKEN }}
+  SLACK_BOT_TOKEN: ${{ secrets.SLACKBOTTOKEN }}
   OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
 jobs:
