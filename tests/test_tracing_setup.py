@@ -8,7 +8,7 @@ including graceful degradation when tracing is unavailable.
 import os
 import sys
 import unittest
-from unittest.mock import MagicMock, patch, Mock
+from unittest.mock import MagicMock, patch
 
 # Add parent directory to path for imports
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
