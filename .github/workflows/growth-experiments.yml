@@ -27,9 +27,9 @@ jobs:
               run: |
                   python scripts/growth_experiments.py
             - name: Post to Notion
-              if: ${{ hashFiles('scripts/post_to_notion.py') != '' && secrets.NOTION_API_KEY != '' && secrets.NOTION_DATABASE_ID != '' }}
+              if: ${{ hashFiles('scripts/post_to_notion.py') != '' && secrets.NOTION_INTEGRATION_TOKEN != '' && secrets.NOTION_DATABASE_ID != '' }}
               env:
-                  NOTION_API_KEY: ${{ secrets.NOTION_API_KEY }}
+                  NOTION_API_KEY: ${{ secrets.NOTION_INTEGRATION_TOKEN }}
                   NOTION_DATABASE_ID: ${{ secrets.NOTION_DATABASE_ID }}
               run: |
                   python scripts/post_to_notion.py

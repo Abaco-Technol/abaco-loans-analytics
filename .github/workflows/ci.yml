@@ -10,7 +10,7 @@ on:
 jobs:
   sonar:
     runs-on: ubuntu-latest
-    if: ${{ github.event_name != 'pull_request' && secrets.SONAR_TOKEN != '' }}
+    if: ${{ github.event_name != 'pull_request' && secrets.SONAR_TOKEN_GITHUB != '' }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -19,7 +19,7 @@ jobs:
         with:
           projectBaseDir: .
         env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN_GITHUB }}
 
   web:
     runs-on: ubuntu-latest

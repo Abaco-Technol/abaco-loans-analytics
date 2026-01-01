@@ -7,14 +7,14 @@ on:
   workflow_dispatch:
 
 env:
-  OPIKTOKEN: ${{ secrets.OPIKTOKEN }}
-  SUPABASESERVICEROLE: ${{ secrets.SUPABASESERVICEROLE }}
-  SLACKBOTTOKEN: ${{ secrets.SLACKBOTTOKEN }}
+  OPIKTOKEN: ${{ secrets.OPIK_TOKEN }}
+  SUPABASESERVICEROLE: ${{ secrets.SUPABASE_SERVICE_ROLE }}
+  SLACKBOTTOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
 
 jobs:
   # Job 1: Fetch system metrics from Opik
   fetch-opik-metrics:
-    if: ${{ secrets.OPIKTOKEN != '' }}
+    if: ${{ secrets.OPIK_TOKEN != '' }}
     runs-on: ubuntu-latest
     outputs:
       metrics-available: ${{ steps.fetch.outputs.available }}
@@ -211,7 +211,7 @@ jobs:
   # Job 6: Alert on critical issues
   alert-on-critical-issues:
     needs: [analyze-pipeline-health, analyze-agent-performance, check-data-quality-trends]
-    if: ${{ secrets.SLACKBOTTOKEN != '' && needs.analyze-pipeline-health.result == 'success' && needs.analyze-agent-performance.result == 'success' && needs.check-data-quality-trends.result == 'success' && (needs.analyze-pipeline-health.outputs.pipeline-status != 'healthy' || needs.analyze-agent-performance.outputs.agent-status != 'optimal' || needs.check-data-quality-trends.outputs.anomalies-detected == 'true') }}
+    if: ${{ secrets.SLACK_BOT_TOKEN != '' && needs.analyze-pipeline-health.result == 'success' && needs.analyze-agent-performance.result == 'success' && needs.check-data-quality-trends.result == 'success' && (needs.analyze-pipeline-health.outputs.pipeline-status != 'healthy' || needs.analyze-agent-performance.outputs.agent-status != 'optimal' || needs.check-data-quality-trends.outputs.anomalies-detected == 'true') }}
     runs-on: ubuntu-latest
     steps:
       - name: Send critical alert to Slack
@@ -222,14 +222,14 @@ jobs:
           ALERT_MESSAGE+="Agents: ${{ needs.analyze-agent-performance.outputs.agent-status }}\n"
           ALERT_MESSAGE+="Data Quality: ${{ needs.check-data-quality-trends.outputs.quality-trend }}"
           
-          curl -X POST ${{ secrets.SLACKBOTTOKEN }} \
+          curl -X POST ${{ secrets.SLACK_BOT_TOKEN }} \
             -H 'Content-Type: application/json' \
             -d "{\"text\":\"$ALERT_MESSAGE\"}"
 
   # Job 7: Daily system health summary
   send-daily-summary:
     needs: [analyze-pipeline-health, analyze-agent-performance, check-data-quality-trends, generate-observability-dashboard]
-    if: ${{ secrets.SLACKBOTTOKEN != '' && needs.analyze-pipeline-health.result == 'success' && needs.analyze-agent-performance.result == 'success' && needs.check-data-quality-trends.result == 'success' && needs.generate-observability-dashboard.result == 'success' }}
+    if: ${{ secrets.SLACK_BOT_TOKEN != '' && needs.analyze-pipeline-health.result == 'success' && needs.analyze-agent-performance.result == 'success' && needs.check-data-quality-trends.result == 'success' && needs.generate-observability-dashboard.result == 'success' }}
     runs-on: ubuntu-latest
     steps:
       - name: Send daily health summary to Slack
@@ -241,6 +241,6 @@ jobs:
           SUMMARY+="📊 Data Quality: ${{ needs.check-data-quality-trends.outputs.quality-trend }}\n\n"
           SUMMARY+="View detailed dashboard in GitHub Actions artifacts."
           
-          curl -X POST ${{ secrets.SLACKBOTTOKEN }} \
+          curl -X POST ${{ secrets.SLACK_BOT_TOKEN }} \
             -H 'Content-Type: application/json' \
             -d "{\"text\":\"$SUMMARY\"}"
