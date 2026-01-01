@@ -13,15 +13,16 @@ from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Tuple
 
 import pandas as pd
-import polars as pl
 import pandera as pa
+import polars as pl
 from jsonschema import Draft202012Validator
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
-from python.analytics.schema import LoanTapeSchema
-from python.pipeline.utils import CircuitBreaker, RateLimiter, RetryPolicy, hash_file, utc_now
-from python.pipeline.data_validation import validate_dataframe
 from python.agents.tools import send_slack_notification
+from python.analytics.schema import LoanTapeSchema
+from python.pipeline.data_validation import validate_dataframe
+from python.pipeline.utils import (CircuitBreaker, RateLimiter, RetryPolicy,
+                                   hash_file, utc_now)
 
 logger = logging.getLogger(__name__)
 
@@ -238,9 +239,7 @@ class UnifiedIngestion:
         return validated
 
     def _update_summary(self, rows: int, filename: str | None = None) -> None:
-        self._summary["rows_ingested"] = int(self._summary.get("rows_ingested", 0)) + int(
-            rows
-        )
+        self._summary["rows_ingested"] = int(self._summary.get("rows_ingested", 0)) + int(rows)
         files = self._summary.setdefault("files", {})
         if filename:
             files[filename] = int(files.get(filename, 0)) + int(rows)
@@ -396,9 +395,7 @@ class UnifiedIngestion:
                     return col
         return None
 
-    def _match_metric(
-        self, metric_name: str, mapping: Dict[str, List[str]]
-    ) -> Optional[str]:
+    def _match_metric(self, metric_name: str, mapping: Dict[str, List[str]]) -> Optional[str]:
         metric_norm = self._normalize_token(metric_name)
         if not metric_norm:
             return None
@@ -535,12 +532,16 @@ class UnifiedIngestion:
                 )
             else:
                 if default_date_strategy == "file_mtime":
-                    default_date = datetime.fromtimestamp(
-                        file_path.stat().st_mtime, timezone.utc
-                    ).date().isoformat()
+                    default_date = (
+                        datetime.fromtimestamp(file_path.stat().st_mtime, timezone.utc)
+                        .date()
+                        .isoformat()
+                    )
                 else:
                     default_date = datetime.now(timezone.utc).date().isoformat()
-                date_series = pd.Series([default_date] * len(financials_df), index=financials_df.index)
+                date_series = pd.Series(
+                    [default_date] * len(financials_df), index=financials_df.index
+                )
 
             if is_long:
                 if not metric_col or not value_col:
@@ -582,7 +583,11 @@ class UnifiedIngestion:
         for metrics in financials_by_date.values():
             assets = metrics.get("total_assets_usd")
             liabilities = metrics.get("total_liabilities_usd")
-            if metrics.get("net_worth_usd") is None and assets is not None and liabilities is not None:
+            if (
+                metrics.get("net_worth_usd") is None
+                and assets is not None
+                and liabilities is not None
+            ):
                 metrics["net_worth_usd"] = float(assets) - float(liabilities)
             net_worth = metrics.get("net_worth_usd")
             if (
@@ -593,7 +598,11 @@ class UnifiedIngestion:
                 metrics["debt_to_equity_ratio"] = float(liabilities) / float(net_worth)
 
         metrics_set = sorted({key for values in financials_by_date.values() for key in values})
-        meta = {"files": [str(p) for p in files], "dates": len(financials_by_date), "metrics": metrics_set}
+        meta = {
+            "files": [str(p) for p in files],
+            "dates": len(financials_by_date),
+            "metrics": metrics_set,
+        }
         if financials_by_date:
             self._log_event("looker_financials", "loaded", dates=len(financials_by_date))
         return financials_by_date, meta
@@ -673,9 +682,7 @@ class UnifiedIngestion:
         ).dropna(subset=["measurement_date"])
 
         grouped = (
-            frame.groupby("measurement_date", dropna=False)
-            .sum(numeric_only=True)
-            .reset_index()
+            frame.groupby("measurement_date", dropna=False).sum(numeric_only=True).reset_index()
         )
         grouped["total_eligible_usd"] = grouped["total_receivable_usd"]
         grouped["discounted_balance_usd"] = grouped["total_receivable_usd"]
@@ -709,7 +716,9 @@ class UnifiedIngestion:
                 )
         if measurement_date is None:
             if strategy == "max_disburse_date":
-                resolved = self._select_column(list(df.columns), ["disburse_date", "disbursement_date"])
+                resolved = self._select_column(
+                    list(df.columns), ["disburse_date", "disbursement_date"]
+                )
             elif strategy == "max_maturity_date":
                 resolved = self._select_column(list(df.columns), ["maturity_date", "loan_end_date"])
             else:
@@ -739,9 +748,7 @@ class UnifiedIngestion:
         ).dropna(subset=["measurement_date"])
 
         grouped = (
-            frame.groupby("measurement_date", dropna=False)
-            .sum(numeric_only=True)
-            .reset_index()
+            frame.groupby("measurement_date", dropna=False).sum(numeric_only=True).reset_index()
         )
         grouped["total_eligible_usd"] = grouped["total_receivable_usd"]
         grouped["discounted_balance_usd"] = grouped["total_receivable_usd"]
@@ -768,18 +775,23 @@ class UnifiedIngestion:
             self._log_event("raw_read", "success", rows=len(df), checksum=checksum)
 
             schema_errors = self._validate_schema(df)
-            
+
             # Pandera Strict Contract Validation (Engineering Excellence Mandate)
             df, pandera_errors = self._validate_schema_pandera(df)
-            
+
             validated_df, record_errors = self._validate_records(df)
             errors = schema_errors + pandera_errors + record_errors
-            
+
             if errors:
                 self._log_event("validation", "completed", error_count=len(errors))
-                
+
                 # Circuit Breaker: Halt on critical contract violations and alert via Slack
-                critical_violation = any("contract" in str(e).lower() or "not found" in str(e).lower() or "future" in str(e).lower() for e in errors)
+                critical_violation = any(
+                    "contract" in str(e).lower()
+                    or "not found" in str(e).lower()
+                    or "future" in str(e).lower()
+                    for e in errors
+                )
                 if critical_violation:
                     msg = f"🚨 CIRCUIT BREAKER: Critical data contract violation in {file_path.name}. Halting ingestion."
                     logger.critical(msg)
@@ -787,8 +799,11 @@ class UnifiedIngestion:
                         send_slack_notification(msg, channel="#data-engineering-alerts")
                     except Exception as slack_err:
                         logger.error("Failed to send Slack alert: %s", slack_err)
-                    return IngestionResult(pd.DataFrame(), self.run_id, {"status": "halted", "error": "critical_violation"})
-
+                    return IngestionResult(
+                        pd.DataFrame(),
+                        self.run_id,
+                        {"status": "halted", "error": "critical_violation"},
+                    )
 
             self._validate_dataframe(validated_df)
 
@@ -852,11 +867,13 @@ class UnifiedIngestion:
                 "par_60_balance_usd",
                 "par_90_balance_usd",
             }.issubset(columns_lower)
-            has_dpd = {"dpd", "outstanding_balance"}.issubset(columns_lower) or {
-                "dpd",
-                "outstanding_balance_usd",
-            }.issubset(columns_lower) or {"days_past_due", "outstanding_balance"}.issubset(
-                columns_lower
+            has_dpd = (
+                {"dpd", "outstanding_balance"}.issubset(columns_lower)
+                or {
+                    "dpd",
+                    "outstanding_balance_usd",
+                }.issubset(columns_lower)
+                or {"days_past_due", "outstanding_balance"}.issubset(columns_lower)
             )
 
             if has_par:

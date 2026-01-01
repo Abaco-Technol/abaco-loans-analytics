@@ -21,7 +21,7 @@ def build_input(args: argparse.Namespace) -> Dict[str, Any]:
         "run_id": args.run_id,
         "date_range": args.date_range,
         "lead_budget": args.lead_budget,
-        "query": f"Surface and score leads for the SDR desk with a budget of {args.lead_budget} leads for {args.date_range}."
+        "query": f"Surface and score leads for the SDR desk with a budget of {args.lead_budget} leads for {args.date_range}.",
     }
 
 
@@ -43,15 +43,15 @@ def parse_args() -> argparse.Namespace:
 def main() -> None:
     args = parse_args()
     inputs = build_input(args)
-    
+
     orchestrator = AgentOrchestrator()
-    
+
     agent_config = {
         "name": "GrowthAgent",
         "role": "SDR Lead Specialist",
-        "goal": "Score and surface high-quality leads for the SDR desk"
+        "goal": "Score and surface high-quality leads for the SDR desk",
     }
-    
+
     LOG.info("Executing Growth agent run_id=%s", args.run_id)
     result = orchestrator.run(inputs, agent_config)
 

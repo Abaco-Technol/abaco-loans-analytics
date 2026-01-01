@@ -9,7 +9,9 @@ class FeedbackStore:
         self.storage_dir = storage_dir
         os.makedirs(self.storage_dir, exist_ok=True)
 
-    def collect_feedback(self, agent_name: str, run_id: str, feedback_score: float, comments: Optional[str] = None):
+    def collect_feedback(
+        self, agent_name: str, run_id: str, feedback_score: float, comments: Optional[str] = None
+    ):
         """Collect and store feedback for a specific agent run."""
         timestamp = datetime.now(timezone.utc).isoformat()
         feedback_data = {
@@ -17,9 +19,9 @@ class FeedbackStore:
             "run_id": run_id,
             "score": feedback_score,
             "comments": comments,
-            "timestamp": timestamp
+            "timestamp": timestamp,
         }
-        
+
         filename = f"{agent_name}_{run_id}_feedback.json"
         path = os.path.join(self.storage_dir, filename)
         with open(path, "w") as f:
@@ -34,14 +36,11 @@ class FeedbackStore:
             with open(os.path.join(self.storage_dir, file), "r") as f:
                 data = json.load(f)
                 scores.append(data["score"])
-        
+
         if not scores:
             return {"average_score": 0.0, "total_feedbacks": 0}
-        
-        return {
-            "average_score": sum(scores) / len(scores),
-            "total_feedbacks": len(scores)
-        }
+
+        return {"average_score": sum(scores) / len(scores), "total_feedbacks": len(scores)}
 
 
 class LearningEngine:
@@ -52,7 +51,9 @@ class LearningEngine:
         """Placeholder for prompt optimization based on feedback."""
         performance = self.feedback_store.get_agent_performance(agent_name)
         if performance["average_score"] < 0.7 and performance["total_feedbacks"] > 5:
-            print(f"[Learning Engine] Performance for {agent_name} is low ({performance['average_score']}). Triggering prompt optimization...")
+            print(
+                f"[Learning Engine] Performance for {agent_name} is low ({performance['average_score']}). Triggering prompt optimization..."
+            )
             # Logic to refine system prompts or few-shot examples
             return True
         return False

@@ -5,24 +5,15 @@ from datetime import datetime, timezone
 from typing import Any, Dict, Optional
 
 import yaml
-from sqlalchemy import (
-    JSON,
-    Boolean,
-    Column,
-    DateTime,
-    Integer,
-    Numeric,
-    String,
-    Text,
-    create_engine,
-)
+from sqlalchemy import (JSON, Boolean, Column, DateTime, Integer, Numeric,
+                        String, Text, create_engine)
 from sqlalchemy.orm import declarative_base, sessionmaker
 
 from python.agents.agent import Agent
 from python.agents.llm_provider import MockLLM
 from python.agents.tools import registry as global_registry
 
-Base = declarative_base()  # type: ignore[misc]
+Base = declarative_base()
 
 
 class AgentRun(Base):  # type: ignore[valid-type,misc]
@@ -53,33 +44,38 @@ class AgentOrchestrator:
                 self.spec = yaml.safe_load(f)
         else:
             self.spec = {}
-            
+
         self.db_url = db_url or os.getenv("DATABASE_URL")
         self.engine = create_engine(self.db_url) if self.db_url else None
         self.session_local = sessionmaker(bind=self.engine) if self.engine else None
-        
+
         # Default LLM provider (Mock for now)
         self.llm = MockLLM()
         self.registry = global_registry
 
-    def run(self, input_data: Dict[str, Any], agent_config: Optional[Dict[str, str]] = None, max_retries: int = 3) -> Dict[str, Any]:
+    def run(
+        self,
+        input_data: Dict[str, Any],
+        agent_config: Optional[Dict[str, str]] = None,
+        max_retries: int = 3,
+    ) -> Dict[str, Any]:
         start_time = datetime.now(timezone.utc)
-        
+
         # Configure the agent
         name = agent_config.get("name", "DefaultAgent") if agent_config else "DefaultAgent"
-        role = agent_config.get("role", "General Assistant") if agent_config else "General Assistant"
-        goal = agent_config.get("goal", "Help the user with their request") if agent_config else "Help the user with their request"
-        
-        agent = Agent(
-            name=name,
-            role=role,
-            goal=goal,
-            llm=self.llm,
-            registry=self.registry
+        role = (
+            agent_config.get("role", "General Assistant") if agent_config else "General Assistant"
         )
-        
+        goal = (
+            agent_config.get("goal", "Help the user with their request")
+            if agent_config
+            else "Help the user with their request"
+        )
+
+        agent = Agent(name=name, role=role, goal=goal, llm=self.llm, registry=self.registry)
+
         user_query = input_data.get("query", str(input_data))
-        
+
         agent_output = "Error: Failed to generate output."
         for attempt in range(max_retries):
             try:
@@ -88,7 +84,7 @@ class AgentOrchestrator:
                     break
             except Exception as e:
                 print(f"[Orchestrator] Attempt {attempt + 1} failed for {name}: {str(e)}")
-        
+
         output = {
             "output": agent_output,
             "input": input_data,
@@ -98,7 +94,7 @@ class AgentOrchestrator:
             "accuracy_score": None,
             "requires_human_review": agent_output.startswith("Error:"),
         }
-        
+
         completed_at = datetime.now(timezone.utc)
         self._log_agent_run(start_time, completed_at, input_data, output)
         return output

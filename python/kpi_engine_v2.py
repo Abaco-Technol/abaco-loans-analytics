@@ -4,13 +4,16 @@ from typing import Any, Dict, List, Optional, Tuple
 
 import pandas as pd
 
-from python.kpis.collection_rate import calculate_collection_rate as calculate_collection_rate_logic
+from python.kpis.collection_rate import \
+    calculate_collection_rate as calculate_collection_rate_logic
 from python.kpis.dti import calculate_dti as calculate_dti_logic
 from python.kpis.ltv import calculate_ltv as calculate_ltv_logic
 from python.kpis.par_30 import calculate_par_30 as calculate_par_30_logic
 from python.kpis.par_90 import calculate_par_90 as calculate_par_90_logic
-from python.kpis.portfolio_health import calculate_portfolio_health as calculate_portfolio_health_logic
-from python.kpis.portfolio_yield import calculate_portfolio_yield as calculate_portfolio_yield_logic
+from python.kpis.portfolio_health import \
+    calculate_portfolio_health as calculate_portfolio_health_logic
+from python.kpis.portfolio_yield import \
+    calculate_portfolio_yield as calculate_portfolio_yield_logic
 
 logger = logging.getLogger(__name__)
 
@@ -62,7 +65,9 @@ class KPIEngineV2:
                 try:
                     par30_val = self.metrics["PAR30"]["value"]
                     collection_val = self.metrics["CollectionRate"]["value"]
-                    health_val, health_ctx = calculate_portfolio_health_logic(par30_val, collection_val)
+                    health_val, health_ctx = calculate_portfolio_health_logic(
+                        par30_val, collection_val
+                    )
                     self.metrics["PortfolioHealth"] = {
                         "value": float(health_val),
                         **health_ctx,
@@ -118,12 +123,12 @@ class KPIEngineV2:
         """Helper to get a single metric value by name."""
         if name in self.metrics:
             return self.metrics[name].get("value")
-        
+
         calculator = self.KPI_FUNCTIONS.get(name) or self.ON_DEMAND_KPI_FUNCTIONS.get(name)
         if calculator is not None:
             val, _ = calculator(self.df)
             return float(val) if val is not None else None
-            
+
         raise ValueError(f"KPI '{name}' not supported by engine")
 
     def _log_event(self, event: str, status: str, **details: Any) -> None:

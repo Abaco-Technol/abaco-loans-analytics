@@ -4,7 +4,9 @@ import pandas as pd
 from apps.analytics.src.enterprise_analytics_engine import LoanAnalyticsEngine
 from python.kpi_engine_v2 import KPIEngineV2
 from python.pipeline.data_validation import safe_numeric, validate_dataframe
-from .quality_score import calculate_quality_score as calculate_portfolio_quality_score
+
+from .quality_score import \
+    calculate_quality_score as calculate_portfolio_quality_score
 
 REQUIRED_ANALYTICS_COLUMNS = [
     "loan_amount",
@@ -17,6 +19,7 @@ REQUIRED_ANALYTICS_COLUMNS = [
 
 # Alias for backward compatibility
 standardize_numeric = safe_numeric
+
 
 def calculate_quality_score(df: pd.DataFrame) -> float:
     """
@@ -52,11 +55,7 @@ def project_growth(
     yields = np.linspace(current_yield, target_yield, periods)
     volumes = np.linspace(current_loan_volume, target_loan_volume, periods)
 
-    return pd.DataFrame({
-        "date": dates,
-        "yield": yields,
-        "loan_volume": volumes
-    })
+    return pd.DataFrame({"date": dates, "yield": yields, "loan_volume": volumes})
 
 
 def portfolio_kpis(df: pd.DataFrame) -> tuple[dict[str, float], pd.DataFrame]:
@@ -97,12 +96,12 @@ def portfolio_kpis(df: pd.DataFrame) -> tuple[dict[str, float], pd.DataFrame]:
     enriched["ltv_ratio"] = np.where(
         enriched["appraised_value"] > 0,
         (enriched["loan_amount"] / enriched["appraised_value"]) * 100.0,
-        np.nan
+        np.nan,
     )
     enriched["dti_ratio"] = np.where(
         enriched["borrower_income"] > 0,
         (enriched["monthly_debt"] / (enriched["borrower_income"] / 12.0)) * 100.0,
-        np.nan
+        np.nan,
     )
 
     # Fill NaNs in metrics
@@ -111,6 +110,7 @@ def portfolio_kpis(df: pd.DataFrame) -> tuple[dict[str, float], pd.DataFrame]:
             metrics[k] = 0.0
 
     return metrics, enriched
+
 
 __all__ = [
     "calculate_quality_score",

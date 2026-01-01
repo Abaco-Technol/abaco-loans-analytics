@@ -3,7 +3,9 @@ from typing import Any, Dict, List, Optional
 
 
 class LLMResponse:
-    def __init__(self, content: str, raw_response: Any = None, usage: Optional[Dict[str, int]] = None):
+    def __init__(
+        self, content: str, raw_response: Any = None, usage: Optional[Dict[str, int]] = None
+    ):
         self.content = content
         self.raw_response = raw_response
         self.usage = usage or {}

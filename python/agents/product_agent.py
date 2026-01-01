@@ -10,28 +10,28 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(mess
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Product Intelligence agent execution harness")
-    parser.add_argument("--query", required=True, help="Product query (e.g., 'Prioritize these features: [...]')")
+    parser.add_argument(
+        "--query", required=True, help="Product query (e.g., 'Prioritize these features: [...]')"
+    )
     return parser.parse_args()
 
 
 def main() -> None:
     args = parse_args()
-    
+
     orchestrator = AgentOrchestrator()
-    
+
     agent_config = {
         "name": "ProductAgent",
         "role": "Product Intelligence Specialist",
-        "goal": "Optimize product development through feature analysis, user feedback synthesis, and roadmap prioritization"
+        "goal": "Optimize product development through feature analysis, user feedback synthesis, and roadmap prioritization",
     }
-    
-    input_data = {
-        "query": args.query
-    }
+
+    input_data = {"query": args.query}
 
     LOG.info("Executing Product agent with query: %s", args.query)
     result = orchestrator.run(input_data, agent_config)
-    
+
     print(json.dumps(result, indent=2))
 
 

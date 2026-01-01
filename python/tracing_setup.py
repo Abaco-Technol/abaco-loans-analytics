@@ -11,12 +11,11 @@ import os
 from typing import Optional
 
 from opentelemetry import trace
-from opentelemetry.exporter.otlp.proto.http.trace_exporter import (
-    OTLPSpanExporter,
-)
+from opentelemetry.exporter.otlp.proto.http.trace_exporter import \
+    OTLPSpanExporter
+from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
-from opentelemetry.sdk.resources import Resource
 
 logger = logging.getLogger(__name__)
 
@@ -38,10 +37,12 @@ def init_tracing(
         Configured TracerProvider instance.
     """
     # Create resource with service attributes
-    resource = Resource.create({
-        "service.name": service_name,
-        "service.version": service_version,
-    })
+    resource = Resource.create(
+        {
+            "service.name": service_name,
+            "service.version": service_version,
+        }
+    )
 
     # Initialize tracer provider
     tracer_provider = TracerProvider(resource=resource)
@@ -49,10 +50,7 @@ def init_tracing(
 
     # Determine OTLP endpoint
     if otlp_endpoint is None:
-        otlp_endpoint = os.getenv(
-            "OTEL_EXPORTER_OTLP_ENDPOINT",
-            "http://localhost:4318"
-        )
+        otlp_endpoint = os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT", "http://localhost:4318")
 
     try:
         # Create OTLP exporter
@@ -62,16 +60,9 @@ def init_tracing(
         span_processor = BatchSpanProcessor(exporter)
         tracer_provider.add_span_processor(span_processor)
 
-        logger.info(
-            "OTEL tracing initialized with endpoint: %s",
-            otlp_endpoint
-        )
+        logger.info("OTEL tracing initialized with endpoint: %s", otlp_endpoint)
     except Exception as e:
-        logger.warning(
-            "Failed to initialize OTEL exporter for %s: %s",
-            otlp_endpoint,
-            str(e)
-        )
+        logger.warning("Failed to initialize OTEL exporter for %s: %s", otlp_endpoint, str(e))
 
     return tracer_provider
 
@@ -86,13 +77,13 @@ def enable_auto_instrumentation() -> None:
     - sql (database queries)
     """
     try:
-        from opentelemetry.instrumentation.httpx import HttpxInstrumentor
-        from opentelemetry.instrumentation.requests import RequestsInstrumentor
-        from opentelemetry.instrumentation.urllib3 import URLLib3Instrumentor
-        from opentelemetry.instrumentation.sqlite3 import SQLite3Instrumentor
+        from opentelemetry.instrumentation.httpx import HTTPXClientInstrumentor
         from opentelemetry.instrumentation.psycopg import PsycopgInstrumentor
+        from opentelemetry.instrumentation.requests import RequestsInstrumentor
+        from opentelemetry.instrumentation.sqlite3 import SQLite3Instrumentor
+        from opentelemetry.instrumentation.urllib3 import URLLib3Instrumentor
 
-        HttpxInstrumentor().instrument()
+        HTTPXClientInstrumentor().instrument()
         RequestsInstrumentor().instrument()
         URLLib3Instrumentor().instrument()
         SQLite3Instrumentor().instrument()
@@ -125,8 +116,4 @@ if not isinstance(trace.get_tracer_provider(), TracerProvider):
         init_tracing()
         enable_auto_instrumentation()
     except Exception as e:
-        logger.warning(
-            "Tracing auto-init failed (will retry on explicit init): %s",
-            str(e)
-        )
-
+        logger.warning("Tracing auto-init failed (will retry on explicit init): %s", str(e))

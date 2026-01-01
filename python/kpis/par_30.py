@@ -2,7 +2,8 @@ from typing import Any, Dict, Tuple
 
 import pandas as pd
 
-from python.kpis.base import KPICalculator, KPIMetadata, create_context, safe_numeric
+from python.kpis.base import (KPICalculator, KPIMetadata, create_context,
+                              safe_numeric)
 
 
 class PAR30Calculator(KPICalculator):
@@ -58,15 +59,19 @@ class PAR30Calculator(KPICalculator):
             )
         elif "loan_status" in df.columns:
             # Fallback for datasets like the one in tests/test_analytics_metrics.py
-            delinquent_statuses = ['30-59 days past due', '60-89 days past due', '90+ days past due']
-            delinquent_count = df['loan_status'].isin(delinquent_statuses).sum()
+            delinquent_statuses = [
+                "30-59 days past due",
+                "60-89 days past due",
+                "90+ days past due",
+            ]
+            delinquent_count = df["loan_status"].isin(delinquent_statuses).sum()
             total_loans = len(df)
             value = (delinquent_count / total_loans) * 100.0 if total_loans > 0 else 0.0
             return value, create_context(
                 self.METADATA.formula,
                 rows_processed=total_loans,
                 delinquent_count=int(delinquent_count),
-                method="loan_status_fallback"
+                method="loan_status_fallback",
             )
         else:
             raise ValueError(f"Missing required columns: {', '.join(required)} or 'loan_status'")

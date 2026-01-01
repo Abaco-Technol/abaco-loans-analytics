@@ -146,9 +146,7 @@ class BatchExportRunner:
 
     def _save_results(self, results: Dict[str, Any], export_type: str) -> None:
         """Save export results to file."""
-        results_file = (
-            self.output_dir / f"export_results_{export_type}_{self.run_id}.json"
-        )
+        results_file = self.output_dir / f"export_results_{export_type}_{self.run_id}.json"
 
         with results_file.open("w") as f:
             json.dump(results, f, indent=2, default=str)

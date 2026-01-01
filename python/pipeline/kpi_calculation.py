@@ -1,12 +1,12 @@
 import importlib
 import logging
 import uuid
-import yaml
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 import pandas as pd
+import yaml
 
 from python.kpi_engine_v2 import KPIEngineV2
 from python.pipeline.utils import utc_now
@@ -73,7 +73,7 @@ class UnifiedCalculationV2:
         name = metric_cfg.get("name")
         # Overlay with external definitions if available
         ext_def = self.kpi_definitions.get("kpis", {}).get(name, {})
-        
+
         func_path = metric_cfg.get("function") or ext_def.get("function")
         if not func_path:
             # Fallback to KPIEngineV2 direct calculation if function path is missing but name exists
@@ -83,13 +83,19 @@ class UnifiedCalculationV2:
                 val = engine.get_metric(name)
                 context = {"source": "KPIEngineV2"}
             except Exception as exc:
-                raise ValueError(f"Missing function for metric {name} and engine fallback failed: {exc}")
+                raise ValueError(
+                    f"Missing function for metric {name} and engine fallback failed: {exc}"
+                )
         else:
             func = self._import_function(func_path)
             val, context = func(df)
 
         value = float(val) if val is not None else None
-        status = self._get_status(value, ext_def.get("thresholds", {})) if value is not None else "unknown"
+        status = (
+            self._get_status(value, ext_def.get("thresholds", {}))
+            if value is not None
+            else "unknown"
+        )
 
         return {
             "value": value,

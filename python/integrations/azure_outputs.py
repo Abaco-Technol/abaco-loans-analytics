@@ -17,8 +17,9 @@ from typing import Any, Dict, List, Optional
 logger = logging.getLogger(__name__)
 
 try:
-    from azure.storage.blob import BlobServiceClient, ContentSettings
     from azure.identity import DefaultAzureCredential
+    from azure.storage.blob import BlobServiceClient, ContentSettings
+
     HAS_AZURE = True
 except ImportError:
     HAS_AZURE = False
@@ -33,15 +34,11 @@ class AzureStorageClient:
             self.client = None
             return
 
-        self.connection_string = (
-            connection_string or os.getenv("AZURE_STORAGE_CONNECTION_STRING")
-        )
+        self.connection_string = connection_string or os.getenv("AZURE_STORAGE_CONNECTION_STRING")
         self.container_name = os.getenv("AZURE_STORAGE_CONTAINER", "analytics-exports")
 
         if self.connection_string:
-            self.client = BlobServiceClient.from_connection_string(
-                self.connection_string
-            )
+            self.client = BlobServiceClient.from_connection_string(self.connection_string)
         else:
             logger.warning("Azure Storage credentials not configured")
             self.client = None
@@ -155,9 +152,7 @@ class AzureDashboardClient:
     def __init__(self, subscription_id: Optional[str] = None):
         self.subscription_id = subscription_id or os.getenv("AZURE_SUBSCRIPTION_ID")
         self.resource_group = os.getenv("AZURE_RESOURCE_GROUP")
-        self.dashboard_name = os.getenv(
-            "AZURE_DASHBOARD_NAME", "abaco-analytics-dashboard"
-        )
+        self.dashboard_name = os.getenv("AZURE_DASHBOARD_NAME", "abaco-analytics-dashboard")
 
         self.credential = DefaultAzureCredential() if self.subscription_id else None
 
@@ -206,9 +201,7 @@ class AzureDashboardClient:
             "position": {"x": 0, "y": 0, "width": 6, "height": 3},
         }
 
-    def build_dashboard_payload(
-        self, kpi_metrics: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    def build_dashboard_payload(self, kpi_metrics: Dict[str, Any]) -> Dict[str, Any]:
         """Build complete dashboard JSON payload with KPI tiles."""
         tiles = []
 

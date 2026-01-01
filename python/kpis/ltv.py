@@ -3,7 +3,8 @@ from typing import Any, Dict, Tuple
 import numpy as np
 import pandas as pd
 
-from python.kpis.base import KPICalculator, KPIMetadata, create_context, safe_numeric
+from python.kpis.base import (KPICalculator, KPIMetadata, create_context,
+                              safe_numeric)
 
 
 class LTVCalculator(KPICalculator):
@@ -22,7 +23,9 @@ class LTVCalculator(KPICalculator):
 
     def calculate(self, df: pd.DataFrame) -> Tuple[float, Dict[str, Any]]:
         if df is None or df.empty:
-            return 0.0, create_context(self.METADATA.formula, rows_processed=0, reason="Empty DataFrame")
+            return 0.0, create_context(
+                self.METADATA.formula, rows_processed=0, reason="Empty DataFrame"
+            )
 
         required = ["loan_amount", "appraised_value"]
         missing = [col for col in required if col not in df.columns]
@@ -39,14 +42,14 @@ class LTVCalculator(KPICalculator):
             np.nan,
         )
         ltv_series = pd.Series(ltv_values)
-        
+
         avg_ltv = float(ltv_series.mean())
-        
+
         return avg_ltv, create_context(
             self.METADATA.formula,
             rows_processed=len(df),
             avg_loan_amount=float(loan_amount.mean()),
-            avg_appraised_value=float(appraised_value.mean())
+            avg_appraised_value=float(appraised_value.mean()),
         )
 
 

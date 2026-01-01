@@ -15,10 +15,8 @@ from typing import Any, Dict, List, Optional
 
 import pandas as pd
 
-from python.integrations.azure_outputs import (
-    AzureStorageClient,
-    AzureDashboardClient,
-)
+from python.integrations.azure_outputs import (AzureDashboardClient,
+                                               AzureStorageClient)
 from python.integrations.figma_client import FigmaClient
 from python.integrations.meta_client import MetaOutputClient
 from python.integrations.notion_client import NotionOutputClient
@@ -30,7 +28,7 @@ logger = logging.getLogger(__name__)
 class UnifiedOutputManager:
     """
     Orchestrate batch exports to all output platforms.
-    
+
     Provides a single interface for scheduling and managing outputs with
     optional filtering, retry logic, and result aggregation.
     """
@@ -119,9 +117,7 @@ class UnifiedOutputManager:
 
         if "figma" in enabled_outputs:
             logger.info("Exporting to Figma...")
-            results["outputs"]["figma"] = self.figma_client.sync_batch_export(
-                export_data, run_id
-            )
+            results["outputs"]["figma"] = self.figma_client.sync_batch_export(export_data, run_id)
 
         if "azure" in enabled_outputs:
             logger.info("Exporting to Azure...")
@@ -130,9 +126,7 @@ class UnifiedOutputManager:
                     export_data.get("export_dir", Path("data/exports")),
                     run_id,
                 ),
-                "dashboard": self.azure_dashboard_client.sync_batch_export(
-                    export_data
-                ),
+                "dashboard": self.azure_dashboard_client.sync_batch_export(export_data),
             }
             results["outputs"]["azure"] = azure_results
 
@@ -144,15 +138,11 @@ class UnifiedOutputManager:
 
         if "meta" in enabled_outputs:
             logger.info("Exporting to Meta...")
-            results["outputs"]["meta"] = self.meta_client.sync_batch_export(
-                export_data
-            )
+            results["outputs"]["meta"] = self.meta_client.sync_batch_export(export_data)
 
         if "notion" in enabled_outputs:
             logger.info("Exporting to Notion...")
-            results["outputs"]["notion"] = self.notion_client.sync_batch_export(
-                export_data, run_id
-            )
+            results["outputs"]["notion"] = self.notion_client.sync_batch_export(export_data, run_id)
 
         success_flags = [
             output.get("success")

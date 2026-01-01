@@ -10,28 +10,28 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(mess
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Sales Optimization agent execution harness")
-    parser.add_argument("--query", required=True, help="Sales optimization query (e.g., 'Score these leads: [...]')")
+    parser.add_argument(
+        "--query", required=True, help="Sales optimization query (e.g., 'Score these leads: [...]')"
+    )
     return parser.parse_args()
 
 
 def main() -> None:
     args = parse_args()
-    
+
     orchestrator = AgentOrchestrator()
-    
+
     agent_config = {
         "name": "SalesAgent",
         "role": "Sales Operations Specialist",
-        "goal": "Accelerate revenue and optimize conversion by scoring leads and identifying funnel bottlenecks"
+        "goal": "Accelerate revenue and optimize conversion by scoring leads and identifying funnel bottlenecks",
     }
-    
-    input_data = {
-        "query": args.query
-    }
+
+    input_data = {"query": args.query}
 
     LOG.info("Executing Sales agent with query: %s", args.query)
     result = orchestrator.run(input_data, agent_config)
-    
+
     print(json.dumps(result, indent=2))
 
 

@@ -39,9 +39,7 @@ class NotionOutputClient:
         if not self.api_token:
             logger.warning("Notion credentials not configured. Notion export disabled.")
 
-    def _request(
-        self, method: str, endpoint: str, **kwargs: Any
-    ) -> Dict[str, Any]:
+    def _request(self, method: str, endpoint: str, **kwargs: Any) -> Dict[str, Any]:
         """Make authenticated request to Notion API."""
         url = f"{self.base_url}{endpoint}"
         kwargs.setdefault("headers", self.headers)
@@ -116,75 +114,85 @@ class NotionOutputClient:
         blocks = []
 
         if "summary" in report_content:
-            blocks.append({
-                "object": "block",
-                "type": "paragraph",
-                "paragraph": {
-                    "rich_text": [
-                        {
-                            "type": "text",
-                            "text": {"content": report_content["summary"]},
-                        }
-                    ]
-                },
-            })
+            blocks.append(
+                {
+                    "object": "block",
+                    "type": "paragraph",
+                    "paragraph": {
+                        "rich_text": [
+                            {
+                                "type": "text",
+                                "text": {"content": report_content["summary"]},
+                            }
+                        ]
+                    },
+                }
+            )
 
         if "kpi_metrics" in report_content:
-            blocks.append({
-                "object": "block",
-                "type": "heading_2",
-                "heading_2": {
-                    "rich_text": [
-                        {
-                            "type": "text",
-                            "text": {"content": "KPI Metrics"},
-                        }
-                    ]
-                },
-            })
+            blocks.append(
+                {
+                    "object": "block",
+                    "type": "heading_2",
+                    "heading_2": {
+                        "rich_text": [
+                            {
+                                "type": "text",
+                                "text": {"content": "KPI Metrics"},
+                            }
+                        ]
+                    },
+                }
+            )
 
             for kpi_name, metric_data in report_content["kpi_metrics"].items():
                 content = f"{kpi_name}: {metric_data.get('current_value', 'N/A')} {metric_data.get('unit', '')}"
-                blocks.append({
-                    "object": "block",
-                    "type": "bulleted_list_item",
-                    "bulleted_list_item": {
-                        "rich_text": [
-                            {
-                                "type": "text",
-                                "text": {"content": content},
-                            }
-                        ]
-                    },
-                })
+                blocks.append(
+                    {
+                        "object": "block",
+                        "type": "bulleted_list_item",
+                        "bulleted_list_item": {
+                            "rich_text": [
+                                {
+                                    "type": "text",
+                                    "text": {"content": content},
+                                }
+                            ]
+                        },
+                    }
+                )
 
         if "findings" in report_content:
-            blocks.append({
-                "object": "block",
-                "type": "heading_2",
-                "heading_2": {
-                    "rich_text": [
-                        {
-                            "type": "text",
-                            "text": {"content": "Key Findings"},
-                        }
-                    ]
-                },
-            })
-
-            for finding in report_content["findings"]:
-                blocks.append({
+            blocks.append(
+                {
                     "object": "block",
-                    "type": "bulleted_list_item",
-                    "bulleted_list_item": {
+                    "type": "heading_2",
+                    "heading_2": {
                         "rich_text": [
                             {
                                 "type": "text",
-                                "text": {"content": finding},
+                                "text": {"content": "Key Findings"},
                             }
                         ]
                     },
-                })
+                }
+            )
+
+            for finding in report_content["findings"]:
+                blocks.append(
+                    {
+                        "object": "block",
+                        "type": "bulleted_list_item",
+                        "bulleted_list_item": {
+                            "rich_text": [
+                                {
+                                    "type": "text",
+                                    "text": {"content": finding},
+                                }
+                            ]
+                        },
+                    }
+                )
 
         return blocks
 
@@ -241,9 +249,7 @@ class NotionOutputClient:
                             }
                         ]
                     },
-                    "Value": {
-                        "number": float(metric_data.get("current_value", 0))
-                    },
+                    "Value": {"number": float(metric_data.get("current_value", 0))},
                     "Unit": {
                         "rich_text": [
                             {

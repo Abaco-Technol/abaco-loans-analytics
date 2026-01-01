@@ -3,7 +3,8 @@ from typing import Any, Dict, Tuple
 import numpy as np
 import pandas as pd
 
-from python.kpis.base import KPICalculator, KPIMetadata, create_context, safe_numeric
+from python.kpis.base import (KPICalculator, KPIMetadata, create_context,
+                              safe_numeric)
 
 
 class DTICalculator(KPICalculator):
@@ -22,7 +23,9 @@ class DTICalculator(KPICalculator):
 
     def calculate(self, df: pd.DataFrame) -> Tuple[float, Dict[str, Any]]:
         if df is None or df.empty:
-            return 0.0, create_context(self.METADATA.formula, rows_processed=0, reason="Empty DataFrame")
+            return 0.0, create_context(
+                self.METADATA.formula, rows_processed=0, reason="Empty DataFrame"
+            )
 
         required = ["monthly_debt", "borrower_income"]
         missing = [col for col in required if col not in df.columns]
@@ -39,14 +42,14 @@ class DTICalculator(KPICalculator):
             np.nan,
         )
         dti_series = pd.Series(dti_values)
-        
+
         avg_dti = float(dti_series.mean())
-        
+
         return avg_dti, create_context(
             self.METADATA.formula,
             rows_processed=len(df),
             avg_monthly_debt=float(monthly_debt.mean()),
-            avg_monthly_income=float(monthly_income.mean())
+            avg_monthly_income=float(monthly_income.mean()),
         )
 
 

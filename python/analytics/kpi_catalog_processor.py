@@ -1,7 +1,7 @@
 import logging
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 import numpy as np
 import pandas as pd
@@ -26,15 +26,10 @@ class KPICatalogProcessor:
         self.schedule = self._clean_df(schedule_df) if schedule_df is not None else pd.DataFrame()
 
         # Filter orphaned loans (matching SQL loader logic)
-        if (
-            "customer_id" in self.loans.columns
-            and "customer_id" in self.customers.columns
-        ):
+        if "customer_id" in self.loans.columns and "customer_id" in self.customers.columns:
             loan_cust_pre = self.loans["customer_id"].nunique()
             valid_cust = set(self.customers["customer_id"])
-            self.loans = self.loans[
-                self.loans["customer_id"].isin(valid_cust)
-            ].copy()
+            self.loans = self.loans[self.loans["customer_id"].isin(valid_cust)].copy()
             loan_cust_post = self.loans["customer_id"].nunique()
             print(
                 f"[DEBUG] KPICatalogProcessor: customers in loans before "
@@ -43,10 +38,7 @@ class KPICatalogProcessor:
             )
 
         # Filter orphaned payments
-        if (
-            "loan_id" in self.payments.columns
-            and "loan_id" in self.loans.columns
-        ):
+        if "loan_id" in self.payments.columns and "loan_id" in self.loans.columns:
             self.payments = self.payments[
                 self.payments["loan_id"].isin(set(self.loans["loan_id"]))
             ].copy()
@@ -90,11 +82,7 @@ class KPICatalogProcessor:
             n_active = len(active_90d)
             n_inactive = len(inactive_90d)
             n_newly = len(newly_90d)
-            churn_pct = (
-                n_inactive / (n_active + n_inactive)
-                if (n_active + n_inactive) > 0
-                else 0.0
-            )
+            churn_pct = n_inactive / (n_active + n_inactive) if (n_active + n_inactive) > 0 else 0.0
 
             if not self.payments.empty:
                 recent_payments = self.payments[
@@ -129,14 +117,16 @@ class KPICatalogProcessor:
         """Calculate XIRR (Internal Rate of Return with dates)."""
         if not cashflows or len(cashflows) != len(dates):
             return 0.0
-        
+
         # Ensure we have both negative and positive flows
         if all(x >= 0 for x in cashflows) or all(x <= 0 for x in cashflows):
             return 0.0
 
         def xnpv(rate, cashflows, dates):
             d0 = dates[0]
-            return sum([cf / (1 + rate) ** ((d - d0).days / 365.0) for cf, d in zip(cashflows, dates)])
+            return sum(
+                [cf / (1 + rate) ** ((d - d0).days / 365.0) for cf, d in zip(cashflows, dates)]
+            )
 
         try:
             return newton(lambda r: xnpv(r, cashflows, dates), 0.1)
@@ -147,11 +137,7 @@ class KPICatalogProcessor:
         df = df.copy()
         # Normalize column names
         df.columns = [
-            c.strip()
-            .lower()
-            .replace(" ", "_")
-            .replace("(", "")
-            .replace(")", "")
+            c.strip().lower().replace(" ", "_").replace("(", "").replace(")", "")
             for c in df.columns
         ]
 
@@ -202,18 +188,11 @@ class KPICatalogProcessor:
 
         # If true_principal_payment is missing, estimate it from total payment
         # (synthetic fallback)
-        if (
-            "true_total_payment" in df.columns
-            and "true_principal_payment" not in df.columns
-        ):
+        if "true_total_payment" in df.columns and "true_principal_payment" not in df.columns:
             df["true_principal_payment"] = df["true_total_payment"] * 0.9
 
         # Date conversion for all columns containing 'date' or 'fecha'
-        date_cols = [
-            col
-            for col in df.columns
-            if any(x in col for x in ["date", "fecha"])
-        ]
+        date_cols = [col for col in df.columns if any(x in col for x in ["date", "fecha"])]
         for col in date_cols:
             df[col] = pd.to_datetime(df[col], errors="coerce")
 
@@ -248,32 +227,20 @@ class KPICatalogProcessor:
             "disbursement_date": "min",
         }
         actual_meta = {c: agg for c, agg in meta_cols.items() if c in self.loans.columns}
-        
-        loan_meta = (
-            self.loans.groupby("loan_id")
-            .agg(actual_meta)
-            .reset_index()
-        )
+
+        loan_meta = self.loans.groupby("loan_id").agg(actual_meta).reset_index()
 
         # 2. Cumulative disbursements per loan_id and month_end
         disb_date_col = "disbursement_date"
         disb_amount_col = "disbursement_amount"
-        
-        disbursements = self.loans[
-            ["loan_id", disb_date_col, disb_amount_col]
-        ].copy()
+
+        disbursements = self.loans[["loan_id", disb_date_col, disb_amount_col]].copy()
 
         grid_disb = []
         for me in month_ends:
-            temp = disbursements[
-                disbursements[disb_date_col] <= me
-            ].copy()
+            temp = disbursements[disbursements[disb_date_col] <= me].copy()
             if not temp.empty:
-                agg = (
-                    temp.groupby("loan_id")[disb_amount_col]
-                    .sum()
-                    .reset_index()
-                )
+                agg = temp.groupby("loan_id")[disb_amount_col].sum().reset_index()
                 agg["month_end"] = me
                 grid_disb.append(agg)
 
@@ -284,9 +251,7 @@ class KPICatalogProcessor:
         df_disb = pd.concat(grid_disb)
 
         # 3. Cumulative payments per loan_id and month_end
-        payments = self.payments[
-            ["loan_id", "true_payment_date", "true_principal_payment"]
-        ].copy()
+        payments = self.payments[["loan_id", "true_payment_date", "true_principal_payment"]].copy()
 
         grid_pay = []
         for me in month_ends:
@@ -303,15 +268,11 @@ class KPICatalogProcessor:
         df_pay = (
             pd.concat(grid_pay)
             if grid_pay
-            else pd.DataFrame(
-                columns=["loan_id", "month_end", "cum_principal"]
-            )
+            else pd.DataFrame(columns=["loan_id", "month_end", "cum_principal"])
         )
 
         # 4. Final Merge
-        df_final = df_disb.merge(
-            df_pay, on=["loan_id", "month_end"], how="left"
-        )
+        df_final = df_disb.merge(df_pay, on=["loan_id", "month_end"], how="left")
         df_final["cum_principal"] = df_final["cum_principal"].fillna(0)
         df_final["outstanding"] = (
             df_final["disbursement_amount"] - df_final["cum_principal"]
@@ -340,17 +301,13 @@ class KPICatalogProcessor:
 
     def get_customer_classification(self) -> pd.DataFrame:
         """Classify customers as New, Recurrent, Reactivated, or Recovered."""
-        loans = self.loans.sort_values(
-            ["customer_id", "disbursement_date", "loan_id"]
-        )
-        
+        loans = self.loans.sort_values(["customer_id", "disbursement_date", "loan_id"])
+
         # Track historical delinquency per customer
         bad_history = self.loans[self.loans["days_past_due"] > 90]["customer_id"].unique()
 
         loans["rn"] = loans.groupby("customer_id").cumcount() + 1
-        loans["prev_disb"] = loans.groupby("customer_id")[
-            "disbursement_date"
-        ].shift(1)
+        loans["prev_disb"] = loans.groupby("customer_id")["disbursement_date"].shift(1)
 
         def classify(row):
             if row["customer_id"] in bad_history and row["days_past_due"] <= 30:
@@ -367,9 +324,7 @@ class KPICatalogProcessor:
         loans["customer_type"] = loans.apply(classify, axis=1)
         loans["year_month"] = loans["disbursement_date"].dt.to_period(
             "M"
-        ).dt.to_timestamp() + pd.offsets.MonthEnd(  # type: ignore
-            0
-        )
+        ).dt.to_timestamp() + pd.offsets.MonthEnd(0)
 
         return (
             loans.groupby(["year_month", "customer_type"])["customer_id"]
@@ -380,9 +335,7 @@ class KPICatalogProcessor:
     def get_intensity_segmentation(self) -> pd.DataFrame:
         """Classify customers into Low / Medium / Heavy users."""
         loans_per_cust = (
-            self.loans.groupby("customer_id")["loan_id"]
-            .nunique()
-            .reset_index(name="loans_count")
+            self.loans.groupby("customer_id")["loan_id"].nunique().reset_index(name="loans_count")
         )
 
         def intensity(count):
@@ -392,17 +345,13 @@ class KPICatalogProcessor:
                 return "Medium"
             return "Heavy"
 
-        loans_per_cust["use_intensity"] = loans_per_cust["loans_count"].apply(
-            intensity
-        )
+        loans_per_cust["use_intensity"] = loans_per_cust["loans_count"].apply(intensity)
 
         # Merge back with monthly disbursement
         df = self.loans.copy()
         df["year_month"] = df["disbursement_date"].dt.to_period(
             "M"
-        ).dt.to_timestamp() + pd.offsets.MonthEnd(  # type: ignore
-            0
-        )
+        ).dt.to_timestamp() + pd.offsets.MonthEnd(0)
         df = df.merge(
             loans_per_cust[["customer_id", "use_intensity"]],
             on="customer_id",
@@ -441,49 +390,59 @@ class KPICatalogProcessor:
             loan_id = loan["loan_id"]
             if loan_id not in payments_grouped.groups:
                 continue
-            
+
             group = payments_grouped.get_group(loan_id)
             disb_amt = loan["disbursement_amount"]
             disb_date = loan["disbursement_date"]
-            
+
             if pd.isna(disb_date) or disb_amt <= 0:
                 continue
-            
+
             # Cashflows: Day 0 is -Disbursement
             cashflows = [-disb_amt]
             dates = [disb_date]
-            
+
             # Group by payment date
-            daily_pays = group.groupby("true_payment_date").agg({
-                "true_principal_payment": "sum",
-                "true_interest_payment": "sum",
-                "true_fee_payment": "sum",
-                "true_other_payment": "sum",
-                "true_rebates": "sum"
-            }).reset_index()
-            
+            daily_pays = (
+                group.groupby("true_payment_date")
+                .agg(
+                    {
+                        "true_principal_payment": "sum",
+                        "true_interest_payment": "sum",
+                        "true_fee_payment": "sum",
+                        "true_other_payment": "sum",
+                        "true_rebates": "sum",
+                    }
+                )
+                .reset_index()
+            )
+
             for _, row in daily_pays.iterrows():
                 # Inflow = Principal + Interest + Fees + Other - Rebates
-                inflow = (row["true_principal_payment"] + 
-                          row["true_interest_payment"] + 
-                          row["true_fee_payment"] + 
-                          row["true_other_payment"] - 
-                          row["true_rebates"])
+                inflow = (
+                    row["true_principal_payment"]
+                    + row["true_interest_payment"]
+                    + row["true_fee_payment"]
+                    + row["true_other_payment"]
+                    - row["true_rebates"]
+                )
                 if inflow > 0:
                     cashflows.append(inflow)
                     dates.append(row["true_payment_date"])
-            
+
             if len(cashflows) > 1:
                 eir = self._xirr(cashflows, dates)
                 if eir != 0:
                     loan_eirs.append(eir)
                     loan_disbursements.append(disb_amt)
-        
+
         if not loan_eirs:
             return 0.0
-            
+
         # Weighted average EIR by disbursement amount
-        weighted_eir = sum(e * d for e, d in zip(loan_eirs, loan_disbursements)) / sum(loan_disbursements)
+        weighted_eir = sum(e * d for e, d in zip(loan_eirs, loan_disbursements)) / sum(
+            loan_disbursements
+        )
         return float(weighted_eir)
 
     def get_eir_scheduled(self) -> float:
@@ -497,48 +456,49 @@ class KPICatalogProcessor:
 
         # Process each loan that has both disbursement and schedule
         scheduled_grouped = self.schedule.groupby("loan_id")
-        
+
         for loan_id, group in scheduled_grouped:
             loan_info = self.loans[self.loans["loan_id"] == loan_id]
             if loan_info.empty:
                 continue
-            
+
             disb_amt = loan_info["disbursement_amount"].sum()
             disb_date = loan_info["disbursement_date"].min()
-            
+
             if pd.isna(disb_date) or disb_amt <= 0:
                 continue
-            
+
             # Cashflows: Day 0 is -Disbursement
             cashflows = [-disb_amt]
             dates = [disb_date]
-            
+
             # Group by due date to consolidate multiple rows on same day
-            daily_flows = group.groupby("date_due").agg({
-                "principal": "sum",
-                "interest": "sum",
-                "fees": "sum",
-                "other": "sum"
-            }).reset_index()
-            
+            daily_flows = (
+                group.groupby("date_due")
+                .agg({"principal": "sum", "interest": "sum", "fees": "sum", "other": "sum"})
+                .reset_index()
+            )
+
             for _, row in daily_flows.iterrows():
                 # Inflow = Principal + Interest + Fees + Other
                 inflow = row["principal"] + row["interest"] + row["fees"] + row["other"]
                 if inflow > 0:
                     cashflows.append(inflow)
                     dates.append(row["date_due"])
-            
+
             if len(cashflows) > 1:
                 eir = self._xirr(cashflows, dates)
                 if eir != 0:
                     loan_eirs.append(eir)
                     loan_disbursements.append(disb_amt)
-        
+
         if not loan_eirs:
             return 0.0
-            
+
         # Weighted average EIR by disbursement amount
-        weighted_eir = sum(e * d for e, d in zip(loan_eirs, loan_disbursements)) / sum(loan_disbursements)
+        weighted_eir = sum(e * d for e, d in zip(loan_eirs, loan_disbursements)) / sum(
+            loan_disbursements
+        )
         return float(weighted_eir)
 
     def get_weighted_apr_contractual(self) -> float:
@@ -546,10 +506,12 @@ class KPICatalogProcessor:
         mask = self.loans["interest_rate_apr"].notna() & self.loans["disbursement_amount"].notna()
         if not any(mask):
             return 0.0
-        
-        weighted_sum = (self.loans.loc[mask, "interest_rate_apr"] * self.loans.loc[mask, "disbursement_amount"]).sum()
+
+        weighted_sum = (
+            self.loans.loc[mask, "interest_rate_apr"] * self.loans.loc[mask, "disbursement_amount"]
+        ).sum()
         total_disb = self.loans.loc[mask, "disbursement_amount"].sum()
-        
+
         return float(weighted_sum / total_disb) if total_disb > 0 else 0.0
 
     def get_weighted_apr(self) -> pd.DataFrame:
@@ -565,9 +527,9 @@ class KPICatalogProcessor:
         result = df.groupby("month_end", as_index=False).agg(
             {"weighted_apr_part": "sum", "outstanding": "sum"}
         )
-        result["weighted_apr"] = result["weighted_apr_part"] / result[
-            "outstanding"
-        ].replace(0, np.nan)
+        result["weighted_apr"] = result["weighted_apr_part"] / result["outstanding"].replace(
+            0, np.nan
+        )
 
         return result[["month_end", "weighted_apr"]]
 
@@ -584,16 +546,20 @@ class KPICatalogProcessor:
         df["apr_part"] = df["interest_rate_apr"] * df["outstanding"]
 
         # 2. Fee Rate
-        df["fee_rate"] = (
-            df["origination_fee"] + df["origination_fee_taxes"]
-        ) / df["disbursement_amount"].replace(0, np.nan)
+        df["fee_rate"] = (df["origination_fee"] + df["origination_fee_taxes"]) / df[
+            "disbursement_amount"
+        ].replace(0, np.nan)
         df["fee_part"] = df["fee_rate"] * df["outstanding"]
 
         # 3. Scheduled Revenue (Estimated: Outstanding * APR / 12)
         df["scheduled_interest"] = (df["outstanding"] * df["interest_rate_apr"]) / 12
         # Add estimated fees (origination fees are usually upfront, so we only count them in disbursement month)
-        df["is_new_disb"] = df["month_end"].dt.to_period("M") == df["disbursement_date"].dt.to_period("M")
-        df["scheduled_fees"] = np.where(df["is_new_disb"], df["origination_fee"] + df["origination_fee_taxes"], 0)
+        df["is_new_disb"] = df["month_end"].dt.to_period("M") == df[
+            "disbursement_date"
+        ].dt.to_period("M")
+        df["scheduled_fees"] = np.where(
+            df["is_new_disb"], df["origination_fee"] + df["origination_fee_taxes"], 0
+        )
         df["total_scheduled"] = df["scheduled_interest"] + df["scheduled_fees"]
 
         # 4. Received Revenue (Following exact requirement: Int + Fee + Other - Rebates)
@@ -601,14 +567,16 @@ class KPICatalogProcessor:
             "true_fee_payment",
             "true_other_payment",
             "true_rebates",
-            "true_interest_payment"
+            "true_interest_payment",
         ]
         for c in other_cols:
             if c not in self.payments.columns:
                 self.payments[c] = 0
 
         # Extract month from payment date for alignment
-        self.payments["pay_month"] = self.payments["true_payment_date"].dt.to_period("M").dt.to_timestamp() + pd.offsets.MonthEnd(0) # type: ignore
+        self.payments["pay_month"] = self.payments["true_payment_date"].dt.to_period(
+            "M"
+        ).dt.to_timestamp() + pd.offsets.MonthEnd(0)
 
         # Aggregate received income per loan AND month
         income_monthly = (
@@ -648,25 +616,31 @@ class KPICatalogProcessor:
                 "true_interest_payment": "sum",
                 "true_fee_payment": "sum",
                 "true_other_payment": "sum",
-                "true_rebates": "sum"
+                "true_rebates": "sum",
             }
         )
 
         result["weighted_apr"] = result["apr_part"] / result["outstanding"].replace(0, np.nan)
         result["weighted_fee_rate"] = result["fee_part"] / result["outstanding"].replace(0, np.nan)
-        
+
         # Additional columns for parity with SQL and definition
         result["weighted_other_income_rate"] = (
             result["total_received"] - result["true_interest_payment"]
         ) / result["outstanding"].replace(0, np.nan)
         result["weighted_effective_rate"] = (
-            result["apr_part"] + result["fee_part"] + (result["total_received"] - result["true_interest_payment"])
+            result["apr_part"]
+            + result["fee_part"]
+            + (result["total_received"] - result["true_interest_payment"])
         ) / result["outstanding"].replace(0, np.nan)
-        
-        result["revenue_ratio"] = result["total_received"] / result["total_scheduled"].replace(0, np.nan)
-        
+
+        result["revenue_ratio"] = result["total_received"] / result["total_scheduled"].replace(
+            0, np.nan
+        )
+
         # Recurrence (%) = intereses / (intereses + fees + otros)
-        result["recurrence_pct"] = result["true_interest_payment"] / result["total_received"].replace(0, np.nan)
+        result["recurrence_pct"] = result["true_interest_payment"] / result[
+            "total_received"
+        ].replace(0, np.nan)
 
         # Cleanup and renaming
         result.rename(columns={"month_end": "year_month"}, inplace=True)
@@ -682,37 +656,43 @@ class KPICatalogProcessor:
         df.rename(columns={"month_end": "year_month"}, inplace=True)
         # Calculate percentages matching SQL
         for days in [7, 15, 30, 60]:
-            df[f"dpd{days}_pct"] = df[f"dpd{days}_amount"] / df[
-                "total_outstanding"
-            ].replace(0, np.nan)
-        df["default_pct"] = df["dpd90_amount"] / df[
-            "total_outstanding"
-        ].replace(0, np.nan)
+            df[f"dpd{days}_pct"] = df[f"dpd{days}_amount"] / df["total_outstanding"].replace(
+                0, np.nan
+            )
+        df["default_pct"] = df["dpd90_amount"] / df["total_outstanding"].replace(0, np.nan)
 
         return df
 
     def get_customer_types(self) -> pd.DataFrame:
         """Customer types summary (New, Recurrent, Reactivated, Recovered)."""
         loans = self.loans.copy()
-        
+
         # 1. Identify date column
-        date_col = self._find_column(["disbursement_date", "disburse_date", "fecha_desembolso"], loans)
+        date_col = self._find_column(
+            ["disbursement_date", "disburse_date", "fecha_desembolso"], loans
+        )
         if not date_col:
-            logger.warning("get_customer_types: date_col not found. Columns: %s", loans.columns.tolist())
+            logger.warning(
+                "get_customer_types: date_col not found. Columns: %s", loans.columns.tolist()
+            )
             return pd.DataFrame()
 
         # 2. Identify amount column
-        amount_col = self._find_column(["disbursement_amount", "disburse_principal", "loan_amount"], loans)
-        
+        amount_col = self._find_column(
+            ["disbursement_amount", "disburse_principal", "loan_amount"], loans
+        )
+
         # 3. Identify DPD column for "Recovered"
         dpd_col = self._find_column(["days_past_due", "dpd", "days_in_default"], loans)
         bad_history = set()
         if dpd_col:
             bad_history = set(loans[loans[dpd_col] > 90]["customer_id"].unique())
 
-        loans["year_month"] = loans[date_col].dt.to_period("M").dt.to_timestamp() + pd.offsets.MonthEnd(0) # type: ignore
+        loans["year_month"] = loans[date_col].dt.to_period(
+            "M"
+        ).dt.to_timestamp() + pd.offsets.MonthEnd(0)
         loans = loans.sort_values(["customer_id", date_col, "loan_id"])
-        
+
         loans["rn"] = loans.groupby("customer_id").cumcount() + 1
         loans["prev_disb"] = loans.groupby("customer_id")[date_col].shift(1)
 
@@ -731,7 +711,10 @@ class KPICatalogProcessor:
             loans.groupby(["year_month", "customer_type"])
             .agg(
                 unique_customers=("customer_id", "nunique"),
-                disbursement_amount=(amount_col if amount_col else date_col, "sum" if amount_col else "count")
+                disbursement_amount=(
+                    amount_col if amount_col else date_col,
+                    "sum" if amount_col else "count",
+                ),
             )
             .reset_index()
         )
@@ -752,17 +735,17 @@ class KPICatalogProcessor:
             return pd.DataFrame()
 
         df = self.loan_month[self.loan_month["outstanding"] > 1e-4].copy()
-        df["fee_rate"] = (
-            df["origination_fee"] + df["origination_fee_taxes"]
-        ) / df["disbursement_amount"].replace(0, np.nan)
+        df["fee_rate"] = (df["origination_fee"] + df["origination_fee_taxes"]) / df[
+            "disbursement_amount"
+        ].replace(0, np.nan)
         df["weighted_fee_part"] = df["fee_rate"] * df["outstanding"]
 
         result = df.groupby("month_end", as_index=False).agg(
             {"weighted_fee_part": "sum", "outstanding": "sum"}
         )
-        result["weighted_fee_rate"] = result["weighted_fee_part"] / result[
-            "outstanding"
-        ].replace(0, np.nan)
+        result["weighted_fee_rate"] = result["weighted_fee_part"] / result["outstanding"].replace(
+            0, np.nan
+        )
 
         return result[["month_end", "weighted_fee_rate"]]
 
@@ -790,19 +773,13 @@ class KPICatalogProcessor:
                     "month_end": month_end,
                     "total_outstanding": total,
                     "top10_concentration": (
-                        group.head(top10_n)["outstanding"].sum() / total
-                        if total > 0
-                        else 0
+                        group.head(top10_n)["outstanding"].sum() / total if total > 0 else 0
                     ),
                     "top3_concentration": (
-                        group.head(top3_n)["outstanding"].sum() / total
-                        if total > 0
-                        else 0
+                        group.head(top3_n)["outstanding"].sum() / total if total > 0 else 0
                     ),
                     "top1_concentration": (
-                        group.head(top1_n)["outstanding"].sum() / total
-                        if total > 0
-                        else 0
+                        group.head(top1_n)["outstanding"].sum() / total if total > 0 else 0
                     ),
                 }
             )
@@ -814,9 +791,7 @@ class KPICatalogProcessor:
         df = self.loans.copy()
         df["year_month"] = df["disbursement_date"].dt.to_period(
             "M"
-        ).dt.to_timestamp() + pd.offsets.MonthEnd(  # type: ignore
-            0
-        )
+        ).dt.to_timestamp() + pd.offsets.MonthEnd(0)
 
         def ticket_band(amount):
             if amount < 10000:
@@ -855,9 +830,7 @@ class KPICatalogProcessor:
 
         df["year_month"] = df["disbursement_date"].dt.to_period(
             "M"
-        ).dt.to_timestamp() + pd.offsets.MonthEnd(  # type: ignore
-            0
-        )
+        ).dt.to_timestamp() + pd.offsets.MonthEnd(0)
 
         def line_band(amount):
             if amount < 10000:
@@ -888,16 +861,10 @@ class KPICatalogProcessor:
         within 90 days after closing.
         """
         loans = self.loans.sort_values(["customer_id", "disbursement_date"])
-        loans["next_disb_date"] = loans.groupby("customer_id")[
-            "disbursement_date"
-        ].shift(-1)
+        loans["next_disb_date"] = loans.groupby("customer_id")["disbursement_date"].shift(-1)
 
         # We need an estimate of "close_date".
-        end_col = (
-            "loan_end_date"
-            if "loan_end_date" in self.loans.columns
-            else "disbursement_date"
-        )
+        end_col = "loan_end_date" if "loan_end_date" in self.loans.columns else "disbursement_date"
 
         loans["is_replined"] = (pd.notnull(loans["next_disb_date"])) & (
             (loans["next_disb_date"] - loans[end_col]).dt.days <= 90
@@ -905,9 +872,7 @@ class KPICatalogProcessor:
 
         loans["year_month"] = loans[end_col].dt.to_period(
             "M"
-        ).dt.to_timestamp() + pd.offsets.MonthEnd(  # type: ignore
-            0
-        )
+        ).dt.to_timestamp() + pd.offsets.MonthEnd(0)
 
         summary = (
             loans.groupby("year_month")
@@ -942,31 +907,25 @@ class KPICatalogProcessor:
 
         for threshold in [7, 15, 30, 60, 90]:
             col_name = f"dpd{threshold}_amount"
-            dpd_filter = (df["days_past_due"] >= threshold) & (
-                df["outstanding"] > 1e-4
-            )
-            dpd_sum = (
-                df[dpd_filter]
-                .groupby("month_end", as_index=False)["outstanding"]
-                .sum()
-            )
+            dpd_filter = (df["days_past_due"] >= threshold) & (df["outstanding"] > 1e-4)
+            dpd_sum = df[dpd_filter].groupby("month_end", as_index=False)["outstanding"].sum()
             dpd_sum.columns = ["month_end", col_name]
             result = result.merge(dpd_sum, on="month_end", how="left")
             result[col_name] = result[col_name].fillna(0)
 
-        result["dpd30_pct"] = result["dpd30_amount"] / result[
-            "total_outstanding"
-        ].replace(0, np.nan)
-        result["dpd90_pct"] = result["dpd90_amount"] / result[
-            "total_outstanding"
-        ].replace(0, np.nan)
+        result["dpd30_pct"] = result["dpd30_amount"] / result["total_outstanding"].replace(
+            0, np.nan
+        )
+        result["dpd90_pct"] = result["dpd90_amount"] / result["total_outstanding"].replace(
+            0, np.nan
+        )
 
         return result
 
     # 5. Payor, LTV & CAC
     def get_throughput_metrics(self) -> pd.DataFrame:
         """
-        Calculates Throughput 12M, Rotation, APR realized, Yield incl. fees, 
+        Calculates Throughput 12M, Rotation, APR realized, Yield incl. fees,
         and SAM Penetration.
         """
         if self.loan_month.empty:
@@ -975,36 +934,40 @@ class KPICatalogProcessor:
             return pd.DataFrame()
 
         # 1. Base monthly AUM and Revenue
-        pricing = self.get_monthly_pricing() # has total_received, true_interest_payment, outstanding
+        pricing = (
+            self.get_monthly_pricing()
+        )  # has total_received, true_interest_payment, outstanding
         pricing.rename(columns={"year_month": "month"}, inplace=True)
-        
+
         # 2. Monthly Throughput (Principal recovery)
         # Throughput = Sum(True Principal Payment) in the month
-        self.payments["pay_month"] = self.payments["true_payment_date"].dt.to_period("M").dt.to_timestamp() + pd.offsets.MonthEnd(0) # type: ignore
+        self.payments["pay_month"] = self.payments["true_payment_date"].dt.to_period(
+            "M"
+        ).dt.to_timestamp() + pd.offsets.MonthEnd(0)
         monthly_principal = (
             self.payments.groupby("pay_month")["true_principal_payment"]
             .sum()
             .reset_index(name="throughput_monthly")
         )
         monthly_principal.rename(columns={"pay_month": "month"}, inplace=True)
-        
+
         df = pricing.merge(monthly_principal, on="month", how="left").fillna(0)
         df = df.sort_values("month")
-        
+
         # 3. LTM (Rolling 12M) Calculations
         df["throughput_12m"] = df["throughput_monthly"].rolling(window=12, min_periods=1).sum()
         df["interest_ltm"] = df["true_interest_payment"].rolling(window=12, min_periods=1).sum()
         df["revenue_ltm"] = df["total_received"].rolling(window=12, min_periods=1).sum()
         df["avg_aum_ltm"] = df["outstanding"].rolling(window=12, min_periods=1).mean()
-        
+
         # 4. Final Metrics
         df["rotation"] = df["throughput_12m"] / df["outstanding"].replace(0, np.nan)
         df["apr_realized"] = df["interest_ltm"] / df["avg_aum_ltm"].replace(0, np.nan)
         df["yield_incl_fees"] = df["revenue_ltm"] / df["avg_aum_ltm"].replace(0, np.nan)
-        
+
         # SAM Penetration = Throughput 12M / USD 0.9B
         df["sam_penetration"] = df["throughput_12m"] / 900000000.0
-        
+
         return df
 
     def get_quarterly_scorecard(self) -> pd.DataFrame:
@@ -1014,9 +977,9 @@ class KPICatalogProcessor:
 
         # 1. Define quarters
         quarters = pd.date_range(start="2023-01-01", end=datetime.now(), freq="QE")
-        
+
         rows = []
-        
+
         # Load commercial expenses for CAC
         base_path = Path(__file__).parent.parent.parent
         spend_path = base_path / "data" / "support" / "marketing_spend.csv"
@@ -1030,56 +993,70 @@ class KPICatalogProcessor:
         for q_end in quarters:
             q_start = q_end - pd.offsets.QuarterBegin(startingMonth=q_end.month)
             label = f"{q_end.year}-Q{(q_end.month-1)//3 + 1}"
-            
+
             # Ventas (USD MM)
-            mask_q = (self.loans["disbursement_date"] >= q_start) & (self.loans["disbursement_date"] <= q_end)
+            mask_q = (self.loans["disbursement_date"] >= q_start) & (
+                self.loans["disbursement_date"] <= q_end
+            )
             ventas_mm = self.loans.loc[mask_q, "disbursement_amount"].sum() / 1e6
-            
+
             # Recurrencia
-            mask_pay = (self.payments["true_payment_date"] >= q_start) & (self.payments["true_payment_date"] <= q_end)
+            mask_pay = (self.payments["true_payment_date"] >= q_start) & (
+                self.payments["true_payment_date"] <= q_end
+            )
             q_pays = self.payments[mask_pay]
-            total_rev = (q_pays["true_interest_payment"].sum() + 
-                         q_pays["true_fee_payment"].sum() + 
-                         q_pays["true_other_payment"].sum() - 
-                         q_pays["true_rebates"].sum())
-            recurrencia = q_pays["true_interest_payment"].sum() / total_rev if total_rev > 0 else 0.0
-            
+            total_rev = (
+                q_pays["true_interest_payment"].sum()
+                + q_pays["true_fee_payment"].sum()
+                + q_pays["true_other_payment"].sum()
+                - q_pays["true_rebates"].sum()
+            )
+            recurrencia = (
+                q_pays["true_interest_payment"].sum() / total_rev if total_rev > 0 else 0.0
+            )
+
             # Clientes EOP
             mask_eop = self.loans["disbursement_date"] <= q_end
             clientes_eop = self.loans.loc[mask_eop, "customer_id"].nunique()
-            
+
             # CAC / LTV (Simplified for scorecard)
             # Commercial expense in quarter
             q_period = pd.period_range(start=q_start, end=q_end, freq="M")
             q_spend = sum(commercial_expenses.get(p, 0) for p in q_period)
-            
+
             # New customers in quarter
             first_disb = self.loans.groupby("customer_id")["disbursement_date"].min()
             new_custs = first_disb[(first_disb >= q_start) & (first_disb <= q_end)].count()
-            
+
             cac = q_spend / new_custs if new_custs > 0 else 0.0
-            
+
             # LTV (Realized revenue from this cohort so far)
             cohort_custs = first_disb[(first_disb >= q_start) & (first_disb <= q_end)].index
-            cohort_rev = self.payments[self.payments["loan_id"].isin(
-                self.loans[self.loans["customer_id"].isin(cohort_custs)]["loan_id"]
-            )]
-            cohort_total_rev = (cohort_rev["true_interest_payment"].sum() + 
-                                cohort_rev["true_fee_payment"].sum() + 
-                                cohort_rev["true_other_payment"].sum() - 
-                                cohort_rev["true_rebates"].sum())
+            cohort_rev = self.payments[
+                self.payments["loan_id"].isin(
+                    self.loans[self.loans["customer_id"].isin(cohort_custs)]["loan_id"]
+                )
+            ]
+            cohort_total_rev = (
+                cohort_rev["true_interest_payment"].sum()
+                + cohort_rev["true_fee_payment"].sum()
+                + cohort_rev["true_other_payment"].sum()
+                - cohort_rev["true_rebates"].sum()
+            )
             ltv_realized = cohort_total_rev / new_custs if new_custs > 0 else 0.0
-            
-            rows.append({
-                "Quarter": label,
-                "Ventas_USD_MM": round(ventas_mm, 2),
-                "Recurrencia_Pct": round(recurrencia * 100, 2),
-                "Clientes_EOP": clientes_eop,
-                "CAC_USD": round(cac, 2),
-                "LTV_Realized_USD": round(ltv_realized, 2),
-                "LTV_CAC_Ratio": round(ltv_realized / cac, 2) if cac > 0 else 0.0
-            })
-            
+
+            rows.append(
+                {
+                    "Quarter": label,
+                    "Ventas_USD_MM": round(ventas_mm, 2),
+                    "Recurrencia_Pct": round(recurrencia * 100, 2),
+                    "Clientes_EOP": clientes_eop,
+                    "CAC_USD": round(cac, 2),
+                    "LTV_Realized_USD": round(ltv_realized, 2),
+                    "LTV_CAC_Ratio": round(ltv_realized / cac, 2) if cac > 0 else 0.0,
+                }
+            )
+
         return pd.DataFrame(rows)
 
     def get_unit_economics(self) -> pd.DataFrame:
@@ -1089,7 +1066,7 @@ class KPICatalogProcessor:
         # Load commercial expenses (marketing spend as proxy if available)
         base_path = Path(__file__).parent.parent.parent
         spend_path = base_path / "data" / "support" / "marketing_spend.csv"
-        
+
         commercial_expenses = pd.DataFrame()
         if spend_path.exists():
             spend_df = pd.read_csv(spend_path)
@@ -1100,10 +1077,9 @@ class KPICatalogProcessor:
             # Placeholder: Assume $100k/month if missing
             if not self.loan_month.empty:
                 months = self.loan_month["month_end"].unique()
-                commercial_expenses = pd.DataFrame({
-                    "month": months,
-                    "commercial_expense": 100000.0
-                })
+                commercial_expenses = pd.DataFrame(
+                    {"month": months, "commercial_expense": 100000.0}
+                )
 
         # New clients per month
         loans = self.loans.copy()
@@ -1116,39 +1092,39 @@ class KPICatalogProcessor:
             .reset_index(name="new_clients")
         )
         new_clients.rename(columns={"disbursement_date": "month"}, inplace=True)
-        
+
         # Merge expense and new clients
         ue = new_clients.merge(commercial_expenses, on="month", how="left").fillna(0)
-        
+
         # CAC = commercial_expense / new_clients
         ue["cac"] = ue["commercial_expense"] / ue["new_clients"].replace(0, np.nan)
-        
+
         # LTV Realized (Cumulative revenue per client of the cohort)
-        # Note: This requires cohort analysis. For simplicity, we'll calculate 
+        # Note: This requires cohort analysis. For simplicity, we'll calculate
         # cumulative revenue / unique customers per month as an approximation of realized yield.
         pricing = self.get_monthly_pricing()
         pricing.rename(columns={"year_month": "month"}, inplace=True)
-        
+
         # Cumulative revenue across all time
         pricing = pricing.sort_values("month")
         pricing["cum_revenue"] = pricing["total_received"].cumsum()
-        
+
         # Total unique customers ever seen up to that month
-        self.loans["month_end"] = self.loans["disbursement_date"] + pd.offsets.MonthEnd(0) # type: ignore
+        self.loans["month_end"] = self.loans["disbursement_date"] + pd.offsets.MonthEnd(0)
         all_months = sorted(self.loans["month_end"].unique())
         cum_cust = []
         for me in all_months:
             count = self.loans[self.loans["month_end"] <= me]["customer_id"].nunique()
             cum_cust.append({"month": me, "cum_unique_customers": count})
         df_cum_cust = pd.DataFrame(cum_cust)
-        
+
         ue = ue.merge(pricing[["month", "cum_revenue"]], on="month", how="left")
         ue = ue.merge(df_cum_cust, on="month", how="left")
-        
+
         # LTV realized = cumulative revenue / cumulative unique customers
         ue["ltv_realized"] = ue["cum_revenue"] / ue["cum_unique_customers"].replace(0, np.nan)
         ue["ltv_cac_ratio"] = ue["ltv_realized"] / ue["cac"].replace(0, np.nan)
-        
+
         return ue
 
     def get_payment_timing(self) -> pd.DataFrame:
@@ -1160,7 +1136,7 @@ class KPICatalogProcessor:
         # Use normalized names from _clean_df mapping
         cols_to_use = ["loan_id", "disbursement_date", "loan_end_date"]
         available_cols = [c for c in cols_to_use if c in self.loans.columns]
-        
+
         df = self.payments.merge(
             self.loans[available_cols],
             on="loan_id",
@@ -1176,9 +1152,7 @@ class KPICatalogProcessor:
             return pd.DataFrame()
 
         def categorize(row):
-            if pd.isnull(row["true_payment_date"]) or pd.isnull(
-                row["expected_date"]
-            ):
+            if pd.isnull(row["true_payment_date"]) or pd.isnull(row["expected_date"]):
                 return "Unknown"
             diff = (row["true_payment_date"] - row["expected_date"]).days
             if diff < -3:
@@ -1190,7 +1164,7 @@ class KPICatalogProcessor:
         df["timing_category"] = df.apply(categorize, axis=1)
         df["year_month"] = df["true_payment_date"].dt.to_period(
             "M"
-        ).dt.to_timestamp() + pd.offsets.MonthEnd(0) # type: ignore
+        ).dt.to_timestamp() + pd.offsets.MonthEnd(0)
 
         summary = (
             df.groupby(["year_month", "timing_category"])
@@ -1218,40 +1192,68 @@ class KPICatalogProcessor:
         """Consolidate the key 8 KPIs for the executive strip."""
         if self.loan_month.empty:
             self.build_loan_month()
-        
+
         if self.loan_month.empty:
             return {}
 
         latest_month = self.loan_month["month_end"].max()
         latest_month_df = self.loan_month[self.loan_month["month_end"] == latest_month]
-        
+
         cust_types = self.get_customer_types()
         latest_cust = pd.DataFrame()
         if not cust_types.empty:
             latest_cust_month = cust_types["year_month"].max()
             latest_cust = cust_types[cust_types["year_month"] == latest_cust_month]
-        
+
         coll_rate_df = self.get_collection_rate()
         latest_coll = pd.DataFrame()
         if not coll_rate_df.empty:
             latest_coll_month = coll_rate_df["year_month"].max()
             latest_coll = coll_rate_df[coll_rate_df["year_month"] == latest_coll_month]
-        
+
         strip = {
             "active_clients": int(latest_month_df["customer_id"].nunique()),
-            "new_clients": int(latest_cust[latest_cust["customer_type"] == "New"]["unique_customers"].sum()) if not latest_cust.empty else 0,
-            "recurrent_clients": int(latest_cust[latest_cust["customer_type"] == "Recurrent"]["unique_customers"].sum()) if not latest_cust.empty else 0,
-            "recovered_clients": int(latest_cust[latest_cust["customer_type"] == "Recovered"]["unique_customers"].sum()) if not latest_cust.empty else 0,
+            "new_clients": (
+                int(latest_cust[latest_cust["customer_type"] == "New"]["unique_customers"].sum())
+                if not latest_cust.empty
+                else 0
+            ),
+            "recurrent_clients": (
+                int(
+                    latest_cust[latest_cust["customer_type"] == "Recurrent"][
+                        "unique_customers"
+                    ].sum()
+                )
+                if not latest_cust.empty
+                else 0
+            ),
+            "recovered_clients": (
+                int(
+                    latest_cust[latest_cust["customer_type"] == "Recovered"][
+                        "unique_customers"
+                    ].sum()
+                )
+                if not latest_cust.empty
+                else 0
+            ),
             "total_outstanding": float(latest_month_df["outstanding"].sum()),
-            "total_disbursements": float(latest_cust["disbursement_amount"].sum()) if not latest_cust.empty else 0.0,
-            "collection_rate": float(latest_coll["collection_rate"].iloc[0]) if not latest_coll.empty else 0.0,
-            "top10_concentration": float(self.get_concentration().iloc[-1]["top10_concentration"]) if not self.get_concentration().empty else 0.0
+            "total_disbursements": (
+                float(latest_cust["disbursement_amount"].sum()) if not latest_cust.empty else 0.0
+            ),
+            "collection_rate": (
+                float(latest_coll["collection_rate"].iloc[0]) if not latest_coll.empty else 0.0
+            ),
+            "top10_concentration": (
+                float(self.get_concentration().iloc[-1]["top10_concentration"])
+                if not self.get_concentration().empty
+                else 0.0
+            ),
         }
         return strip
 
     def get_all_kpis(self) -> Dict:
         """Run all calculations and return a consolidated dictionary."""
-        kpis = {}
+        kpis: Dict[str, Any] = {}
         # Executive Strip
         try:
             kpis["executive_strip"] = self.get_executive_strip()
@@ -1260,9 +1262,7 @@ class KPICatalogProcessor:
 
         # Core aggregated views for parity tests
         try:
-            kpis["monthly_pricing"] = self.get_monthly_pricing().to_dict(
-                "records"
-            )
+            kpis["monthly_pricing"] = self.get_monthly_pricing().to_dict("records")
         except Exception:
             pass
         try:
@@ -1274,41 +1274,29 @@ class KPICatalogProcessor:
         except Exception as e:
             logger.error(f"Error in churn_90d_metrics: {e}")
         try:
-            kpis["customer_types"] = self.get_customer_types().to_dict(
-                "records"
-            )
+            kpis["customer_types"] = self.get_customer_types().to_dict("records")
         except Exception:
             pass
         try:
-            kpis["payment_timing"] = self.get_payment_timing().to_dict(
-                "records"
-            )
+            kpis["payment_timing"] = self.get_payment_timing().to_dict("records")
         except Exception:
             pass
         try:
-            kpis["collection_rate"] = self.get_collection_rate().to_dict(
-                "records"
-            )
+            kpis["collection_rate"] = self.get_collection_rate().to_dict("records")
         except Exception:
             pass
 
         # Detailed/Granular views
         try:
-            kpis["active_unique_customers"] = (
-                self.get_active_unique_customers().to_dict("records")
-            )
+            kpis["active_unique_customers"] = self.get_active_unique_customers().to_dict("records")
         except Exception:
             pass
         try:
-            kpis["customer_classification"] = (
-                self.get_customer_classification().to_dict("records")
-            )
+            kpis["customer_classification"] = self.get_customer_classification().to_dict("records")
         except Exception:
             pass
         try:
-            kpis["intensity_segmentation"] = (
-                self.get_intensity_segmentation().to_dict("records")
-            )
+            kpis["intensity_segmentation"] = self.get_intensity_segmentation().to_dict("records")
         except Exception:
             pass
         try:
@@ -1316,9 +1304,7 @@ class KPICatalogProcessor:
         except Exception:
             pass
         try:
-            kpis["weighted_fee_rate"] = self.get_weighted_fee_rate().to_dict(
-                "records"
-            )
+            kpis["weighted_fee_rate"] = self.get_weighted_fee_rate().to_dict("records")
         except Exception:
             pass
         try:
@@ -1326,21 +1312,15 @@ class KPICatalogProcessor:
         except Exception:
             pass
         try:
-            kpis["average_ticket"] = self.get_average_ticket().to_dict(
-                "records"
-            )
+            kpis["average_ticket"] = self.get_average_ticket().to_dict("records")
         except Exception:
             pass
         try:
-            kpis["line_size_segmentation"] = (
-                self.get_line_size_segmentation().to_dict("records")
-            )
+            kpis["line_size_segmentation"] = self.get_line_size_segmentation().to_dict("records")
         except Exception:
             pass
         try:
-            kpis["replines_metrics"] = self.get_replines_metrics().to_dict(
-                "records"
-            )
+            kpis["replines_metrics"] = self.get_replines_metrics().to_dict("records")
         except Exception:
             pass
         try:
@@ -1348,9 +1328,7 @@ class KPICatalogProcessor:
         except Exception:
             pass
         try:
-            kpis["payor_concentration"] = (
-                self.get_payor_concentration().to_dict("records")
-            )
+            kpis["payor_concentration"] = self.get_concentration().to_dict("records")
         except Exception:
             pass
         try:
@@ -1386,22 +1364,26 @@ class KPICatalogProcessor:
 
     def get_figma_dashboard_df(self) -> pd.DataFrame:
         """
-        Consolidate all KPIs into a single DataFrame formatted for the 
+        Consolidate all KPIs into a single DataFrame formatted for the
         public.figma_dashboard Supabase view.
         """
         if self.loan_month.empty:
             self.build_loan_month()
-        
+
         # 1. Base monthly metrics (Outstanding, Active Clients)
-        base = self.loan_month.groupby("month_end").agg({
-            "outstanding": "sum",
-            "customer_id": "nunique"
-        }).reset_index()
-        base.rename(columns={
-            "month_end": "month",
-            "outstanding": "outstanding",
-            "customer_id": "active_clients"
-        }, inplace=True)
+        base = (
+            self.loan_month.groupby("month_end")
+            .agg({"outstanding": "sum", "customer_id": "nunique"})
+            .reset_index()
+        )
+        base.rename(
+            columns={
+                "month_end": "month",
+                "outstanding": "outstanding",
+                "customer_id": "active_clients",
+            },
+            inplace=True,
+        )
 
         # 2. Pricing & Revenue
         pricing = self.get_monthly_pricing()
@@ -1413,13 +1395,13 @@ class KPICatalogProcessor:
                 "scheduled_interest": "sched_interest",
                 "true_interest_payment": "recv_interest_paid_month",
                 "true_fee_payment": "recv_fee_paid_month",
-                "recurrence_pct": "recurrence_pct"
+                "recurrence_pct": "recurrence_pct",
             }
             # Add missing columns if they don't exist
             for c in ["true_fee_payment", "recurrence_pct"]:
                 if c not in pricing.columns:
                     pricing[c] = 0
-            
+
             pricing_sub = pricing[list(pricing_map.keys())].rename(columns=pricing_map)
             base = base.merge(pricing_sub, on="month", how="left")
             base["sched_fee"] = base["sched_revenue"] - base["sched_interest"]
@@ -1427,42 +1409,62 @@ class KPICatalogProcessor:
         # 3. Customer Types (Pivoted)
         cust_types = self.get_customer_types()
         if not cust_types.empty:
-            cust_pivot = cust_types.pivot(index="year_month", columns="customer_type", values="unique_customers").fillna(0).reset_index()
-            cust_pivot.rename(columns={
-                "year_month": "month",
-                "New": "new_clients",
-                "Recurrent": "recurrent_clients",
-                "Recovered": "recovered_clients",
-                "Reactivated": "reactivated_clients" # Extra but safe
-            }, inplace=True)
+            cust_pivot = (
+                cust_types.pivot(
+                    index="year_month", columns="customer_type", values="unique_customers"
+                )
+                .fillna(0)
+                .reset_index()
+            )
+            cust_pivot.rename(
+                columns={
+                    "year_month": "month",
+                    "New": "new_clients",
+                    "Recurrent": "recurrent_clients",
+                    "Recovered": "recovered_clients",
+                    "Reactivated": "reactivated_clients",  # Extra but safe
+                },
+                inplace=True,
+            )
             # Ensure all expected columns exist
             for col in ["new_clients", "recurrent_clients", "recovered_clients"]:
                 if col not in cust_pivot.columns:
                     cust_pivot[col] = 0
             base = base.merge(cust_pivot, on="month", how="left")
-            
+
             # Disbursement amount from same group
             disb_pivot = cust_types.groupby("year_month")["disbursement_amount"].sum().reset_index()
-            disb_pivot.rename(columns={"year_month": "month", "disbursement_amount": "disbursement"}, inplace=True)
+            disb_pivot.rename(
+                columns={"year_month": "month", "disbursement_amount": "disbursement"}, inplace=True
+            )
             base = base.merge(disb_pivot, on="month", how="left")
 
         # 4. Concentration
         conc = self.get_concentration()
         if not conc.empty:
-            conc_sub = conc[["month_end", "top10_concentration"]].rename(columns={"month_end": "month"})
+            conc_sub = conc[["month_end", "top10_concentration"]].rename(
+                columns={"month_end": "month"}
+            )
             base = base.merge(conc_sub, on="month", how="left")
 
         # 5. Payment Timing (Pivoted)
         timing = self.get_payment_timing()
         if not timing.empty:
-            time_pivot = timing.pivot(index="year_month", columns="timing_category", values="count").fillna(0).reset_index()
-            time_pivot.rename(columns={
-                "year_month": "month",
-                "Early": "early",
-                "On-time": "on_time",
-                "Late": "late",
-                "Unknown": "unmapped"
-            }, inplace=True)
+            time_pivot = (
+                timing.pivot(index="year_month", columns="timing_category", values="count")
+                .fillna(0)
+                .reset_index()
+            )
+            time_pivot.rename(
+                columns={
+                    "year_month": "month",
+                    "Early": "early",
+                    "On-time": "on_time",
+                    "Late": "late",
+                    "Unknown": "unmapped",
+                },
+                inplace=True,
+            )
             # Ensure all columns exist
             for col in ["early", "on_time", "late", "unmapped"]:
                 if col not in time_pivot.columns:
@@ -1472,16 +1474,22 @@ class KPICatalogProcessor:
         # 6. Collection Rate
         coll = self.get_collection_rate()
         if not coll.empty:
-            coll_sub = coll[["year_month", "collection_rate"]].rename(columns={
-                "year_month": "month",
-                "collection_rate": "collection_rate_due_month"
-            })
+            coll_sub = coll[["year_month", "collection_rate"]].rename(
+                columns={"year_month": "month", "collection_rate": "collection_rate_due_month"}
+            )
             base = base.merge(coll_sub, on="month", how="left")
 
         # 7. Throughput Metrics
         throughput = self.get_throughput_metrics()
         if not throughput.empty:
-            tp_cols = ["month", "throughput_12m", "rotation", "apr_realized", "yield_incl_fees", "sam_penetration"]
+            tp_cols = [
+                "month",
+                "throughput_12m",
+                "rotation",
+                "apr_realized",
+                "yield_incl_fees",
+                "sam_penetration",
+            ]
             base = base.merge(throughput[tp_cols], on="month", how="left")
 
         # 8. Unit Economics
@@ -1499,10 +1507,12 @@ class KPICatalogProcessor:
             base["cum_received_due_month"] = base["cum_received_paid_month"]
 
         # 10. Placeholders for missing fields in SQL view
-        base["outstanding_proj"] = base["outstanding"] * 1.05 # Simple projection
-        base["planned_disbursement"] = base["disbursement"].shift(-1).fillna(base["disbursement"] * 1.1)
-        base["remaining_capital"] = 10000000 - base["outstanding"] # Assume 10M fund
-        
+        base["outstanding_proj"] = base["outstanding"] * 1.05  # Simple projection
+        base["planned_disbursement"] = (
+            base["disbursement"].shift(-1).fillna(base["disbursement"] * 1.1)
+        )
+        base["remaining_capital"] = 10000000 - base["outstanding"]  # Assume 10M fund
+
         # Revenue by due month placeholders (if not specifically calculated)
         base["recv_interest_for_month"] = base["recv_interest_paid_month"]
         base["recv_fee_for_month"] = base["recv_fee_paid_month"]
@@ -1510,5 +1520,5 @@ class KPICatalogProcessor:
 
         # Final Cleanup
         base = base.fillna(0)
-        
+
         return base

@@ -34,9 +34,7 @@ class FigmaClient:
         if not self.api_token or not self.file_key:
             logger.warning("Figma credentials not configured. Figma export disabled.")
 
-    def _request(
-        self, method: str, endpoint: str, **kwargs: Any
-    ) -> Dict[str, Any]:
+    def _request(self, method: str, endpoint: str, **kwargs: Any) -> Dict[str, Any]:
         """Make authenticated request to Figma API."""
         url = f"{self.base_url}{endpoint}"
         kwargs.setdefault("headers", self.headers)
@@ -55,9 +53,7 @@ class FigmaClient:
             return {}
         return self._request("GET", f"/files/{self.file_key}")
 
-    def update_text_node(
-        self, node_id: str, new_text: str, run_id: str
-    ) -> bool:
+    def update_text_node(self, node_id: str, new_text: str, run_id: str) -> bool:
         """Update a text node in Figma with new metric value."""
         if not self.file_key:
             return False
@@ -88,9 +84,7 @@ class FigmaClient:
 
         return success
 
-    def update_kpi_cards(
-        self, kpi_metrics: Dict[str, Any], run_id: str
-    ) -> Dict[str, bool]:
+    def update_kpi_cards(self, kpi_metrics: Dict[str, Any], run_id: str) -> Dict[str, bool]:
         """Update KPI card components in design system."""
         results = {}
 
@@ -167,9 +161,7 @@ class FigmaClient:
         logger.info(f"Created dashboard snapshot in Figma (frame: {snapshot_frame_id})")
         return snapshot_frame_id
 
-    def sync_batch_export(
-        self, export_data: Dict[str, Any], run_id: str
-    ) -> Dict[str, Any]:
+    def sync_batch_export(self, export_data: Dict[str, Any], run_id: str) -> Dict[str, Any]:
         """
         Sync complete batch export (KPIs, metrics, summaries) to Figma.
 
@@ -192,9 +184,7 @@ class FigmaClient:
 
         try:
             if "kpi_metrics" in export_data:
-                results["kpi_cards"] = self.update_kpi_cards(
-                    export_data["kpi_metrics"], run_id
-                )
+                results["kpi_cards"] = self.update_kpi_cards(export_data["kpi_metrics"], run_id)
 
             if "summary" in export_data:
                 results["dashboard_snapshot"] = self.create_dashboard_snapshot(

@@ -19,7 +19,8 @@ import pandas as pd
 logger = logging.getLogger(__name__)
 
 try:
-    from supabase import create_client  # type: ignore
+    from supabase import create_client
+
     HAS_SUPABASE = True
 except ImportError:
     HAS_SUPABASE = False
@@ -30,9 +31,7 @@ class SupabaseOutputClient:
 
     def __init__(self, url: Optional[str] = None, service_role_key: Optional[str] = None):
         self.url = url or os.getenv("SUPABASE_URL")
-        self.service_role_key = (
-            service_role_key or os.getenv("SUPABASE_SERVICE_ROLE")
-        )
+        self.service_role_key = service_role_key or os.getenv("SUPABASE_SERVICE_ROLE")
 
         if not HAS_SUPABASE:
             logger.warning("supabase-py not installed. Supabase export disabled.")
@@ -72,11 +71,7 @@ class SupabaseOutputClient:
                     "created_at": datetime.utcnow().isoformat(),
                 }
 
-                response = (
-                    self.client.table("analytics_kpi_metrics")
-                    .insert(record)
-                    .execute()
-                )
+                response = self.client.table("analytics_kpi_metrics").insert(record).execute()
 
                 success = bool(response.data)
                 results[kpi_name] = success
@@ -118,9 +113,7 @@ class SupabaseOutputClient:
 
                 if response.data:
                     total_inserted += len(response.data)
-                    logger.info(
-                        f"Inserted {len(response.data)} records into {table_name}"
-                    )
+                    logger.info(f"Inserted {len(response.data)} records into {table_name}")
 
             logger.info(f"Total inserted: {total_inserted} records into {table_name}")
             return total_inserted

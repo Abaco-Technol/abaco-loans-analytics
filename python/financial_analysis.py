@@ -25,9 +25,7 @@ def resolve_column(candidates: List[str], fallback: Optional[str] = None):
                 if not resolved_col and fallback and fallback in df.columns:
                     resolved_col = fallback
             if not resolved_col:
-                logger.warning(
-                    "Column not found for %s, tried: %s", func.__name__, candidates
-                )
+                logger.warning("Column not found for %s, tried: %s", func.__name__, candidates)
                 return df
             return func(self, df, resolved_col, **kwargs)
 
@@ -105,7 +103,9 @@ class FinancialAnalyzer:
         return errors
 
     @resolve_column(["days_past_due", "dpd", "dias_mora", "days_late"])
-    def classify_dpd_buckets(self, df: pd.DataFrame, dpd_col: str = "days_past_due") -> pd.DataFrame:
+    def classify_dpd_buckets(
+        self, df: pd.DataFrame, dpd_col: str = "days_past_due"
+    ) -> pd.DataFrame:
         """Classify days past due into standard buckets."""
         result = df.copy()
         try:

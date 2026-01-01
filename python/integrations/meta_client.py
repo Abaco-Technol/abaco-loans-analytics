@@ -38,9 +38,7 @@ class MetaOutputClient:
         if not self.access_token:
             logger.warning("Meta credentials not configured. Meta export disabled.")
 
-    def _request(
-        self, method: str, endpoint: str, **kwargs: Any
-    ) -> Dict[str, Any]:
+    def _request(self, method: str, endpoint: str, **kwargs: Any) -> Dict[str, Any]:
         """Make authenticated request to Meta API."""
         url = f"{self.base_url}{endpoint}"
         kwargs.setdefault("headers", self.headers)
@@ -153,10 +151,12 @@ class MetaOutputClient:
             params = {
                 "access_token": self.access_token,
                 "fields": ",".join(fields),
-                "time_range": json.dumps({
-                    "since": date_start,
-                    "until": date_stop,
-                }),
+                "time_range": json.dumps(
+                    {
+                        "since": date_start,
+                        "until": date_stop,
+                    }
+                ),
                 "level": "campaign",
             }
 
@@ -238,16 +238,12 @@ class MetaOutputClient:
 
         try:
             if "kpi_metrics" in export_data:
-                results["pixel_events_tracked"] = self.track_kpi_updates(
-                    export_data["kpi_metrics"]
-                )
+                results["pixel_events_tracked"] = self.track_kpi_updates(export_data["kpi_metrics"])
 
             results["ads_insights_retrieved"] = self.get_ads_insights()
 
             if "customer_segments" in export_data:
-                for segment_name, customer_list in export_data[
-                    "customer_segments"
-                ].items():
+                for segment_name, customer_list in export_data["customer_segments"].items():
                     audience_id = self.create_custom_audience(
                         audience_name=f"analytics_{segment_name}",
                         customer_list=customer_list,

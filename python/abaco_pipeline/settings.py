@@ -12,7 +12,8 @@ class Settings:
     # Canonical (matches config/pipeline.yml): SUPABASE_SERVICE_ROLE
     # Back-compat: SUPABASE_SERVICE_ROLE_KEY
     supabase_service_role_key: str | None = field(
-        default_factory=lambda: os.getenv("SUPABASE_SERVICE_ROLE") or os.getenv("SUPABASE_SERVICE_ROLE_KEY")
+        default_factory=lambda: os.getenv("SUPABASE_SERVICE_ROLE")
+        or os.getenv("SUPABASE_SERVICE_ROLE_KEY")
     )
 
     cascade_base_url: str = field(

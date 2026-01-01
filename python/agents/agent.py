@@ -1,6 +1,6 @@
+import inspect
 import json
 import re
-import inspect
 from typing import Dict, List, Optional
 
 from python.agents.llm_provider import BaseLLM
@@ -27,7 +27,10 @@ class Agent:
 
     def _generate_default_system_prompt(self) -> str:
         tools_info = "\n".join(
-            [f"- {t.name}: {t.description} (Params: {inspect.signature(t.func)})" for t in self.registry.tools.values()]
+            [
+                f"- {t.name}: {t.description} (Params: {inspect.signature(t.func)})"
+                for t in self.registry.tools.values()
+            ]
         )
         return f"""You are {self.name}, {self.role}.
 Your goal is: {self.goal}
@@ -86,8 +89,8 @@ Begin!
             else:
                 # If no action is found and no final answer, we might be stuck or the LLM is just talking
                 if "Thought:" not in content:
-                    return content # Fallback
-                
+                    return content  # Fallback
+
                 # Continue loop to let it try again or finish
 
         return "Error: Maximum iterations reached without final answer."

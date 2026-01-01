@@ -40,20 +40,21 @@ def mask_pii_in_dataframe(
 ) -> Tuple[pd.DataFrame, List[str]]:
     columns = list(pii_columns) if pii_columns is not None else []
     keyword_source = list(keywords) if keywords is not None else PII_COLUMN_KEYWORDS
-    
+
     # Identify columns by keywords
     lowered_keywords = [k.lower() for k in keyword_source]
     detected_columns = [
-        col for col in df.columns 
+        col
+        for col in df.columns
         if any(keyword in str(col).lower() for keyword in lowered_keywords)
     ]
-    
+
     # Combine detected with explicitly provided (ensuring uniqueness)
     all_pii_cols = list(set(columns + detected_columns))
-    
+
     masked = df.copy()
     processed_cols = []
-    
+
     for column in all_pii_cols:
         if column in masked.columns:
             if action == "redact":
@@ -61,7 +62,7 @@ def mask_pii_in_dataframe(
             else:
                 masked[column] = masked[column].apply(_mask_value)
             processed_cols.append(column)
-            
+
     return masked, processed_cols
 
 

@@ -1,21 +1,19 @@
 import logging
 import uuid
-import yaml
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 import numpy as np
 import pandas as pd
+import yaml
 
 from python.compliance import create_access_log_entry, mask_pii_in_dataframe
+from python.pipeline.data_validation import (validate_iso8601_dates,
+                                             validate_no_nulls,
+                                             validate_numeric_bounds,
+                                             validate_percentage_bounds)
 from python.pipeline.utils import hash_dataframe, utc_now
-from python.pipeline.data_validation import (
-    validate_iso8601_dates,
-    validate_no_nulls,
-    validate_numeric_bounds,
-    validate_percentage_bounds,
-)
 
 logger = logging.getLogger(__name__)
 
@@ -38,9 +36,7 @@ class UnifiedTransformation:
 
     def __init__(self, config: Optional[Dict[str, Any]] = None, run_id: Optional[str] = None):
         root_cfg: Dict[str, Any] = config or {}
-        self.config = (
-            root_cfg.get("pipeline", {}).get("phases", {}).get("transformation", {})
-        )
+        self.config = root_cfg.get("pipeline", {}).get("phases", {}).get("transformation", {})
         self.run_id = run_id or f"tx_{uuid.uuid4().hex[:12]}"
         self.lineage: List[Dict[str, Any]] = []
         self.transformations_count = 0
@@ -121,7 +117,7 @@ class UnifiedTransformation:
         if missing:
             raise ValueError(f"missing required columns: {missing}")
 
-        numeric_required = [c for c in required]
+        numeric_required = list(required)
         for col in numeric_required:
             try:
                 pd.to_numeric(df[col], errors="raise")
@@ -132,9 +128,7 @@ class UnifiedTransformation:
         # Preserve raw columns expected by KPIEngine (v1)
         out["total_receivable_usd"] = pd.to_numeric(df["total_receivable_usd"], errors="raise")
         out["total_eligible_usd"] = pd.to_numeric(df["total_eligible_usd"], errors="raise")
-        out["discounted_balance_usd"] = pd.to_numeric(
-            df["discounted_balance_usd"], errors="raise"
-        )
+        out["discounted_balance_usd"] = pd.to_numeric(df["discounted_balance_usd"], errors="raise")
         out["dpd_0_7_usd"] = pd.to_numeric(df["dpd_0_7_usd"], errors="raise")
         out["dpd_7_30_usd"] = pd.to_numeric(df["dpd_7_30_usd"], errors="raise")
         out["dpd_30_60_usd"] = pd.to_numeric(df["dpd_30_60_usd"], errors="raise")
@@ -172,7 +166,9 @@ class UnifiedTransformation:
         if "receivable_amount" not in transformed.columns:
             return False
         try:
-            orig_total = float(pd.to_numeric(original["total_receivable_usd"], errors="raise").sum())
+            orig_total = float(
+                pd.to_numeric(original["total_receivable_usd"], errors="raise").sum()
+            )
             new_total = float(pd.to_numeric(transformed["receivable_amount"], errors="raise").sum())
         except Exception:
             return False
@@ -252,10 +248,10 @@ class UnifiedTransformation:
             pii_cfg = self.config.get("pii_masking", {})
             if pii_cfg.get("enabled", True):
                 clean_df, masked_columns = mask_pii_in_dataframe(
-                    clean_df, 
+                    clean_df,
                     keywords=self.pii_config.get("keywords") or pii_cfg.get("keywords"),
                     pii_columns=self.pii_config.get("explicit_columns"),
-                    action=self.pii_config.get("default_action", "mask")
+                    action=self.pii_config.get("default_action", "mask"),
                 )
             self._log_step("pii_masking", "completed", masked_columns=masked_columns)
             access_log.append(

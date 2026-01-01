@@ -1,4 +1,5 @@
-from typing import Mapping, Any
+from typing import Any, Mapping
+
 
 def calculate_quality_score(metrics: Mapping[str, Any]) -> float:
     """

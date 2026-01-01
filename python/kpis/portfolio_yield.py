@@ -2,7 +2,8 @@ from typing import Any, Dict, Tuple
 
 import pandas as pd
 
-from python.kpis.base import KPICalculator, KPIMetadata, create_context, safe_numeric
+from python.kpis.base import (KPICalculator, KPIMetadata, create_context,
+                              safe_numeric)
 
 
 class PortfolioYieldCalculator(KPICalculator):
@@ -21,7 +22,9 @@ class PortfolioYieldCalculator(KPICalculator):
 
     def calculate(self, df: pd.DataFrame) -> Tuple[float, Dict[str, Any]]:
         if df is None or df.empty:
-            return 0.0, create_context(self.METADATA.formula, rows_processed=0, reason="Empty DataFrame")
+            return 0.0, create_context(
+                self.METADATA.formula, rows_processed=0, reason="Empty DataFrame"
+            )
 
         required = ["interest_rate", "principal_balance"]
         missing = [col for col in required if col not in df.columns]
@@ -33,16 +36,18 @@ class PortfolioYieldCalculator(KPICalculator):
 
         total_principal = principal_balance.sum()
         if total_principal == 0:
-            return 0.0, create_context(self.METADATA.formula, rows_processed=len(df), reason="Zero total principal")
+            return 0.0, create_context(
+                self.METADATA.formula, rows_processed=len(df), reason="Zero total principal"
+            )
 
         weighted_interest = (interest_rate * principal_balance).sum()
         yield_val = (weighted_interest / total_principal) * 100.0
-        
+
         return yield_val, create_context(
             self.METADATA.formula,
             rows_processed=len(df),
             total_principal=float(total_principal),
-            weighted_interest=float(weighted_interest)
+            weighted_interest=float(weighted_interest),
         )
 
 
