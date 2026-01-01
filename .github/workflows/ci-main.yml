@@ -28,7 +28,9 @@ jobs:
           cache-dependency-path: apps/web/pnpm-lock.yaml
 
       - name: Install dependencies # Installs dependencies for all workspaces
-        run: pnpm install --frozen-lockfile
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm -C apps/web install --frozen-lockfile
 
       - name: Run Lint
         run: pnpm lint
