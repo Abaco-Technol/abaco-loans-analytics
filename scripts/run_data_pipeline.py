@@ -21,11 +21,18 @@ from src.pipeline.orchestrator import UnifiedPipeline
 CascadeIngestion = UnifiedIngestion
 DataTransformation = UnifiedTransformation
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-)
-logger = logging.getLogger(__name__)
+try:
+    from src.azure_tracing import setup_azure_tracing
+
+    logger, _ = setup_azure_tracing()
+    logger.info("Azure tracing initialized for run_data_pipeline")
+except (ImportError, Exception) as tracing_err:
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    )
+    logger = logging.getLogger(__name__)
+    logger.warning("Azure tracing not initialized: %s", tracing_err)
 
 DEFAULT_INPUT = os.getenv(
     "PIPELINE_INPUT_FILE", str(Paths.raw_data_dir() / "abaco_portfolio_calculations.csv")
