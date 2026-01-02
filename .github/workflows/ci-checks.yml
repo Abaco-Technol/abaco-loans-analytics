@@ -171,12 +171,12 @@ jobs:
   notify-on-failure:
     name: Notify on Failure
     runs-on: ubuntu-latest
-    needs: [repo-health, run-demos, evaluate-models]
+    needs: [repo-health, workflow-lint, evaluate-models]
     if: failure()
     steps:
       - name: Notify Slack on failure
         uses: slackapi/slack-github-action@v2
-        if: env.SLACK_WEBHOOK_URL != ''
+        if: secrets.SLACK_WEBHOOK_URL != ''
         with:
           webhook-type: INCOMING_WEBHOOK
           payload: |
