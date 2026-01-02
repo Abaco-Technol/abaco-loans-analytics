@@ -1,199 +1,373 @@
-# Tracing and Observability Setup
+# Tracing Configuration Guide
 
-This document describes how tracing and observability are implemented in the Abaco Analytics workspace using Azure Monitor OpenTelemetry.
+OpenTelemetry (OTEL) distributed tracing captures HTTP requests, database queries, and spans across the Abaco Analytics pipeline. This guide covers setup for development and production environments.
 
-## Overview
+## Architecture
 
-The workspace uses **Azure Monitor OpenTelemetry** for distributed tracing and observability. This provides:
+```
+┌─────────────────────────┐
+│  Streamlit Dashboard    │
+│  (dashboard/app.py)     │
+└──────────┬──────────────┘
+           │
+           ├─→ HTTP Client (httpx/requests) ──→ Instrumented
+           ├─→ Database (psycopg/sqlite3)    ──→ Instrumented
+           └─→ Custom Spans                  ──→ User-defined
+           │
+           ↓
+┌─────────────────────────────────────┐
+│  OpenTelemetry SDK                  │
+│  - TracerProvider                   │
+│  - Batch Span Processor             │
+│  - Auto-instrumentation             │
+└──────────┬──────────────────────────┘
+           │
+           ├─→ Dev: OTLP HTTP to localhost:4318
+           └─→ Prod: OTLP HTTP to Azure Monitor (via endpoint)
+```
 
-- **Distributed tracing** across pipeline phases, agent executions, and data transformations
-- **Performance monitoring** with detailed timing and metrics
-- **Error tracking** with stack traces and context
-- **Integration with Azure Application Insights** for visualization and alerting
+## Development Setup
 
-## Configuration
+### 1. Start Local OTEL Collector
 
-### Prerequisites
+For local development, run Jaeger or the OpenTelemetry Collector on port 4318:
 
-1. Azure Application Insights instance
-2. Application Insights Connection String
-
-### Environment Variables
-
-Set the following environment variable to enable tracing:
+#### Option A: Jaeger (all-in-one)
 
 ```bash
-export APPLICATIONINSIGHTS_CONNECTION_STRING="InstrumentationKey=...;IngestionEndpoint=..."
+docker run --rm \
+  -p 4318:4318 \
+  -p 16686:16686 \
+  jaegertracing/all-in-one:latest
 ```
 
-You can find this connection string in the Azure Portal:
-1. Navigate to your Application Insights resource
-2. Go to "Overview" or "Properties"
-3. Copy the "Connection String"
+Then access traces at: `http://localhost:16686`
 
-### Dependencies
+#### Option B: OpenTelemetry Collector
 
-The following packages are required and included in `requirements.txt`:
+Create `otel-collector-config.yaml`:
+
+```yaml
+receivers:
+  otlp:
+    protocols:
+      http:
+        endpoint: 0.0.0.0:4318
+
+processors:
+  batch:
+  memory_limiter:
+    check_interval: 1s
+    limit_mib: 512
+
+exporters:
+  logging:
+    loglevel: debug
+  jaeger:
+    endpoint: http://localhost:14250
+
+service:
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [memory_limiter, batch]
+      exporters: [logging, jaeger]
+```
+
+Run:
+
+```bash
+docker run --rm \
+  -p 4317:4317 \
+  -p 4318:4318 \
+  -p 14250:14250 \
+  -v $(pwd)/otel-collector-config.yaml:/etc/otel-collector-config.yaml \
+  otel/opentelemetry-collector:latest \
+  --config=/etc/otel-collector-config.yaml
+```
+
+### 2. Set Environment Variables
+
+```bash
+export OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318
+export LOG_LEVEL=DEBUG
+```
+
+Or add to `.env`:
 
 ```
-azure-monitor-opentelemetry>=1.0.0
-azure-identity>=1.12.0
+OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318
+LOG_LEVEL=DEBUG
 ```
 
-## Usage
+### 3. Start Dashboard with Tracing
 
-### Initializing Tracing
+```bash
+source .venv/bin/activate
+python -m streamlit run dashboard/app.py
+```
 
-In your application entry point (e.g., `main.py`, dashboard startup, or pipeline script):
+### 4. View Traces
+
+- **Jaeger UI**: `http://localhost:16686`
+- **Search for service**: `abaco-dashboard`
+- **Filter by span**: `http.method`, `db.statement`, etc.
+
+## Production Setup (Azure)
+
+### 1. Application Insights Resource
+
+Ensure you have an Application Insights instance in Azure:
+
+```bash
+az monitor app-insights component create \
+  --app abaco-dashboard-ai \
+  --location eastus \
+  --resource-group AI-MultiAgent-Ecosystem-RG \
+  --application-type web
+```
+
+Retrieve the **Connection String**:
+
+```bash
+az monitor app-insights component show \
+  --app abaco-dashboard-ai \
+  --resource-group AI-MultiAgent-Ecosystem-RG \
+  --query connectionString
+```
+
+### 2. Set Secrets in App Service
+
+Add to Azure App Service configuration (via Azure CLI or Portal):
+
+```bash
+az webapp config appsettings set \
+  --resource-group AI-MultiAgent-Ecosystem-RG \
+  --name abaco-analytics-dashboard \
+  --settings \
+    APPLICATIONINSIGHTS_CONNECTION_STRING="InstrumentationKey=...;IngestionEndpoint=..." \
+    OTEL_EXPORTER_OTLP_ENDPOINT="https://your-app-insights-endpoint/opentelemetry/v1/traces"
+```
+
+Or via **Azure Portal**:
+
+1. Go to **App Service** > **Configuration** > **Application settings**
+2. Add new settings:
+   - `APPLICATIONINSIGHTS_CONNECTION_STRING` = (from above)
+   - `OTEL_EXPORTER_OTLP_ENDPOINT` = `https://<region>.in.applicationinsights.azure.com/opentelemetry/v1/traces`
+
+### 3. Verify in Application Insights
+
+1. Go to Azure Portal > **Application Insights** > **abaco-dashboard-ai**
+2. Navigate to **Transaction Search** or **Distributed Traces**
+3. Look for `abaco-dashboard` service traces
+
+## Instrumented Modules
+
+The following are auto-instrumented via `opentelemetry-instrumentation-*`:
+
+### HTTP Clients
+
+- **httpx** — async HTTP client
+- **requests** — synchronous HTTP client
+- **urllib3** — low-level HTTP library
+
+### Database Drivers
+
+- **psycopg2/psycopg** — PostgreSQL (Supabase)
+- **sqlite3** — SQLite (local databases)
+
+### Custom Spans
+
+Wrap your own code with spans:
 
 ```python
-from python.tracing_setup import configure_tracing
-
-# Configure tracing once at startup
-configure_tracing()
-```
-
-### Using Tracing in Code
-
-Import the tracer and use spans to trace operations:
-
-```python
-from python.tracing_setup import get_tracer
+from tracing_setup import get_tracer  # dashboard (dashboard/tracing_setup.py)
+# from src.tracing_setup import get_tracer  # pipeline modules
 
 tracer = get_tracer(__name__)
 
-def my_function():
-    with tracer.start_as_current_span("my_operation") as span:
-        # Add custom attributes for better context
-        span.set_attribute("operation.type", "data_processing")
-        span.set_attribute("row_count", 1000)
-        
+def my_business_logic():
+    with tracer.start_as_current_span("process_loan_data") as span:
+        span.set_attribute("loan.id", loan_id)
+        span.set_attribute("loan.status", "processing")
+
         # Your code here
-        result = process_data()
-        
-        # Record exceptions if they occur
-        try:
-            risky_operation()
-        except Exception as e:
-            span.record_exception(e)
-            raise
-        
+        result = process_loan(loan_id)
+
+        span.set_attribute("loan.status", "completed")
         return result
 ```
 
-### Nested Spans
+## Configuration Reference
 
-You can create nested spans to trace sub-operations:
+### Environment Variables
+
+| Variable | Default | Purpose |
+|----------|---------|---------|
+| `OTEL_EXPORTER_OTLP_ENDPOINT` | `http://localhost:4318` | OTLP exporter endpoint |
+| `APPLICATIONINSIGHTS_CONNECTION_STRING` | (unset) | Azure App Insights connection |
+| `LOG_LEVEL` | `INFO` | Logging verbosity |
+| `OTEL_SDK_DISABLED` | `false` | Disable tracing globally |
+
+### Code Configuration
+
+In `src/tracing_setup.py`:
 
 ```python
-def pipeline_execute():
-    with tracer.start_as_current_span("pipeline.execute") as parent_span:
-        parent_span.set_attribute("pipeline.run_id", "run_123")
-        
-        with tracer.start_as_current_span("pipeline.ingestion"):
-            # Ingestion code
-            pass
-        
-        with tracer.start_as_current_span("pipeline.transformation"):
-            # Transformation code
-            pass
-        
-        with tracer.start_as_current_span("pipeline.calculation"):
-            # Calculation code
-            pass
-```
+from src.tracing_setup import init_tracing
 
-## Where Tracing is Implemented
-
-Tracing has been integrated into the following modules:
-
-1. **Agent Orchestrator** (`python/agents/orchestrator.py`)
-   - Traces agent execution with retry attempts
-   - Records agent name, role, and performance metrics
-   - Tracks input data hash and output quality
-
-2. **Pipeline Orchestrator** (`python/pipeline/orchestrator.py`)
-   - Traces complete pipeline execution
-   - Tracks each phase: ingestion, transformation, calculation, compliance, output
-   - Records row counts, masked columns, and metrics
-
-## Observability Workflows
-
-The `.github/workflows/opik-observability.yml` workflow runs daily to:
-
-1. **Fetch system metrics** - Collects observability data
-2. **Analyze pipeline health** - Checks pipeline success rates
-3. **Analyze agent performance** - Monitors agent response times
-4. **Check data quality trends** - Tracks data quality scores
-5. **Generate dashboard** - Creates HTML dashboard
-6. **Send alerts** - Notifies on critical issues
-
-## Viewing Traces
-
-### Azure Portal
-
-1. Navigate to your Application Insights resource
-2. Go to "Transaction search" or "Application map"
-3. Filter by operation name (e.g., `pipeline.execute`, `agent_orchestrator.run`)
-4. View detailed traces with timing and custom attributes
-
-### Query with KQL
-
-Use Kusto Query Language (KQL) to query traces:
-
-```kql
-// Find slow pipeline executions
-traces
-| where operation_Name == "pipeline.execute"
-| where duration > 60000  // > 60 seconds
-| project timestamp, duration, customDimensions
-| order by duration desc
-
-// Agent execution metrics
-traces
-| where operation_Name startswith "agent"
-| summarize avg(duration), count() by operation_Name
-| order by avg_duration desc
+# Initialize with custom endpoint
+init_tracing(
+    service_name="abaco-dashboard",
+    service_version="1.0.0",
+    otlp_endpoint="https://my-collector.example.com"
+)
 ```
 
 ## Troubleshooting
 
-### Tracing Not Working
+### Spans not appearing
 
-1. **Check connection string**: Verify `APPLICATIONINSIGHTS_CONNECTION_STRING` is set correctly
-2. **Check initialization**: Ensure `configure_tracing()` is called at startup
-3. **Check logs**: Look for "Azure Monitor tracing configured successfully" message
+1. **Check OTEL endpoint is reachable**:
 
-### Missing Traces
+   ```bash
+   curl -i http://localhost:4318/v1/traces
+   # Expected: 400 Bad Request (OTEL expects POST with body)
+   ```
 
-- Traces are batched and sent asynchronously
-- It may take 1-2 minutes for traces to appear in Azure
-- Check network connectivity to Azure endpoints
+2. **Verify tracing initialization**:
 
-### High Overhead
+   ```bash
+   python -c "from src.tracing_setup import init_tracing; init_tracing(); print('OK')"
+   ```
 
-- Tracing adds minimal overhead (<1% typically)
-- Adjust sampling if needed (see Azure Monitor documentation)
-- Consider disabling tracing in non-production environments
+3. **Enable debug logging**:
+
+   ```bash
+   export OTEL_LOG_LEVEL=DEBUG
+   python -m streamlit run dashboard/app.py
+   ```
+
+4. **Check firewall/network**:
+
+   ```bash
+   # If using Azure, verify App Service can reach Application Insights
+   curl -i https://your-app-insights-endpoint/opentelemetry/v1/traces
+   ```
+
+### High memory usage
+
+OTEL batches spans to reduce memory. If still high:
+
+```python
+# In dashboard/app.py
+from opentelemetry.sdk.trace.export import BatchSpanProcessor
+
+processor = BatchSpanProcessor(exporter, max_queue_size=100, max_export_batch_size=50)
+```
+
+### Missing instrumentation
+
+If HTTP or database calls aren't traced:
+
+1. Ensure the library is installed:
+
+   ```bash
+   pip install opentelemetry-instrumentation-httpx
+   ```
+
+2. Verify `enable_auto_instrumentation()` is called in `dashboard/app.py`
+
+3. Check that imports happen **after** instrumentation:
+
+   ```python
+   from src.tracing_setup import init_tracing, enable_auto_instrumentation
+   init_tracing()
+   enable_auto_instrumentation()
+
+   import httpx  # Must be after instrumentation!
+   ```
+
+## Examples
+
+### Trace an HTTP call to Cascade API
+
+```python
+from src.tracing_setup import get_tracer
+import httpx
+
+tracer = get_tracer(__name__)
+
+async def fetch_cascade_data():
+    with tracer.start_as_current_span("cascade_fetch") as span:
+        async with httpx.AsyncClient() as client:
+            response = await client.get(
+                "https://api.cascadedebt.com/data",
+                headers={"Authorization": f"Bearer {TOKEN}"}
+            )
+            span.set_attribute("http.status_code", response.status_code)
+            return response.json()
+```
+
+The HTTP call will be automatically instrumented with attributes like:
+
+- `http.method` = GET
+- `http.url` = <https://api.cascadedebt.com/data>
+- `http.status_code` = 200
+- `http.duration_ms` = 145
+
+### Trace a database query
+
+```python
+from src.tracing_setup import get_tracer
+import psycopg
+
+tracer = get_tracer(__name__)
+
+def fetch_kpi_values():
+    with tracer.start_as_current_span("fetch_kpis") as span:
+        conn = psycopg.connect(os.getenv("DATABASE_URL"))
+        cursor = conn.cursor()
+
+        # This query will be auto-instrumented
+        cursor.execute("SELECT * FROM kpi_values WHERE as_of = %s", (today,))
+        rows = cursor.fetchall()
+
+        span.set_attribute("db.rows_fetched", len(rows))
+        return rows
+```
+
+The query will be automatically traced with:
+
+- `db.system` = postgresql
+- `db.statement` = SELECT ...
+- `db.client.connections.usage` = 1
+- `db.duration_ms` = 23
 
 ## Best Practices
 
-1. **Use meaningful span names**: Use descriptive operation names like `pipeline.ingestion` not `step1`
-2. **Add relevant attributes**: Include context like `run_id`, `user`, `row_count`
-3. **Record exceptions**: Always use `span.record_exception(e)` for error tracking
-4. **Keep spans focused**: Each span should represent a single logical operation
-5. **Use nested spans**: Create child spans for sub-operations
+1. **Use meaningful span names**: `process_loan_data` not `do_stuff`
+2. **Add semantic attributes**: `loan.id`, `borrower.name`, etc.
+3. **Set status on errors**:
 
-## Security Notes
+   ```python
+   from opentelemetry.trace import Status, StatusCode
 
-- Connection strings contain sensitive credentials
-- Never commit connection strings to source control
-- Use environment variables or Azure Key Vault
-- Rotate connection strings periodically
-- Traces may contain PII - ensure compliance with data policies
+   try:
+       process_loan()
+   except Exception as e:
+       span.set_status(Status(StatusCode.ERROR))
+       span.record_exception(e)
+       raise
+   ```
 
-## Further Reading
+4. **Use context propagation** for distributed traces across services
+5. **Sample high-volume traces** in production (by default, all are sampled)
 
-- [Azure Monitor OpenTelemetry Python Documentation](https://learn.microsoft.com/en-us/azure/azure-monitor/app/opentelemetry-enable?tabs=python)
-- [OpenTelemetry Python SDK](https://opentelemetry.io/docs/instrumentation/python/)
-- [Application Insights Overview](https://learn.microsoft.com/en-us/azure/azure-monitor/app/app-insights-overview)
+## References
+
+- [OpenTelemetry Python](https://opentelemetry.io/docs/instrumentation/src/)
+- [Azure Application Insights with OpenTelemetry](https://learn.microsoft.com/en-us/azure/azure-monitor/app/opentelemetry-enable)
+- [OTEL Collector Configuration](https://opentelemetry.io/docs/collector/configuration/)
+- [Jaeger Documentation](https://www.jaegertracing.io/docs/)
