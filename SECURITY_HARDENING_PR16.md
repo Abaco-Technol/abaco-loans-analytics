@@ -2,7 +2,8 @@
 
 ## Executive Summary
 
-This PR addresses **critical security vulnerabilities** and **configuration brittle ness** identified in the codebase:
+This PR addresses **critical security vulnerabilities** and **configuration
+brittleness** identified in the codebase:
 
 - **🔴 CRITICAL**: Exposed credentials in `.env` (Azure, OpenAI, Anthropic, HubSpot)
 - **🟠 HIGH**: 40+ hard-coded paths across codebase causing deployment failures
@@ -14,7 +15,9 @@ This PR addresses **critical security vulnerabilities** and **configuration brit
 ## CRITICAL ISSUE: Exposed Secrets
 
 ### Current State
+
 `.env` file contains **active production credentials**:
+
 - Azure Client Secret, Tenant ID, Subscription ID
 - OpenAI API Key (billing exposure)
 - Anthropic API Key (billing exposure)
@@ -23,6 +26,7 @@ This PR addresses **critical security vulnerabilities** and **configuration brit
 ### Remediation
 
 #### Step 1: Remove from Git History
+
 ```bash
 # Install BFG Repo Cleaner
 brew install bfg
@@ -47,12 +51,14 @@ git push -f origin main
 ```
 
 #### Step 2: Rotate Credentials Immediately
+
 - [ ] Azure: Regenerate Client Secret in Azure Portal
 - [ ] OpenAI: Deactivate exposed key, create new one
 - [ ] Anthropic: Deactivate exposed key, create new one
 - [ ] HubSpot: Deactivate API key, create new one
 
 #### Step 3: Use GitHub Secrets
+
 All secrets should be stored in GitHub Repository Settings → Secrets, NOT in `.env`
 
 ```yaml
@@ -84,20 +90,21 @@ environment = Paths.get_environment()
 
 ### Environment Variables Supported
 
-| Variable | Default | Purpose |
-|----------|---------|---------|
-| `DATA_RAW_PATH` | `./data/raw` | Raw input data |
-| `DATA_METRICS_PATH` | `./data/metrics` | Calculated KPIs |
-| `CONFIG_PATH` | `./config` | Config files |
-| `LOGS_PATH` | `./logs` | Application logs |
-| `REPORTS_PATH` | `./reports` | Generated reports |
-| `PYTHON_ENV` or `APP_ENV` | `development` | Current environment |
+| Variable                  | Default            | Purpose              |
+| ------------------------- | ------------------ | -------------------- |
+| `DATA_RAW_PATH`           | `./data/raw`       | Raw input data       |
+| `DATA_METRICS_PATH`       | `./data/metrics`   | Calculated KPIs      |
+| `CONFIG_PATH`             | `./config`         | Config files         |
+| `LOGS_PATH`               | `./logs`           | Application logs     |
+| `REPORTS_PATH`            | `./reports`        | Generated reports    |
+| `PYTHON_ENV` or `APP_ENV` | `development`      | Current environment  |
 
 ### Migration Plan
 
 #### Files to Refactor (Priority Order)
 
 1. **`src/pipeline/orchestrator.py`** (Lines 36-37)
+
    ```python
    # BEFORE:
    DEFAULT_CONFIG_PATH = Path("config/pipeline.yml")
@@ -110,6 +117,7 @@ environment = Paths.get_environment()
    ```
 
 2. **`scripts/production_cutover.sh`** (Lines 13-18)
+
    ```bash
    # BEFORE:
    LOG_FILE="${PROD_DIR}/logs/cutover_$(date +%Y%m%d_%H%M%S).log"
@@ -122,6 +130,7 @@ environment = Paths.get_environment()
    ```
 
 3. **`scripts/run_data_pipeline.py`** (Line 95)
+
    ```python
    # BEFORE:
    DEFAULT_INPUT = os.getenv("PIPELINE_INPUT_FILE", "data/abaco_portfolio_calculations.csv")
@@ -132,6 +141,7 @@ environment = Paths.get_environment()
    ```
 
 4. **`scripts/monitoring_checkpoint.py`** (Line 77)
+
    ```python
    # BEFORE:
    def save_checkpoint(self, output_dir: str = "logs/monitoring") -> str:
@@ -144,6 +154,7 @@ environment = Paths.get_environment()
    ```
 
 5. **`scripts/load_secrets.py`** (Line 9)
+
    ```python
    # BEFORE:
    vault_name = os.getenv("AZURE_KEY_VAULT_NAME", "abaco-capital-kv")
@@ -159,11 +170,13 @@ environment = Paths.get_environment()
 ## Secrets Management: Unified Pattern
 
 ### Current: 3 Different Patterns ❌
+
 1. Azure Key Vault (`load_secrets.py`)
 2. Environment Variables (`.env`)
 3. GitHub Secrets (workflows)
 
 ### Proposed: Single Pattern ✅
+
 All secrets via **environment variables** (from GitHub Secrets → workflow → container):
 
 ```bash
