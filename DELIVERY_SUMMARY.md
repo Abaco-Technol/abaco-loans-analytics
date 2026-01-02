@@ -82,7 +82,7 @@ Outstanding Balance:       $7.0M USD
 # http://localhost:8501
 
 # To restart (if needed):
-/Users/jenineferderas/Library/Python/3.9/bin/streamlit run streamlit_app/app.py
+streamlit run streamlit_app/app.py
 ```
 
 ### **Executive Report** (HTML)
