@@ -9,6 +9,7 @@ from prefect import flow, task
 
 from python.agents.tools import send_slack_notification
 from python.compliance import build_compliance_report, write_compliance_report
+from python.config.paths import Paths
 from python.pipeline.data_ingestion import UnifiedIngestion
 from python.pipeline.data_transformation import UnifiedTransformation
 from python.pipeline.kpi_calculation import UnifiedCalculationV2
@@ -33,8 +34,8 @@ def _deep_merge(base_dict: Dict[str, Any], override_dict: Dict[str, Any]) -> Dic
 class PipelineConfig:
     """Configuration management with validation, environment overrides, and defaults."""
 
-    DEFAULT_CONFIG_PATH = Path("config/pipeline.yml")
-    ENVIRONMENTS_DIR = Path("config/environments")
+    DEFAULT_CONFIG_PATH = Paths.config_file()
+    ENVIRONMENTS_DIR = Paths.config_file().parent.parent / "environments"
 
     def __init__(self, config_path: Optional[Path] = None):
         self.config_path = config_path or self.DEFAULT_CONFIG_PATH

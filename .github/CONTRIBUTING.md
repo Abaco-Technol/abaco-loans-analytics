@@ -115,7 +115,6 @@ refactor(api): extract request validation logic
 - Don't commit without testing
 - Don't force-push to shared branches
 
-
 ## Dependency Management
 
 **Dependabot**
@@ -131,9 +130,11 @@ refactor(api): extract request validation logic
 - Use branch protection rules to require review/CI for Dependabot PRs
 
 **Escalation:**
+
 - If a Dependabot PR breaks the build or exposes a security issue, escalate to the security contact in SECURITY.md
 
 **Best Practices:**
+
 - Review and merge Dependabot PRs promptly to keep dependencies current
 - Document any limitations or customizations in SECURITY.md or this file
 

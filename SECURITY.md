@@ -1,3 +1,10 @@
+# Path Management Security
+
+All path and environment variable resolution logic is covered by automated tests in `tests/test_paths.py`. Any changes to path logic must pass this suite to ensure data is never written to or read from insecure or unintended locations.
+
+# Documentation & Settings Policy
+
+All documentation, README, and settings/configuration files are governed by the repository policy (see main README.md). Duplicates, stale, or user-specific files are not permitted. All changes are subject to review and periodic audit. See .gitignore for enforced exclusions.
 
 # SonarQube Configuration Security
 

@@ -68,5 +68,13 @@ class Paths:
         return monitoring_dir
     
     @staticmethod
+    def runs_artifacts_dir(create: bool = False) -> Path:
+        logs_dir = Paths.logs_dir(create=create)
+        runs_dir = logs_dir / "runs"
+        if create:
+            runs_dir.mkdir(parents=True, exist_ok=True)
+        return runs_dir
+    
+    @staticmethod
     def get_environment() -> str:
         return os.getenv("PYTHON_ENV", os.getenv("APP_ENV", "development"))

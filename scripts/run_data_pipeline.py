@@ -13,6 +13,7 @@ from python.pipeline.data_ingestion import UnifiedIngestion
 from python.pipeline.orchestrator import UnifiedPipeline
 from python.pipeline.data_transformation import UnifiedTransformation
 from python.kpi_engine_v2 import KPIEngineV2 as KPIEngine
+from python.config.paths import Paths
 
 # Legacy aliases for backward compatibility with tests/patching
 CascadeIngestion = UnifiedIngestion
@@ -24,12 +25,14 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-DEFAULT_INPUT = os.getenv("PIPELINE_INPUT_FILE", "data/abaco_portfolio_calculations.csv")
+DEFAULT_INPUT = os.getenv("PIPELINE_INPUT_FILE", str(Paths.raw_data_dir() / "abaco_portfolio_calculations.csv"))
 
 
 def write_outputs(
-    df, metrics: Dict[str, Any], manifest: Dict[str, Any], output_dir: str = "data/metrics"
+    df, metrics: Dict[str, Any], manifest: Dict[str, Any], output_dir: Optional[str] = None
 ) -> Dict[str, Any]:
+    if output_dir is None:
+        output_dir = str(Paths.metrics_dir(create=True))
     output_path = Path(output_dir)
     output_path.mkdir(parents=True, exist_ok=True)
     run_id = manifest.get("run_id", "run")

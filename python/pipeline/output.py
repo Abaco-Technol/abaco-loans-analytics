@@ -6,6 +6,7 @@ from typing import Any, Dict, List, Optional
 
 import pandas as pd
 
+from python.config.paths import Paths
 from python.pipeline.utils import ensure_dir, hash_file, utc_now, write_json
 
 logger = logging.getLogger(__name__)
@@ -101,8 +102,8 @@ class UnifiedOutput:
         self._log_event("start", "initiated", run_ids=run_ids)
 
         storage_cfg = self.config.get("storage", {})
-        base_dir = ensure_dir(Path(storage_cfg.get("local_dir", "data/metrics")))
-        manifest_dir = ensure_dir(Path(storage_cfg.get("manifest_dir", "logs/runs")))
+        base_dir = ensure_dir(Path(storage_cfg.get("local_dir", str(Paths.metrics_dir()))))
+        manifest_dir = ensure_dir(Path(storage_cfg.get("manifest_dir", str(Paths.runs_artifacts_dir()))))
 
         master_run_id = run_ids.get("pipeline", run_ids.get("ingest", "unknown"))
         parquet_path = base_dir / f"{master_run_id}.parquet"
