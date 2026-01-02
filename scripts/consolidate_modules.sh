@@ -11,7 +11,7 @@ echo "Step 1: Updating imports to use src.pipeline.ingestion..."
 sed -i '' 's/from python\.ingestion import CascadeIngestion/from src.pipeline.ingestion import UnifiedIngestion/g' tests/test_pipeline_integration.py
 sed -i '' 's/CascadeIngestion/UnifiedIngestion/g' tests/test_pipeline_integration.py
 
-# tests/test_ingestion.py  
+# tests/test_ingestion.py
 sed -i '' 's/from python\.ingestion import CascadeIngestion/from src.pipeline.ingestion import UnifiedIngestion/g' tests/test_ingestion.py
 sed -i '' 's/CascadeIngestion/UnifiedIngestion/g' tests/test_ingestion.py
 
@@ -43,4 +43,3 @@ mv src/pipeline/calculation_v2.py src/pipeline/calculation.py && echo "✓ Renam
 echo ""
 echo "=== CONSOLIDATION COMPLETE ==="
 echo "Next: Run tests to validate changes"
-

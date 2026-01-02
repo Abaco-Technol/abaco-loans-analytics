@@ -42,47 +42,41 @@ class Classification:
         """Map DPD value to bucket classification."""
         if val <= 0:
             return "Current"
-        elif val <= 29:
+        if val <= 29:
             return "1-29"
-        elif val <= 59:
+        if val <= 59:
             return "30-59"
-        elif val <= 89:
+        if val <= 89:
             return "60-89"
-        elif val <= 119:
+        if val <= 119:
             return "90-119"
-        elif val <= 149:
+        if val <= 149:
             return "120-149"
-        elif val <= 179:
+        if val <= 179:
             return "150-179"
-        else:
-            return "180+"
+        return "180+"
 
     @staticmethod
     def exposure_segment_rules(val: float) -> str:
         """Map exposure value to segment classification."""
         if val < 1000:
             return "Micro"
-        elif val < 10000:
+        if val < 10000:
             return "Small"
-        else:
-            return "Medium/Large"
+        return "Medium/Large"
 
     @staticmethod
     def client_type_rules(loan_count: int, days_since_active: int) -> str:
         """Map loan metrics to client type classification."""
         if loan_count == 1:
             return "New"
-        elif days_since_active <= 90:
+        if days_since_active <= 90:
             return "Recurring"
-        else:
-            return "Recovered"
+        return "Recovered"
 
 
 class FinancialAnalyzer:
     """Financial analysis and enrichment engine."""
-
-    def __init__(self):
-        pass
 
     def validate_numeric_columns(self, df: pd.DataFrame, columns: list) -> list:
         """

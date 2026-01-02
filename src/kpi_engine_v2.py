@@ -39,10 +39,17 @@ class KPIEngineV2:
         "PortfolioYield": calculate_portfolio_yield_logic,
     }
 
-    def __init__(self, df: pd.DataFrame, actor: str = "system", action: str = "kpi"):
+    def __init__(
+        self,
+        df: pd.DataFrame,
+        actor: str = "system",
+        action: str = "kpi",
+        run_id: Optional[str] = None,
+    ):
         self.df = df
         self.actor = actor
         self.action = action
+        self.run_id = run_id or f"kpi_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
         self.audit_trail: List[Dict[str, Any]] = []
         self.metrics: Dict[str, Dict[str, Any]] = {}
 
@@ -59,20 +66,12 @@ class KPIEngineV2:
                         "value": float(value),
                         **context,
                     }
-                    self._log_event(
-                        "kpi_calculated", "success", kpi=kpi_name, value=value
-                    )
+                    self._log_event("kpi_calculated", "success", kpi=kpi_name, value=value)
                 except Exception as e:
-                    self._log_event(
-                        "kpi_calculation_failed", "error", kpi=kpi_name, error=str(e)
-                    )
+                    self._log_event("kpi_calculation_failed", "error", kpi=kpi_name, error=str(e))
                     self.metrics[kpi_name] = {"value": None, "error": str(e)}
 
-            if (
-                include_composite
-                and "PAR30" in self.metrics
-                and "CollectionRate" in self.metrics
-            ):
+            if include_composite and "PAR30" in self.metrics and "CollectionRate" in self.metrics:
                 try:
                     par30_val = self.metrics["PAR30"]["value"]
                     collection_val = self.metrics["CollectionRate"]["value"]
@@ -83,9 +82,7 @@ class KPIEngineV2:
                         "value": float(health_val),
                         **health_ctx,
                     }
-                    self._log_event(
-                        "composite_kpi_calculated", "success", kpi="PortfolioHealth"
-                    )
+                    self._log_event("composite_kpi_calculated", "success", kpi="PortfolioHealth")
                 except Exception as e:
                     self._log_event("composite_kpi_failed", "error", error=str(e))
 
@@ -95,6 +92,20 @@ class KPIEngineV2:
         except Exception as e:
             self._log_event("calculate_all", "failed", error=str(e))
             raise
+
+    def calculate_portfolio_health(
+        self, par_30: Optional[float] = None, collection_rate: Optional[float] = None
+    ) -> Tuple[float, Dict[str, Any]]:
+        """Calculate Portfolio Health composite metric."""
+        p30 = par_30 if par_30 is not None else self.get_metric("PAR30")
+        cr = collection_rate if collection_rate is not None else self.get_metric("CollectionRate")
+
+        if p30 is None or cr is None:
+            return 0.0, {"error": "Missing inputs for PortfolioHealth", "metric": "PortfolioHealth"}
+
+        val, ctx = calculate_portfolio_health_logic(p30, cr)
+        ctx.setdefault("metric", "PortfolioHealth")
+        return val, ctx
 
     def calculate_par_30(self) -> Tuple[float, Dict[str, Any]]:
         """Calculate PAR30."""
@@ -137,9 +148,7 @@ class KPIEngineV2:
         if name in self.metrics:
             return self.metrics[name].get("value")
 
-        calculator = self.KPI_FUNCTIONS.get(name) or self.ON_DEMAND_KPI_FUNCTIONS.get(
-            name
-        )
+        calculator = self.KPI_FUNCTIONS.get(name) or self.ON_DEMAND_KPI_FUNCTIONS.get(name)
         if calculator is not None:
             val, _ = calculator(self.df)
             return float(val) if val is not None else None
@@ -148,6 +157,7 @@ class KPIEngineV2:
 
     def _log_event(self, event: str, status: str, **details: Any) -> None:
         entry = {
+            "run_id": self.run_id,
             "event": event,
             "status": status,
             "timestamp": datetime.now(timezone.utc).isoformat(),

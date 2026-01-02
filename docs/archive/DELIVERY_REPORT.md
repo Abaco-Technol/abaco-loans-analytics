@@ -223,7 +223,7 @@
    python3 -c "
    from src.pipeline.orchestrator import UnifiedPipeline
    from pathlib import Path
-   
+
    pipeline = UnifiedPipeline()
    result = pipeline.execute(Path('data/sample_portfolio.csv'))
    print(result)

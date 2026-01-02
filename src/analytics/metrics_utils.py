@@ -49,7 +49,7 @@ def validate_kpi_columns(loan_data: pd.DataFrame) -> None:
     """
 
     if loan_data.empty:
-        return
+        raise ValueError("Input data must be a non-empty DataFrame")
 
     # Use centralized validation for structure and types
     validate_dataframe(
@@ -179,7 +179,7 @@ def _data_quality_metrics(loan_data: pd.DataFrame) -> Dict[str, float]:
 def portfolio_kpis(loan_data: pd.DataFrame, return_enriched: bool = False) -> Any:
     """
     Aggregate portfolio KPIs used across analytics modules.
-    
+
     Args:
         loan_data: Input loan data.
         return_enriched: Whether to return a tuple (metrics, enriched_df).

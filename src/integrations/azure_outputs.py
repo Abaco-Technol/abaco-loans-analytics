@@ -172,9 +172,9 @@ class AzureDashboardClient:
                 "markdown": {
                     "content": f"""
 ### {kpi_name}
-**Current**: {current_value:.2f}{unit}  
-**Previous**: {previous_value:.2f}{unit}  
-**Change**: {change:+.2f}{unit} ({change_pct:+.1f}%)  
+**Current**: {current_value:.2f}{unit}
+**Previous**: {previous_value:.2f}{unit}
+**Change**: {change:+.2f}{unit} ({change_pct:+.1f}%)
 **Updated**: {datetime.utcnow().isoformat()}
 """
                 }

@@ -1,7 +1,7 @@
 # 🚨 Emergency Response Plan - Production Outage
-**Date**: January 1, 2026, 7:00 AM CET  
-**Status**: CRITICAL - All 3 P0 systems down  
-**Owner**: DevOps / Data Engineering Lead  
+**Date**: January 1, 2026, 7:00 AM CET
+**Status**: CRITICAL - All 3 P0 systems down
+**Owner**: DevOps / Data Engineering Lead
 
 ---
 
@@ -40,8 +40,8 @@ git push origin main
 ---
 
 ### 2️⃣ Restore Dashboard Service (Parallel Task)
-**Owner**: DevOps  
-**Timeline**: 30 minutes  
+**Owner**: DevOps
+**Timeline**: 30 minutes
 
 **Diagnosis Steps**:
 1. Azure Portal → App Services → `abaco-analytics-dashboard`
@@ -64,8 +64,8 @@ git push origin main
 ---
 
 ### 3️⃣ Diagnose Data Pipeline Failures (Parallel Task)
-**Owner**: Data Engineering  
-**Timeline**: 45 minutes  
+**Owner**: Data Engineering
+**Timeline**: 45 minutes
 
 **Root Cause Investigation**:
 1. GitHub Actions → View latest failed run (e.g., "Daily Data Ingestion")
@@ -88,8 +88,8 @@ git push origin main
 ## HOUR 2-4: STABILIZATION
 
 ### 4️⃣ Set Up Basic Monitoring
-**Owner**: DevOps  
-**Timeline**: 30 minutes  
+**Owner**: DevOps
+**Timeline**: 30 minutes
 
 **Azure Portal Actions**:
 ```
@@ -116,8 +116,8 @@ Repository Settings → Notifications
 ---
 
 ### 5️⃣ Enable Branch Protection
-**Owner**: DevOps  
-**Timeline**: 10 minutes  
+**Owner**: DevOps
+**Timeline**: 10 minutes
 
 **GitHub → Settings → Branches → Add Rule**:
 - Branch name: `main`
@@ -155,7 +155,7 @@ Repository Settings → Notifications
 
 1. **Root Cause Analysis**: Document why all 3 systems failed simultaneously
 2. **Timeline**: Create detailed timeline of failure detection and response
-3. **Preventive Measures**: 
+3. **Preventive Measures**:
    - Add better alerting to catch failures earlier
    - Implement health checks for each component
    - Add runbooks for common failure patterns
@@ -181,6 +181,6 @@ Repository Settings → Notifications
 
 ---
 
-**Last Updated**: 2026-01-01 07:00 CET  
-**Status**: EMERGENCY RESPONSE IN PROGRESS  
+**Last Updated**: 2026-01-01 07:00 CET
+**Status**: EMERGENCY RESPONSE IN PROGRESS
 **Next Review**: 30 minutes

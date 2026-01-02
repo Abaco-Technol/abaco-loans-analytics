@@ -17,7 +17,7 @@ def test_calculate_par_30_standard():
     value, context = calculate_par_30(df)
     assert value == pytest.approx(15.0)
     assert isinstance(context, dict)
-    assert context['rows_processed'] == 2
+    assert context["rows_processed"] == 2
 
 
 def test_calculate_par_30_zero_receivable():

@@ -230,7 +230,7 @@ Startup Command: bash startup.sh
 
 ### Branch Protection
 - **Current**: ❌ None (main branch unprotected)
-- **Recommended**: 
+- **Recommended**:
   - Require pull requests
   - Require status checks to pass
   - Dismiss stale pull request approvals

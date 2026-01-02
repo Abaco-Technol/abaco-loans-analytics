@@ -191,10 +191,10 @@ def my_business_logic():
     with tracer.start_as_current_span("process_loan_data") as span:
         span.set_attribute("loan.id", loan_id)
         span.set_attribute("loan.status", "processing")
-        
+
         # Your code here
         result = process_loan(loan_id)
-        
+
         span.set_attribute("loan.status", "completed")
         return result
 ```
@@ -285,7 +285,7 @@ If HTTP or database calls aren't traced:
    from src.tracing_setup import init_tracing, enable_auto_instrumentation
    init_tracing()
    enable_auto_instrumentation()
-   
+
    import httpx  # Must be after instrumentation!
    ```
 
@@ -329,11 +329,11 @@ def fetch_kpi_values():
     with tracer.start_as_current_span("fetch_kpis") as span:
         conn = psycopg.connect(os.getenv("DATABASE_URL"))
         cursor = conn.cursor()
-        
+
         # This query will be auto-instrumented
         cursor.execute("SELECT * FROM kpi_values WHERE as_of = %s", (today,))
         rows = cursor.fetchall()
-        
+
         span.set_attribute("db.rows_fetched", len(rows))
         return rows
 ```
@@ -353,7 +353,7 @@ The query will be automatically traced with:
 
    ```python
    from opentelemetry.trace import Status, StatusCode
-   
+
    try:
        process_loan()
    except Exception as e:

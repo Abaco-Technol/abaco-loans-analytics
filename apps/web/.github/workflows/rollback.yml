@@ -166,7 +166,7 @@ jobs:
               - **Version**: ${process.env.TARGET_VERSION}
               - **Environment**: ${process.env.ENVIRONMENT}
               - **Action**: https://github.com/${process.env.REPO}/actions/runs/${process.env.RUN_ID}
-              
+
               **IMMEDIATE ACTION REQUIRED** - Manual intervention needed.
               See OPERATIONS.md incident response procedures.
               `,

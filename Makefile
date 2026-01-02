@@ -8,20 +8,20 @@
 # ------------------------------------------------------------------------------
 
 install:
-	pip install -r requirements.txt
+	python3 -m pip install -r requirements.txt
 
 install-dev:
-	pip install -r requirements.txt -r dev-requirements.txt
+	python3 -m pip install -r requirements.txt -r dev-requirements.txt
 
 # ------------------------------------------------------------------------------
 # Testing targets
 # ------------------------------------------------------------------------------
 
 test:
-	pytest
+	python3 -m pytest
 
 test-cov:
-	pytest --cov=src --cov-report=html --cov-report=term
+	python3 -m pytest --cov=src --cov-report=html --cov-report=term
 
 # ------------------------------------------------------------------------------
 # Code quality targets
@@ -29,21 +29,21 @@ test-cov:
 
 lint:
 	@echo "Running pylint..."
-	PYTHONPATH=src pylint src --exit-zero
+	PYTHONPATH=src python3 -m pylint src --exit-zero
 	@echo "\nRunning flake8..."
-	PYTHONPATH=src flake8 src --exit-zero
+	PYTHONPATH=src python3 -m flake8 src --exit-zero
 	@echo "\nRunning ruff check..."
-	PYTHONPATH=src ruff check src --exit-zero
+	PYTHONPATH=src python3 -m ruff check src --exit-zero
 
 format:
 	@echo "Running black..."
-	PYTHONPATH=src black src
+	PYTHONPATH=src python3 -m black src
 	@echo "\nRunning isort..."
-	PYTHONPATH=src isort src
+	PYTHONPATH=src python3 -m isort src
 
 type-check:
 	@echo "Running mypy..."
-	PYTHONPATH=src mypy src --ignore-missing-imports
+	PYTHONPATH=src python3 -m mypy src --ignore-missing-imports
 
 audit-code: lint type-check test-cov
 	@echo "\n✅ Code audit complete: linting, type checking, and tests"
@@ -56,7 +56,7 @@ quality: format lint type-check test
 # ------------------------------------------------------------------------------
 
 run-pipeline:
-	python scripts/run_data_pipeline.py
+	python3 scripts/run_data_pipeline.py
 
 run-dashboard:
 	streamlit run streamlit_app.py
@@ -66,13 +66,13 @@ run-dashboard:
 # ------------------------------------------------------------------------------
 
 audit-dry-run:
-	python -m src.abaco_pipeline.main --config config/pipeline.yml write-audit --kpis-config config/kpis.yml --payload config/audit_payload.example.json --dry-run
+	python3 -m src.abaco_pipeline.main --config config/pipeline.yml write-audit --kpis-config config/kpis.yml --payload config/audit_payload.example.json --dry-run
 
 audit-write:
-	python -m src.abaco_pipeline.main --config config/pipeline.yml write-audit --kpis-config config/kpis.yml --payload config/audit_payload.example.json
+	python3 -m src.abaco_pipeline.main --config config/pipeline.yml write-audit --kpis-config config/kpis.yml --payload config/audit_payload.example.json
 
 check-maturity:
-	python repo_maturity_summary.py
+	python3 repo_maturity_summary.py
 
 # ------------------------------------------------------------------------------
 # Python environment management
@@ -89,12 +89,12 @@ venv:
 venv-install: venv
 	@echo "Setting up virtualenv with project dependencies..."
 	. .venv/bin/activate && \
-	  pip install --upgrade pip && \
-	  pip install -r requirements.txt -r dev-requirements.txt
+	  python3 -m pip install --upgrade pip && \
+	  python3 -m pip install -r requirements.txt -r dev-requirements.txt
 
 # KPI parity test (dual-engine governance)
 test-kpi-parity:
-	. .venv/bin/activate && RUN_KPI_PARITY_TESTS=1 pytest -q tests/test_kpi_parity.py
+	. .venv/bin/activate && RUN_KPI_PARITY_TESTS=1 python3 -m pytest -q tests/test_kpi_parity.py
 
 # Analytics validation and execution
 analytics-run:

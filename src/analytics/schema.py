@@ -22,7 +22,8 @@ class LoanTapeSchema(pa.DataFrameModel):
     interest_rate_apr: Optional[Series[float]] = pa.Field(ge=0, le=2.0, nullable=True)
 
     @pa.check("disbursement_date")
-    def date_not_in_future(cls, series: Series) -> Series:
+    @staticmethod
+    def date_not_in_future(series: Series) -> Series:
         """Ensure disbursement dates are not in the future."""
         return series <= pd.Timestamp.now()
 

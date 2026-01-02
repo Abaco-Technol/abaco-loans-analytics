@@ -6,14 +6,16 @@ import sys
 from pathlib import Path
 from typing import Any, Dict, Optional
 
+import pandas as pd
+
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from src.compliance import build_compliance_report, write_compliance_report
-from src.pipeline.data_ingestion import UnifiedIngestion
-from src.pipeline.orchestrator import UnifiedPipeline
-from src.pipeline.data_transformation import UnifiedTransformation
-from src.kpi_engine_v2 import KPIEngineV2 as KPIEngine
 from src.config.paths import Paths
+from src.kpi_engine_v2 import KPIEngineV2 as KPIEngine
+from src.pipeline.data_ingestion import UnifiedIngestion
+from src.pipeline.data_transformation import UnifiedTransformation
+from src.pipeline.orchestrator import UnifiedPipeline
 
 # Legacy aliases for backward compatibility with tests/patching
 CascadeIngestion = UnifiedIngestion
@@ -25,7 +27,9 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-DEFAULT_INPUT = os.getenv("PIPELINE_INPUT_FILE", str(Paths.raw_data_dir() / "abaco_portfolio_calculations.csv"))
+DEFAULT_INPUT = os.getenv(
+    "PIPELINE_INPUT_FILE", str(Paths.raw_data_dir() / "abaco_portfolio_calculations.csv")
+)
 
 
 def write_outputs(
@@ -78,7 +82,7 @@ def run_pipeline(
     ingested = ingestion.ingest_csv(Path(input_file).name)
     validated = ingestion.validate_loans(ingested)
 
-    if validated.empty or not bool(validated.get("_validation_passed", True).all()):
+    if validated.empty or not pd.Series(validated.get("_validation_passed", True)).all():
         return False
 
     transformer = DataTransformation()
@@ -133,20 +137,19 @@ def main(
     action: Optional[str] = None,
     config_path: str = "config/pipeline.yml",
 ) -> bool:
-    user = user or os.getenv("PIPELINE_RUN_USER", "system")
-    action = action or os.getenv("PIPELINE_RUN_ACTION", "manual")
+    effective_user: str = user or os.getenv("PIPELINE_RUN_USER", "system")
+    effective_action: str = action or os.getenv("PIPELINE_RUN_ACTION", "manual")
 
-    {
-        "user": user,
-        "action": action,
-        "triggered_at": Path(input_file).name,
-    }
-
-    logger.info("--- ABACO UNIFIED PIPELINE START ---")
+    logger.info(
+        "--- ABACO UNIFIED PIPELINE START --- user=%s action=%s input=%s",
+        effective_user,
+        effective_action,
+        Path(input_file).name,
+    )
 
     try:
         pipeline = UnifiedPipeline(config_path=Path(config_path))
-        result = pipeline.execute(Path(input_file), user=user, action=action)
+        result = pipeline.execute(Path(input_file), user=effective_user, action=effective_action)
         logger.info("Pipeline completed: %s", result.get("status"))
         return result.get("status") == "success"
     except Exception as exc:

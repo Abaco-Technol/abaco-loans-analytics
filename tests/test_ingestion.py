@@ -9,9 +9,7 @@ pytest.skip(
 # Deferred import to prevent collection errors
 from src.analytics.ingestion import DataIngestionEngine  # noqa: E402
 
-pytestmark = pytest.mark.skip(
-    reason="streamlit_app.utils not yet packaged as module."
-)
+pytestmark = pytest.mark.skip(reason="streamlit_app.utils not yet packaged as module.")
 
 
 def test_normalize_dataframe_converts_numeric_strings():

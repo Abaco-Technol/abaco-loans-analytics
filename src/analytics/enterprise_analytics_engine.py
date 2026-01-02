@@ -4,7 +4,6 @@ from typing import Dict, Optional, Protocol, runtime_checkable
 import numpy as np
 import pandas as pd
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -12,6 +11,7 @@ logger = logging.getLogger(__name__)
 class KPIExporter(Protocol):
     def upload_metrics(self, metrics: Dict[str, float], blob_name: Optional[str] = None) -> str:
         pass
+
 
 class LoanAnalyticsEngine:
     """
@@ -50,8 +50,13 @@ class LoanAnalyticsEngine:
     def _validate_columns(self):
         """Ensures the DataFrame contains the necessary columns for KPI computation."""
         required_cols = [
-            'loan_amount', 'appraised_value', 'borrower_income', 'monthly_debt',
-            'loan_status', 'interest_rate', 'principal_balance'
+            "loan_amount",
+            "appraised_value",
+            "borrower_income",
+            "monthly_debt",
+            "loan_status",
+            "interest_rate",
+            "principal_balance",
         ]
         missing_cols = [col for col in required_cols if col not in self.loan_data.columns]
         if missing_cols:
@@ -60,8 +65,12 @@ class LoanAnalyticsEngine:
     def _coerce_numeric_columns(self):
         """Coerce numeric columns to float and track invalid conversions."""
         numeric_cols = [
-            'loan_amount', 'appraised_value', 'borrower_income', 'monthly_debt',
-            'interest_rate', 'principal_balance'
+            "loan_amount",
+            "appraised_value",
+            "borrower_income",
+            "monthly_debt",
+            "interest_rate",
+            "principal_balance",
         ]
         for col in numeric_cols:
             if col in self.loan_data.columns:
@@ -90,43 +99,49 @@ class LoanAnalyticsEngine:
 
     def compute_loan_to_value(self) -> pd.Series:
         """Computes the Loan-to-Value (LTV) ratio for each loan."""
-        appraised_value = self.loan_data['appraised_value']
+        appraised_value = self.loan_data["appraised_value"]
         ltv_values = np.where(
             appraised_value > 0,
-            (self.loan_data['loan_amount'] / appraised_value) * 100,
+            (self.loan_data["loan_amount"] / appraised_value) * 100,
             np.nan,
         )
         ltv_series = pd.Series(ltv_values, index=self.loan_data.index)
         ltv_series = ltv_series.replace([np.inf, -np.inf], np.nan)
 
-        self.loan_data['ltv_ratio'] = ltv_series
+        self.loan_data["ltv_ratio"] = ltv_series
         return ltv_series
 
     def compute_debt_to_income(self) -> pd.Series:
         """Computes the Debt-to-Income (DTI) ratio for each borrower."""
         # Assuming borrower_income is annual, convert to monthly
-        monthly_income = self.loan_data['borrower_income'] / 12
+        monthly_income = self.loan_data["borrower_income"] / 12
         # Avoid division by zero and preserve index alignment by returning a Series
         dti_values = np.where(
             monthly_income > 0,
-            (self.loan_data['monthly_debt'] / monthly_income) * 100,
+            (self.loan_data["monthly_debt"] / monthly_income) * 100,
             np.nan,
         )
         dti_series = pd.Series(dti_values, index=self.loan_data.index)
 
-        self.loan_data['dti_ratio'] = dti_series
+        self.loan_data["dti_ratio"] = dti_series
         return dti_series
 
     def compute_delinquency_rate(self) -> float:
         """Computes the portfolio delinquency rate using KPIEngineV2."""
-        from src.kpi_engine_v2 import KPIEngineV2  # pylint: disable=import-outside-toplevel
+        from src.kpi_engine_v2 import (
+            KPIEngineV2,  # pylint: disable=import-outside-toplevel
+        )
+
         engine_v2 = KPIEngineV2(self.loan_data, actor="enterprise_engine")
         val, _ = engine_v2.calculate_par_30()
         return float(val)
 
     def compute_portfolio_yield(self) -> float:
         """Computes the weighted average portfolio yield using KPIEngineV2."""
-        from src.kpi_engine_v2 import KPIEngineV2  # pylint: disable=import-outside-toplevel
+        from src.kpi_engine_v2 import (
+            KPIEngineV2,  # pylint: disable=import-outside-toplevel
+        )
+
         engine_v2 = KPIEngineV2(self.loan_data, actor="enterprise_engine")
         val, _ = engine_v2.calculate_portfolio_yield()
         return float(val)
@@ -143,15 +158,11 @@ class LoanAnalyticsEngine:
 
         duplicate_rows = df.duplicated().sum()
         total_rows = len(df)
-        duplicate_ratio = (
-            (duplicate_rows / total_rows * 100) if total_rows > 0 else 0.0
-        )
+        duplicate_ratio = (duplicate_rows / total_rows * 100) if total_rows > 0 else 0.0
 
         null_counts = df.isnull().sum().sum()
         total_cells = df.size
-        average_null_ratio = (
-            (null_counts / total_cells * 100) if total_cells > 0 else 0.0
-        )
+        average_null_ratio = (null_counts / total_cells * 100) if total_cells > 0 else 0.0
 
         invalid_count = sum(self._coercion_report.values())
         numeric_cols = [
@@ -165,14 +176,11 @@ class LoanAnalyticsEngine:
         numeric_col_count = len([col for col in numeric_cols if col in df.columns])
         total_numeric_cells = total_rows * numeric_col_count
         invalid_numeric_ratio = (
-            (invalid_count / total_numeric_cells * 100)
-            if total_numeric_cells > 0
-            else 0.0
+            (invalid_count / total_numeric_cells * 100) if total_numeric_cells > 0 else 0.0
         )
 
         data_quality_score = (
-            100.0
-            - (duplicate_ratio + average_null_ratio + invalid_numeric_ratio) / 3
+            100.0 - (duplicate_ratio + average_null_ratio + invalid_numeric_ratio) / 3
         )
         data_quality_score = max(0, min(100, data_quality_score))
 
@@ -183,9 +191,7 @@ class LoanAnalyticsEngine:
             "data_quality_score": data_quality_score,
         }
 
-    def risk_alerts(
-        self, ltv_threshold: float = 80.0, dti_threshold: float = 50.0
-    ) -> pd.DataFrame:
+    def risk_alerts(self, ltv_threshold: float = 80.0, dti_threshold: float = 50.0) -> pd.DataFrame:
         """
         Identifies high-risk loans based on LTV and DTI thresholds.
 
@@ -222,7 +228,9 @@ class LoanAnalyticsEngine:
         Runs a comprehensive analysis and returns a portfolio-level KPIs dict.
         Delegates core computations to KPIEngineV2 for consistency.
         """
-        from src.kpi_engine_v2 import KPIEngineV2  # pylint: disable=import-outside-toplevel
+        from src.kpi_engine_v2 import (
+            KPIEngineV2,  # pylint: disable=import-outside-toplevel
+        )
 
         engine_v2 = KPIEngineV2(self.loan_data, actor="enterprise_engine")
         results = engine_v2.calculate_all()
@@ -232,39 +240,45 @@ class LoanAnalyticsEngine:
             "portfolio_yield_percent": engine_v2.get_metric("PortfolioYield") or 0.0,
             "average_ltv_ratio_percent": engine_v2.get_metric("LTV") or 0.0,
             "average_dti_ratio_percent": engine_v2.get_metric("DTI") or 0.0,
+            # Short keys for backward compatibility
+            "delinquency_rate": results.get("PAR30", {}).get("value", 0.0),
+            "portfolio_yield": engine_v2.get_metric("PortfolioYield") or 0.0,
+            "average_ltv": engine_v2.get_metric("LTV") or 0.0,
+            "average_dti": engine_v2.get_metric("DTI") or 0.0,
         }
 
         quality = self.data_quality_profile()
-        dashboard.update({
-            "data_quality_score": quality["data_quality_score"],
-            "average_null_ratio_percent": quality["average_null_ratio"],
-            "invalid_numeric_ratio_percent": quality["invalid_numeric_ratio"],
-        })
+        dashboard.update(
+            {
+                "data_quality_score": quality["data_quality_score"],
+                "average_null_ratio_percent": quality["average_null_ratio"],
+                "invalid_numeric_ratio_percent": quality["invalid_numeric_ratio"],
+            }
+        )
 
         return dashboard
 
-    def export_kpis_to_blob(
-        self, exporter: KPIExporter, blob_name: Optional[str] = None
-    ) -> str:
+    def export_kpis_to_blob(self, exporter: KPIExporter, blob_name: Optional[str] = None) -> str:
         if blob_name is not None and not isinstance(blob_name, str):
             raise ValueError("blob_name must be a string if provided.")
 
         kpis = self.run_full_analysis()
         return exporter.upload_metrics(kpis, blob_name=blob_name)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     # Example usage demonstrating the engine's capabilities
     # This simulates a data-driven workflow for generating actionable insights.
 
     # Sample data representing a loan portfolio
     data = {
-        'loan_amount': [250000, 450000, 150000, 600000],
-        'appraised_value': [300000, 500000, 160000, 750000],
-        'borrower_income': [80000, 120000, 60000, 150000],
-        'monthly_debt': [1500, 2500, 1000, 3000],
-        'loan_status': ['current', '30-59 days past due', 'current', 'current'],
-        'interest_rate': [0.035, 0.042, 0.038, 0.045],
-        'principal_balance': [240000, 440000, 145000, 590000]
+        "loan_amount": [250000, 450000, 150000, 600000],
+        "appraised_value": [300000, 500000, 160000, 750000],
+        "borrower_income": [80000, 120000, 60000, 150000],
+        "monthly_debt": [1500, 2500, 1000, 3000],
+        "loan_status": ["current", "30-59 days past due", "current", "current"],
+        "interest_rate": [0.035, 0.042, 0.038, 0.045],
+        "principal_balance": [240000, 440000, 145000, 590000],
     }
     portfolio_df = pd.DataFrame(data)
 

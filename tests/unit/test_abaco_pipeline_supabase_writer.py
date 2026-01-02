@@ -13,7 +13,9 @@ def test_upsert_pipeline_run_posts_expected_url_headers_and_body(mock_post: Mock
     mock_resp.raise_for_status = Mock()
     mock_post.return_value = mock_resp
 
-    writer = SupabaseWriter(SupabaseAuth(url="https://example.supabase.co/", service_role_key="svc"))
+    writer = SupabaseWriter(
+        SupabaseAuth(url="https://example.supabase.co/", service_role_key="svc")
+    )
     run = {
         "run_id": "00000000-0000-0000-0000-000000000000",
         "started_at": datetime(2025, 12, 31, 0, 0, tzinfo=timezone.utc),

@@ -15,7 +15,6 @@ class BaseLLM(ABC):
     @abstractmethod
     def generate(self, messages: List[Dict[str, str]], **kwargs: Any) -> LLMResponse:
         """Generate a response from the LLM based on a list of messages."""
-        pass
 
 
 class MockLLM(BaseLLM):

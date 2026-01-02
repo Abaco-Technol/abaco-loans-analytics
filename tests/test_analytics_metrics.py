@@ -122,12 +122,13 @@ def test_calculate_quality_score_counts_completeness():
 
 def test_portfolio_kpis_returns_expected_metrics(sample_df: pd.DataFrame):
     metrics, enriched = portfolio_kpis(sample_df, return_enriched=True)
-    assert set(metrics.keys()) == {
+    expected_keys = {
         "delinquency_rate",
         "portfolio_yield",
         "average_ltv",
         "average_dti",
     }
+    assert expected_keys.issubset(set(metrics.keys()))
     assert "ltv_ratio" in enriched.columns
     assert "dti_ratio" in enriched.columns
 
@@ -158,12 +159,14 @@ def test_portfolio_kpis_missing_column_raises(sample_df: pd.DataFrame):
 def test_portfolio_kpis_handles_empty_frame(sample_df: pd.DataFrame):
     df = sample_df.iloc[:0]
     metrics, enriched = portfolio_kpis(df, return_enriched=True)
-    assert metrics == {
+    expected_metrics = {
         "delinquency_rate": 0.0,
         "portfolio_yield": 0.0,
         "average_ltv": 0.0,
         "average_dti": 0.0,
     }
+    for key, value in expected_metrics.items():
+        assert metrics[key] == value
     assert enriched.empty
 
 

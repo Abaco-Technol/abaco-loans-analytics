@@ -1,7 +1,7 @@
 # Production Secrets Setup - Complete Guide
 
-**Status**: Complete  
-**Last Updated**: January 1, 2026  
+**Status**: Complete
+**Last Updated**: January 1, 2026
 **Purpose**: Configure all GitHub Actions secrets for unified output exports and production deployments
 
 ---
@@ -129,7 +129,7 @@ DefaultEndpointsProtocol=https;AccountName=abacostgprod;AccountKey=...;EndpointS
 
 ### 4. Azure Resource IDs (For Dashboard & Monitoring)
 
-**Environment Variables**: 
+**Environment Variables**:
 - `AZURE_SUBSCRIPTION_ID`
 - `AZURE_RESOURCE_GROUP`
 - `AZURE_DASHBOARD_NAME`
@@ -182,7 +182,7 @@ AZURE_DASHBOARD_NAME: abaco-analytics-dashboard
 2. Select your app → Settings → Tokens
 3. Copy "User access token" (long-lived, 60+ days)
 
-**To Add**: 
+**To Add**:
 - Name: `META_ACCESS_TOKEN`
 
 #### 6b. Meta Pixel ID
@@ -194,7 +194,7 @@ AZURE_DASHBOARD_NAME: abaco-analytics-dashboard
 2. Click your pixel → Settings
 3. Copy Pixel ID
 
-**To Add**: 
+**To Add**:
 - Name: `META_PIXEL_ID`
 
 #### 6c. Meta Ad Account ID
@@ -205,7 +205,7 @@ AZURE_DASHBOARD_NAME: abaco-analytics-dashboard
 1. Meta Ads Manager → Settings (gear icon) → Ad account settings
 2. Copy "Ad Account ID" (format: `act_1234567890`)
 
-**To Add**: 
+**To Add**:
 - Name: `META_AD_ACCOUNT_ID`
 
 ---
@@ -222,7 +222,7 @@ AZURE_DASHBOARD_NAME: abaco-analytics-dashboard
 3. Name: `Abaco Analytics Export`
 4. Copy the "Internal Integration Token"
 
-**To Add**: 
+**To Add**:
 - Name: `NOTION_API_KEY`
 
 #### 7b. Notion Database ID
@@ -233,7 +233,7 @@ AZURE_DASHBOARD_NAME: abaco-analytics-dashboard
 1. Open your Notion database in browser
 2. Copy the 32-character ID from the URL: `https://notion.so/{YOUR_WORKSPACE}/{DATABASE_ID}?v=...`
 
-**To Add**: 
+**To Add**:
 - Name: `NOTION_DATABASE_ID`
 
 #### 7c. Notion Reports Page ID
@@ -244,7 +244,7 @@ AZURE_DASHBOARD_NAME: abaco-analytics-dashboard
 1. Create a page in Notion for analytics reports
 2. Copy the page ID from the URL
 
-**To Add**: 
+**To Add**:
 - Name: `NOTION_REPORTS_PAGE_ID`
 
 ---
@@ -260,7 +260,7 @@ AZURE_DASHBOARD_NAME: abaco-analytics-dashboard
 2. Right-click on the frame where you want metric updates
 3. Copy "Link to frame" and extract the node ID
 
-**To Add** (optional): 
+**To Add** (optional):
 - Name: `FIGMA_DASHBOARD_FRAME_ID`
 
 ---

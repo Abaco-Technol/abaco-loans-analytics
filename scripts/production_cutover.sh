@@ -141,12 +141,12 @@ log "PHASE 3: Graceful V1 shutdown"
 
 if command -v systemctl &> /dev/null; then
     log "Checking V1 pipeline service..."
-    
+
     if systemctl is-active --quiet abaco-pipeline-v1 2>/dev/null; then
         log "Stopping V1 pipeline service..."
         systemctl stop abaco-pipeline-v1
         sleep 5
-        
+
         if ! systemctl is-active --quiet abaco-pipeline-v1; then
             success "V1 pipeline stopped gracefully"
         else
@@ -156,7 +156,7 @@ if command -v systemctl &> /dev/null; then
     else
         log "V1 pipeline not running (service may not exist, continuing)"
     fi
-    
+
     if command -v journalctl &> /dev/null; then
         journalctl -u abaco-pipeline-v1 -n 100 > "$ROLLBACK_DIR/v1_final_logs.log" 2>&1 || true
         success "V1 final logs recorded"

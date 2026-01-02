@@ -40,7 +40,7 @@ cascade_token: str | None = os.getenv("CASCADE_TOKEN")
 ### Current Status
 
 - **SUPABASE_URL**: ❌ NOT SET in GitHub Actions
-- **SUPABASE_SERVICE_ROLE**: ❌ NOT SET in GitHub Actions  
+- **SUPABASE_SERVICE_ROLE**: ❌ NOT SET in GitHub Actions
 - **CASCADE_TOKEN**: ❌ NOT SET in GitHub Actions
 - App Service config: ❌ NO database connections configured
 

@@ -1,13 +1,12 @@
 import unittest
+
 import pandas as pd
 import pytest
 
 import src.analytics.feature_engineering as utils
 from src.analytics.feature_engineering import FeatureEngineer
 
-pytestmark = pytest.mark.skip(
-    reason="streamlit_app.utils not yet packaged as module."
-)
+pytestmark = pytest.mark.skip(reason="streamlit_app.utils not yet packaged as module.")
 
 pytest.skip(
     "Skipping dashboard utils tests: streamlit_app not yet a module.",

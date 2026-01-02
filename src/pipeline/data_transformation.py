@@ -9,10 +9,12 @@ import pandas as pd
 import yaml
 
 from src.compliance import create_access_log_entry, mask_pii_in_dataframe
-from src.pipeline.data_validation import (validate_iso8601_dates,
-                                             validate_no_nulls,
-                                             validate_numeric_bounds,
-                                             validate_percentage_bounds)
+from src.pipeline.data_validation import (
+    validate_iso8601_dates,
+    validate_no_nulls,
+    validate_numeric_bounds,
+    validate_percentage_bounds,
+)
 from src.pipeline.utils import hash_dataframe, utc_now
 
 logger = logging.getLogger(__name__)
@@ -173,6 +175,19 @@ class UnifiedTransformation:
         except Exception:
             return False
         return abs(orig_total - new_total) < 1e-6
+
+    def get_processing_summary(self) -> Dict[str, Any]:
+        """Return summary of transformation operations."""
+        return {
+            "run_id": self.run_id,
+            "transformations_applied": self.transformations_count,
+            "lineage_entries": len(self.lineage),
+            "timestamp": utc_now(),
+        }
+
+    def get_lineage(self) -> List[Dict[str, Any]]:
+        """Return full transformation lineage."""
+        return list(self.lineage)
 
     def _log_step(self, step: str, status: str, **details: Any) -> None:
         entry = {

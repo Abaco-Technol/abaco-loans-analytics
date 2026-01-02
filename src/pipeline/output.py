@@ -111,7 +111,9 @@ class UnifiedOutput:
 
         storage_cfg = self.config.get("storage", {})
         base_dir = ensure_dir(Path(storage_cfg.get("local_dir", str(Paths.metrics_dir()))))
-        manifest_dir = ensure_dir(Path(storage_cfg.get("manifest_dir", str(Paths.runs_artifacts_dir()))))
+        manifest_dir = ensure_dir(
+            Path(storage_cfg.get("manifest_dir", str(Paths.runs_artifacts_dir())))
+        )
 
         master_run_id = run_ids.get("pipeline", run_ids.get("ingest", "unknown"))
         parquet_path = base_dir / f"{master_run_id}.parquet"

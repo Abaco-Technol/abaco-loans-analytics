@@ -19,6 +19,7 @@ import requests
 # Optional: Azure Application Insights tracing
 try:
     from src.azure_tracing import setup_azure_tracing, trace_analytics_job
+
     AZURE_TRACING_ENABLED = True
 except ImportError:
     AZURE_TRACING_ENABLED = False
@@ -60,15 +61,11 @@ def _env(name: str) -> str:
         raise RuntimeError(f"Missing env var: {name}")
     return v
 
+
 SUPABASE_URL = _env("SUPABASE_URL").rstrip("/")
-SUPABASE_KEY = os.getenv("SUPABASE_ANON_KEY") or os.getenv(
-    "NEXT_PUBLIC_SUPABASE_ANON_KEY"
-)
+SUPABASE_KEY = os.getenv("SUPABASE_ANON_KEY") or os.getenv("NEXT_PUBLIC_SUPABASE_ANON_KEY")
 if not SUPABASE_KEY:
-    raise RuntimeError(
-        "Missing SUPABASE_ANON_KEY "
-        "(or NEXT_PUBLIC_SUPABASE_ANON_KEY)."
-    )
+    raise RuntimeError("Missing SUPABASE_ANON_KEY " "(or NEXT_PUBLIC_SUPABASE_ANON_KEY).")
 
 HEADERS = {
     "apikey": SUPABASE_KEY,
@@ -91,9 +88,7 @@ def _rest_get(
             params[k] = f"eq.{v}"
     r = requests.get(url, headers=HEADERS, params=params, timeout=60)
     if r.status_code >= 300:
-        raise RuntimeError(
-            f"GET {relation} failed {r.status_code}: {r.text[:500]}"
-        )
+        raise RuntimeError(f"GET {relation} failed {r.status_code}: {r.text[:500]}")
     return pd.DataFrame(r.json() or [])
 
 
@@ -116,9 +111,7 @@ def _rest_upsert(
         timeout=60,
     )
     if r.status_code >= 300:
-        raise RuntimeError(
-            f"UPSERT {relation} failed {r.status_code}: {r.text[:500]}"
-        )
+        raise RuntimeError(f"UPSERT {relation} failed {r.status_code}: {r.text[:500]}")
 
 
 # -----------------
@@ -140,12 +133,8 @@ def compute_client_metrics(
     if c.empty:
         raise ValueError(f"No rows for client_id={client_id}")
 
-    total_outstanding = pd.to_numeric(
-        df["outstanding_balance"], errors="coerce"
-    ).sum(skipna=True)
-    c_outstanding = pd.to_numeric(
-        c["outstanding_balance"], errors="coerce"
-    ).sum(skipna=True)
+    total_outstanding = pd.to_numeric(df["outstanding_balance"], errors="coerce").sum(skipna=True)
+    c_outstanding = pd.to_numeric(c["outstanding_balance"], errors="coerce").sum(skipna=True)
 
     dpd = pd.to_numeric(c["dpd"], errors="coerce")
     bal = pd.to_numeric(c["outstanding_balance"], errors="coerce")
@@ -156,19 +145,16 @@ def compute_client_metrics(
     return {
         "client_id": str(client_id),
         "total_disbursed": float(
-            pd.to_numeric(c["disbursement_amount"], errors="coerce").sum(
-                skipna=True
-            )
+            pd.to_numeric(c["disbursement_amount"], errors="coerce").sum(skipna=True)
         ),
         "outstanding_balance": float(c_outstanding),
-        "share_portfolio_outstanding": safe_div(
-            c_outstanding, total_outstanding
-        ),
+        "share_portfolio_outstanding": safe_div(c_outstanding, total_outstanding),
         "par30_balance_pct": safe_div(par30_bal, c_outstanding),
         "par90_balance_pct": safe_div(par90_bal, c_outstanding),
         "max_dpd": float(dpd.max(skipna=True)),
         "mean_dpd": float(dpd.mean(skipna=True)),
     }
+
 
 @dataclass
 class RunResult:
@@ -184,9 +170,7 @@ def _execute_one(client_id: str, loans_view: str, run_id: str) -> RunResult:
     @trace_analytics_job("client_metrics", str(client_id), run_id)
     def _run() -> RunResult:
         try:
-            select_fields = (
-                "customer_id,disbursement_amount,outstanding_balance,dpd"
-            )
+            select_fields = "customer_id,disbursement_amount,outstanding_balance,dpd"
             loans = _rest_get(
                 loans_view,
                 select=select_fields,
@@ -261,16 +245,8 @@ def main() -> None:
         on_conflict="run_id",
     )
 
-    clients_df = _rest_get(
-        args.clients_view, select=args.client_id_col, limit=200000
-    )
-    client_ids = (
-        clients_df[args.client_id_col]
-        .dropna()
-        .astype(str)
-        .unique()
-        .tolist()
-    )
+    clients_df = _rest_get(args.clients_view, select=args.client_id_col, limit=200000)
+    client_ids = clients_df[args.client_id_col].dropna().astype(str).unique().tolist()
     if not client_ids:
         raise RuntimeError("No clients returned from clients_view.")
 
@@ -300,10 +276,7 @@ def main() -> None:
                 logger.error("FAILED client=%s: %s", cid, rr.error)
     else:
         with ProcessPoolExecutor(max_workers=args.workers) as ex:
-            futs = [
-                ex.submit(_execute_one, cid, args.loans_view, run_id)
-                for cid in client_ids
-            ]
+            futs = [ex.submit(_execute_one, cid, args.loans_view, run_id) for cid in client_ids]
             for fut in as_completed(futs):
                 rr = fut.result()
                 results.append(rr)
@@ -349,6 +322,7 @@ def main() -> None:
     if failures:
         raise SystemExit(2)
     raise SystemExit(0)
+
 
 if __name__ == "__main__":
     main()

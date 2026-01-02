@@ -1,8 +1,8 @@
 # PR: Analytics Engine Hardening – v1.1.0
 
-**Type**: Refactoring / Performance  
-**Impact**: Python analytics engine  
-**Breaking Changes**: None  
+**Type**: Refactoring / Performance
+**Impact**: Python analytics engine
+**Breaking Changes**: None
 **Testing**: ✅ Full validation complete
 
 ---
@@ -145,7 +145,7 @@ pytest -q tests/test_kpi_parity.py
 chore(analytics): refactor KPI engine – eliminate FutureWarnings, improve performance
 
 - Replace groupby().apply() with vectorized groupby().agg() in 5 core methods
-- Improve: get_monthly_pricing, get_dpd_buckets, get_weighted_apr, 
+- Improve: get_monthly_pricing, get_dpd_buckets, get_weighted_apr,
   get_weighted_fee_rate, get_concentration
 - Eliminate pandas FutureWarnings; pandas 2.x+ compatible
 - Maintain mathematical equivalence; no KPI definition changes
@@ -159,7 +159,7 @@ Fixes: FutureWarning spam in analytics pipeline
 
 ## Sign-Off
 
-**Status**: ✅ Ready for merge  
-**Risk Level**: Low (refactoring only; no logic changes)  
-**Rollback Plan**: Revert commit (no data/schema changes)  
+**Status**: ✅ Ready for merge
+**Risk Level**: Low (refactoring only; no logic changes)
+**Rollback Plan**: Revert commit (no data/schema changes)
 **Timeline**: Can deploy immediately after review

@@ -51,6 +51,7 @@ def get_customer_types() -> List[Dict[str, Any]]:
     data = load_dashboard_metrics()
     return data.get("extended_kpis", {}).get("customer_types", [])
 
+
 __all__ = [
     "calculate_quality_score",
     "portfolio_kpis",

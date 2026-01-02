@@ -102,7 +102,7 @@ environment = Paths.get_environment()
    # BEFORE:
    DEFAULT_CONFIG_PATH = Path("config/pipeline.yml")
    ENVIRONMENTS_DIR = Path("config/environments")
-   
+
    # AFTER:
    from src.config.paths import Paths
    config_path = Paths.config_file()
@@ -114,7 +114,7 @@ environment = Paths.get_environment()
    # BEFORE:
    LOG_FILE="${PROD_DIR}/logs/cutover_$(date +%Y%m%d_%H%M%S).log"
    mkdir -p "$(dirname "$LOG_FILE")" "$ROLLBACK_DIR"
-   
+
    # AFTER:
    LOG_DIR="${LOGS_PATH:-.logs}"
    mkdir -p "$LOG_DIR" "$ROLLBACK_DIR"
@@ -125,7 +125,7 @@ environment = Paths.get_environment()
    ```python
    # BEFORE:
    DEFAULT_INPUT = os.getenv("PIPELINE_INPUT_FILE", "data/abaco_portfolio_calculations.csv")
-   
+
    # AFTER:
    from src.config.paths import Paths
    DEFAULT_INPUT = os.getenv("PIPELINE_INPUT_FILE", str(Paths.raw_data_dir() / "abaco_portfolio_calculations.csv"))
@@ -135,7 +135,7 @@ environment = Paths.get_environment()
    ```python
    # BEFORE:
    def save_checkpoint(self, output_dir: str = "logs/monitoring") -> str:
-   
+
    # AFTER:
    from src.config.paths import Paths
    def save_checkpoint(self, output_dir: Optional[str] = None) -> str:
@@ -147,7 +147,7 @@ environment = Paths.get_environment()
    ```python
    # BEFORE:
    vault_name = os.getenv("AZURE_KEY_VAULT_NAME", "abaco-capital-kv")
-   
+
    # AFTER:
    vault_name = os.getenv("AZURE_KEY_VAULT_NAME")
    if not vault_name:
@@ -184,37 +184,37 @@ from typing import Optional
 
 class SecretsManager:
     """Unified secrets access with validation."""
-    
+
     REQUIRED = [
         "OPENAI_API_KEY",
         "ANTHROPIC_API_KEY",
     ]
-    
+
     OPTIONAL = [
         "GEMINI_API_KEY",
         "PERPLEXITY_API_KEY",
         "HUBSPOT_API_KEY",
     ]
-    
+
     @classmethod
     def validate_all(cls, fail_on_missing_optional: bool = False) -> dict:
         """Validate all secrets are available."""
         missing = []
-        
+
         for key in cls.REQUIRED:
             if not os.getenv(key):
                 missing.append(key)
-        
+
         if fail_on_missing_optional:
             for key in cls.OPTIONAL:
                 if not os.getenv(key):
                     missing.append(key)
-        
+
         if missing:
             raise ValueError(f"Missing secrets: {', '.join(missing)}")
-        
+
         return {"status": "ok", "validated": len(cls.REQUIRED) + len(cls.OPTIONAL)}
-    
+
     @classmethod
     def get(cls, key: str, required: bool = False) -> Optional[str]:
         """Get a secret with optional validation."""
@@ -283,12 +283,12 @@ python -m pytest tests/test_pipeline_orchestrator.py -v
 
 ## Security Benefits
 
-✅ **No secrets in git** - All credentials in GitHub Secrets or K8s  
-✅ **Environment-agnostic paths** - Same code runs locally, staging, prod  
-✅ **Automatic directory creation** - No silent failures on missing directories  
-✅ **Centralized configuration** - Single source of truth for all paths  
-✅ **Easy environment switching** - Set env vars once, code adapts  
-✅ **Audit trail** - GitHub Actions logs secrets access (masked)  
+✅ **No secrets in git** - All credentials in GitHub Secrets or K8s
+✅ **Environment-agnostic paths** - Same code runs locally, staging, prod
+✅ **Automatic directory creation** - No silent failures on missing directories
+✅ **Centralized configuration** - Single source of truth for all paths
+✅ **Easy environment switching** - Set env vars once, code adapts
+✅ **Audit trail** - GitHub Actions logs secrets access (masked)
 
 ---
 

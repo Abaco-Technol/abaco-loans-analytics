@@ -67,4 +67,3 @@ def test_get_audit_trail():
     assert "event" in trail.columns
     assert "status" in trail.columns
     assert "calculate_all" in trail["event"].values
-

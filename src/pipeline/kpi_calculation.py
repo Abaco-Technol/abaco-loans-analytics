@@ -80,6 +80,8 @@ class UnifiedCalculationV2:
             try:
                 engine = KPIEngineV2(df)
                 # Map names to engine methods if needed
+                if not isinstance(name, str):
+                    raise ValueError(f"Invalid metric name: {name}")
                 val = engine.get_metric(name)
                 context = {"source": "KPIEngineV2"}
             except Exception as exc:
@@ -120,7 +122,7 @@ class UnifiedCalculationV2:
         coll_val = base_metrics.get("CollectionRate", {}).get("value")
         if par_val is None or coll_val is None:
             raise ValueError(f"Missing inputs for composite metric {name}")
-        value, context = func(par_val, coll_val)  # type: ignore[misc]
+        value, context = func(par_val, coll_val)
         return {
             "value": float(value) if value is not None else None,
             "formula": metric_cfg.get("formula"),

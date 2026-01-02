@@ -20,7 +20,6 @@ class KPICalculator(ABC):
             - null_count: number of null values encountered
             - timestamp: calculation timestamp
         """
-        pass
 
 
 class KPIMetadata:

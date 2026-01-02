@@ -53,7 +53,7 @@ WITH month_ends AS (
 ),
 loan_meta AS (
     -- Representative metadata for each loan ID
-    SELECT 
+    SELECT
         loan_id,
         MAX(customer_id) as customer_id,
         MAX(interest_rate_apr) as interest_rate_apr,
@@ -365,7 +365,7 @@ ORDER BY 1;
 CREATE OR REPLACE VIEW analytics.kpi_weighted_fee_rate AS
 SELECT
     month_end AS year_month,
-    SUM(((origination_fee + origination_fee_taxes) / NULLIF(disbursement_amount, 0)) * outstanding) 
+    SUM(((origination_fee + origination_fee_taxes) / NULLIF(disbursement_amount, 0)) * outstanding)
         / NULLIF(SUM(outstanding), 0) AS weighted_fee_rate
 FROM analytics.loan_month
 WHERE outstanding > 1e-4

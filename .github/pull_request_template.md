@@ -1,12 +1,12 @@
 ## Description
 
-**Summary** (2–3 sentences):  
+**Summary** (2–3 sentences):
 Provide a succinct description of what this PR accomplishes and why it is necessary.
 
-**Problem Statement**:  
+**Problem Statement**:
 What functional or technical problem does this PR address? What is the underlying root cause?
 
-**Related Issues & Context**:  
+**Related Issues & Context**:
 Reference all related issues, tickets, architecture documents, or decision records.
 
 Fixes: #(issue_number)
@@ -79,7 +79,7 @@ Select all that apply:
 
 Document architectural rationale, technical decisions, and trade-offs. Include links to relevant design docs or decision records.
 
-**Trade-offs & Shortcuts** (required if any):  
+**Trade-offs & Shortcuts** (required if any):
 Any shortcuts, technical debt, or deferred work must be explicitly documented. Tag with `#TODO` or document in [ARCHITECTURE.md](../docs/ARCHITECTURE.md) with a timeline for resolution.
 
 ### Performance, Security, Compliance, or Deployment Impact

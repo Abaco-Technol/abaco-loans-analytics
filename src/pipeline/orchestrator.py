@@ -14,8 +14,13 @@ from src.pipeline.data_ingestion import UnifiedIngestion
 from src.pipeline.data_transformation import UnifiedTransformation
 from src.pipeline.kpi_calculation import UnifiedCalculationV2
 from src.pipeline.output import UnifiedOutput
-from src.pipeline.utils import (ensure_dir, load_yaml, resolve_placeholders,
-                                   utc_now, write_json)
+from src.pipeline.utils import (
+    ensure_dir,
+    load_yaml,
+    resolve_placeholders,
+    utc_now,
+    write_json,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -103,10 +108,20 @@ class PipelineConfig:
 class UnifiedPipeline:
     """Orchestrate the complete 4-phase data pipeline."""
 
+    ingestor: UnifiedIngestion
+    transformer: UnifiedTransformation
+    calculator: UnifiedCalculationV2
+    output: UnifiedOutput
+
     def __init__(self, config_path: Optional[Path] = None):
         self.config = PipelineConfig(config_path)
         timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
         self.run_id: Optional[str] = f"pipeline_{timestamp}"
+        # Initialize phase components
+        self.ingestor = UnifiedIngestion(self.config.config)
+        self.transformer = UnifiedTransformation(self.config.config, run_id=self.run_id)
+        self.calculator = UnifiedCalculationV2(self.config.config, run_id=self.run_id)
+        self.output = UnifiedOutput(self.config.config, run_id=self.run_id)
 
     def _generate_run_id(self, source_hash: Optional[str]) -> str:
         strategy = self.config.get("run", "id_strategy", default="timestamp")
@@ -178,7 +193,6 @@ class UnifiedPipeline:
         cascade_cfg = self.config.get("cascade", default={}) or {}
 
         try:
-            ingestion = UnifiedIngestion(self.config.config)
             if ingest_source == "cascade_http":
                 base_url = cascade_cfg.get("base_url", "")
                 endpoint = cascade_cfg.get("endpoints", {}).get("loan_tape", "")
@@ -186,7 +200,7 @@ class UnifiedPipeline:
                 token_value = os.getenv(token_env, "") if token_env else ""
                 headers = {"Authorization": f"Bearer {token_value}"} if token_value else {}
                 url = f"{base_url}{endpoint}"
-                ingestion_result = ingestion.ingest_http(url, headers=headers)
+                ingestion_result = self.ingestor.ingest_http(url, headers=headers)
             elif ingest_source == "looker":
                 looker_cfg = ingest_cfg.get("looker", {}) or {}
                 loans_par_path = looker_cfg.get("loans_par_path")
@@ -201,26 +215,33 @@ class UnifiedPipeline:
                 if selected_path is None:
                     selected_path = input_file
                 financials_path = looker_cfg.get("financials_path")
-                ingestion_result = ingestion.ingest_looker(
+                ingestion_result = self.ingestor.ingest_looker(
                     selected_path,
                     financials_path=Path(financials_path) if financials_path else None,
                     archive_dir=raw_archive_dir,
                 )
             else:
-                ingestion_result = ingestion.ingest_file(input_file, archive_dir=raw_archive_dir)
+                ingestion_result = self.ingestor.ingest_file(
+                    input_file, archive_dir=raw_archive_dir
+                )
 
             self.run_id = self._generate_run_id(ingestion_result.source_hash)
             run_dir = ensure_dir(artifacts_dir / self.run_id)
 
-            transformation = UnifiedTransformation(self.config.config, run_id=self.run_id)
-            transformation_result = transformation.transform(ingestion_result.df, user=user)
+            # Update run_id for components
+            self.transformer.run_id = self.run_id
+            self.calculator.run_id = self.run_id
+            self.output.run_id = self.run_id
+
+            transformation_result = self.transformer.transform(ingestion_result.df, user=user)
 
             baseline_metrics = self._load_previous_metrics(artifacts_dir, self.run_id)
-            calculation = UnifiedCalculationV2(self.config.config, run_id=self.run_id)
-            calculation_result = calculation.calculate(transformation_result.df, baseline_metrics)
+            calculation_result = self.calculator.calculate(
+                transformation_result.df, baseline_metrics
+            )
 
             # Evaluate alerts
-            self._handle_alerts(ingestion.get_ingest_summary(), calculation_result)
+            self._handle_alerts(self.ingestor.get_ingest_summary(), calculation_result)
 
             compliance_report = build_compliance_report(
                 run_id=self.run_id,
@@ -237,8 +258,7 @@ class UnifiedPipeline:
             compliance_path = run_dir / f"{self.run_id}_compliance.json"
             write_compliance_report(compliance_report, compliance_path)
 
-            output = UnifiedOutput(self.config.config, run_id=self.run_id)
-            output_result = output.persist(
+            output_result = self.output.persist(
                 transformation_result.df,
                 calculation_result.metrics,
                 metadata={
@@ -341,7 +361,7 @@ def daily_loan_intelligence_flow(input_file: str = "data/raw/abaco_portfolio.csv
 
     # 1. Ingestion Phase with Circuit Breaker
     ingest_res = ingest_task(pipeline, path)
-    if ingest_res.df.empty:
+    if ingest_res is None or ingest_res.df.empty:
         logger.error("Flow halted: Ingestion returned empty dataframe (Circuit Breaker triggered)")
         return {"status": "halted", "reason": "ingestion_failure"}
 

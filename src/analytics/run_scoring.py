@@ -16,9 +16,7 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 from src.analytics.azure_blob_exporter import AzureBlobKPIExporter  # noqa: E402
-from src.analytics.enterprise_analytics_engine import (  # noqa: E402
-    LoanAnalyticsEngine,
-)
+from src.analytics.enterprise_analytics_engine import LoanAnalyticsEngine  # noqa: E402
 
 
 def parse_args() -> argparse.Namespace:

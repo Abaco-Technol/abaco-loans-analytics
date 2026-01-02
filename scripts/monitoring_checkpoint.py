@@ -4,9 +4,9 @@
 Executes validation and records metrics for each checkpoint
 """
 
+import json
 import subprocess
 import sys
-import json
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, Optional
@@ -91,7 +91,7 @@ class MonitoringCheckpoint:
                         validation_report_path.unlink()
                     except Exception:
                         pass
-                
+
                 return {
                     "status": "FAIL",
                     "error": f"Validation script failed (returncode={completed.returncode})",
@@ -125,15 +125,13 @@ class MonitoringCheckpoint:
             print(f"  CPU: {system_metrics['cpu_percent']:.1f}%")
 
         self.metrics["status"] = validation_status
-        self.metrics["duration_seconds"] = (
-            datetime.now() - self.start_time
-        ).total_seconds()
+        self.metrics["duration_seconds"] = (datetime.now() - self.start_time).total_seconds()
 
         return self.metrics
 
     def save_checkpoint(self, output_dir: Optional[str] = None) -> str:
         """Save checkpoint results to file
-        
+
         Args:
             output_dir: Directory to save checkpoint. Defaults to logs/monitoring from config.
         """
@@ -143,9 +141,7 @@ class MonitoringCheckpoint:
             output_path = Path(output_dir)
             output_path.mkdir(parents=True, exist_ok=True)
 
-        checkpoint_file = (
-            output_path / f"checkpoint_hour_{self.checkpoint_hour:02d}.json"
-        )
+        checkpoint_file = output_path / f"checkpoint_hour_{self.checkpoint_hour:02d}.json"
         with open(checkpoint_file, "w") as f:
             json.dump(self.metrics, f, indent=2)
 
@@ -174,28 +170,16 @@ class MonitoringCheckpoint:
         system_metrics = self.metrics.get("system_metrics") or {}
         if isinstance(system_metrics, dict) and "error" not in system_metrics:
             print("\nSystem Metrics:")
-            print(
-                f"  Memory: {system_metrics['memory_rss_mb']:.1f} MB "
-                "(threshold: 200 MB)"
-            )
-            print(
-                f"  CPU: {system_metrics['cpu_percent']:.1f}% "
-                "(threshold: 80%)"
-            )
+            print(f"  Memory: {system_metrics['memory_rss_mb']:.1f} MB " "(threshold: 200 MB)")
+            print(f"  CPU: {system_metrics['cpu_percent']:.1f}% " "(threshold: 80%)")
             print(f"  Threads: {system_metrics['num_threads']}")
 
         performance_checks = validation.get("checks", {}).get("performance")
         if isinstance(performance_checks, dict):
             perf = performance_checks.get("metrics", {})
             print("\nPerformance:")
-            print(
-                f"  Latency: {perf.get('latency_ms', 'N/A')} ms "
-                "(threshold: 100 ms)"
-            )
-            print(
-                f"  Throughput: {perf.get('throughput_rows_per_sec', 'N/A')} "
-                "rows/sec"
-            )
+            print(f"  Latency: {perf.get('latency_ms', 'N/A')} ms " "(threshold: 100 ms)")
+            print(f"  Throughput: {perf.get('throughput_rows_per_sec', 'N/A')} " "rows/sec")
 
         duration = self.metrics.get("duration_seconds")
         if isinstance(duration, (int, float)):

@@ -636,11 +636,11 @@ class KPICatalogProcessor:
         result["weighted_other_income_rate"] = (
             result["total_received"] - result["true_interest_payment"]
         ) / result["outstanding"].replace(0, np.nan)
-        
+
         # Effective rate = (Interest + Fees + Other + Taxes - Rebates) / Outstanding
-        result["weighted_effective_rate"] = (
-            result["total_received"]
-        ) / result["outstanding"].replace(0, np.nan)
+        result["weighted_effective_rate"] = (result["total_received"]) / result[
+            "outstanding"
+        ].replace(0, np.nan)
 
         result["revenue_ratio"] = result["total_received"] / result["total_scheduled"].replace(
             0, np.nan

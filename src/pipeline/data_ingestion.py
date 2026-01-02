@@ -21,8 +21,13 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError
 from src.agents.tools import send_slack_notification
 from src.analytics.schema import LoanTapeSchema
 from src.pipeline.data_validation import validate_dataframe
-from src.pipeline.utils import (CircuitBreaker, RateLimiter, RetryPolicy,
-                                   hash_file, utc_now)
+from src.pipeline.utils import (
+    CircuitBreaker,
+    RateLimiter,
+    RetryPolicy,
+    hash_file,
+    utc_now,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -166,7 +171,7 @@ class UnifiedIngestion:
         """Legacy helper used by unit tests: normalize and return a copy."""
 
         ingested = df.copy()
-        ingested.columns = [str(c).strip() for c in ingested.columns]
+        ingested.columns = pd.Index([str(c).strip() for c in ingested.columns])
 
         self._update_summary(len(ingested))
         ts = utc_now()
@@ -557,10 +562,10 @@ class UnifiedIngestion:
                     metric_key = self._match_metric(metric_name, mapping)
                     if not metric_key:
                         continue
-                    metric_value = values.loc[idx]
+                    metric_value = values[idx]
                     if pd.isna(metric_value):
                         continue
-                    date_value = date_series.loc[idx]
+                    date_value = date_series[idx]
                     if not date_value or pd.isna(date_value):
                         continue
                     metrics = financials_by_date.setdefault(str(date_value), {})
@@ -574,7 +579,7 @@ class UnifiedIngestion:
                     for idx, metric_value in values.items():
                         if pd.isna(metric_value):
                             continue
-                        date_value = date_series.loc[idx]
+                        date_value = date_series[idx]
                         if not date_value or pd.isna(date_value):
                             continue
                         metrics = financials_by_date.setdefault(str(date_value), {})
@@ -595,7 +600,9 @@ class UnifiedIngestion:
                 and liabilities is not None
                 and net_worth not in (None, 0)
             ):
-                metrics["debt_to_equity_ratio"] = float(liabilities) / float(net_worth)
+                metrics["debt_to_equity_ratio"] = float(liabilities or 0.0) / float(
+                    net_worth or 1.0
+                )
 
         metrics_set = sorted({key for values in financials_by_date.values() for key in values})
         meta = {

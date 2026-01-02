@@ -74,8 +74,7 @@ def simulate_portfolio_scenario(
     """
     import pandas as pd
 
-    from src.analytics.enterprise_analytics_engine import \
-        LoanAnalyticsEngine
+    from src.analytics.enterprise_analytics_engine import LoanAnalyticsEngine
 
     if data_path:
         df = pd.read_csv(data_path)
@@ -127,8 +126,7 @@ def run_portfolio_analysis(data_path: Optional[str] = None) -> Dict[str, Any]:
     """
     import pandas as pd
 
-    from src.analytics.enterprise_analytics_engine import \
-        LoanAnalyticsEngine
+    from src.analytics.enterprise_analytics_engine import LoanAnalyticsEngine
 
     if data_path:
         df = pd.read_csv(data_path)

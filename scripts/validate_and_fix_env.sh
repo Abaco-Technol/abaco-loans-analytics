@@ -67,9 +67,9 @@ git -C "$REPO_PATH" status --porcelain | grep . && echo "⚠️  Warning: Uncomm
 echo ""
 echo "🔍 Auditing documentation..."
 DOCS=(
-    "docs/KPI-Operating-Model.md" 
-    "docs/FINTECH_DASHBOARD_WEB_APP_GUIDE.md" 
-    "COMPLIANCE_VALIDATION_SUMMARY.md" 
+    "docs/KPI-Operating-Model.md"
+    "docs/FINTECH_DASHBOARD_WEB_APP_GUIDE.md"
+    "COMPLIANCE_VALIDATION_SUMMARY.md"
     "SECURITY.md"
 )
 

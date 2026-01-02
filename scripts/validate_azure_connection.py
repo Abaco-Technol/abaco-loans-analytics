@@ -6,10 +6,8 @@ handling and logging.
 """
 
 import logging
-import os
 import sys
 from pathlib import Path
-from typing import Optional
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from src.config.secrets import get_secrets_manager
@@ -20,18 +18,18 @@ logger = logging.getLogger(__name__)
 def validate_all() -> bool:
     """Validate all critical configurations using SecretsManager."""
     manager = get_secrets_manager(use_vault=True)
-    
+
     print("\n" + "=" * 60)
     print("VALIDATING SYSTEM CONNECTIVITY")
     print("=" * 60 + "\n")
-    
+
     try:
         validation = manager.validate(fail_on_missing_required=True, fail_on_missing_optional=False)
         manager.log_status(include_optional=True)
-        
+
         # Additional Azure specific checks if needed
         # ...
-        
+
         return validation["status"] == "ok"
     except Exception as e:
         logger.error("Validation failed: %s", str(e))
@@ -41,10 +39,7 @@ def validate_all() -> bool:
 
 if __name__ == "__main__":
     logging.basicConfig(
-        level=logging.INFO,
-        format=(
-            "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-        )
+        level=logging.INFO, format=("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
     )
     exit_code = 0 if validate_all() else 1
     sys.exit(exit_code)
