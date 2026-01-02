@@ -290,8 +290,8 @@ jobs:
     name: Notify on Failure
     runs-on: ubuntu-latest
     needs:
+      - changes
       - repo-health
-      - run-demos
       - web
       - analytics
       - update-figma-slides
