@@ -30,12 +30,12 @@ def analyze_pipeline_health():
     total_runs = pipeline_metrics.get("total_runs", 0)
     failed_runs = pipeline_metrics.get("failed_runs", 0)
     
+    failure_rate = failed_runs / total_runs if total_runs > 0 else 0
+
     if total_runs == 0:
         health_status = "unknown"
         issues = 1
     else:
-        failure_rate = failed_runs / total_runs
-        
         if failure_rate < 0.05:
             health_status = "healthy"
             issues = 0
@@ -58,7 +58,7 @@ def analyze_pipeline_health():
         "issues_count": issues,
         "total_runs": total_runs,
         "failed_runs": failed_runs,
-        "failure_rate": failed_runs / total_runs if total_runs > 0 else 0
+        "failure_rate": failure_rate
     }
     
     with open(output_dir / "pipeline_health.json", "w") as f:
