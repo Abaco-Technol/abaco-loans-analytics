@@ -61,13 +61,16 @@ jobs:
 
       - name: Check Azure deploy secrets
         id: check_secrets
+        env:
+          AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
+          AZURE_WEBAPP_PUBLISH_PROFILE: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
         run: |
-          if [ -n "${{ secrets.AZURE_CREDENTIALS }}" ]; then
+          if [ -n "$AZURE_CREDENTIALS" ]; then
             echo "has_creds=true" >> "$GITHUB_OUTPUT"
           else
             echo "has_creds=false" >> "$GITHUB_OUTPUT"
           fi
-          if [ -n "${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}" ]; then
+          if [ -n "$AZURE_WEBAPP_PUBLISH_PROFILE" ]; then
             echo "has_publish_profile=true" >> "$GITHUB_OUTPUT"
           else
             echo "has_publish_profile=false" >> "$GITHUB_OUTPUT"

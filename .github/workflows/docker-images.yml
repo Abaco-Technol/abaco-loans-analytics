@@ -88,14 +88,19 @@ jobs:
           password: ${{ secrets.ACR_PASSWORD }}
 
       - name: Tag & push to ACR (optional)
-        
+        env:
+          ACR_LOGIN_SERVER: ${{ secrets.ACR_LOGIN_SERVER }}
         run: |
           set -euo pipefail
+          if [ -z "$ACR_LOGIN_SERVER" ]; then
+            echo "Skipping ACR push: ACR_LOGIN_SERVER not set"
+            exit 0
+          fi
           WEB_SRC_TAG="${{ env.REGISTRY }}/${{ env.IMAGE_WEB }}:${{ github.sha }}"
           DASH_SRC_TAG="${{ env.REGISTRY }}/${{ env.IMAGE_DASHBOARD }}:${{ github.sha }}"
 
-          WEB_ACR_TAG="${{ secrets.ACR_LOGIN_SERVER }}/${{ env.IMAGE_WEB }}:${{ github.sha }}"
-          DASH_ACR_TAG="${{ secrets.ACR_LOGIN_SERVER }}/${{ env.IMAGE_DASHBOARD }}:${{ github.sha }}"
+          WEB_ACR_TAG="$ACR_LOGIN_SERVER/${{ env.IMAGE_WEB }}:${{ github.sha }}"
+          DASH_ACR_TAG="$ACR_LOGIN_SERVER/${{ env.IMAGE_DASHBOARD }}:${{ github.sha }}"
 
           docker pull "$WEB_SRC_TAG"
           docker pull "$DASH_SRC_TAG"

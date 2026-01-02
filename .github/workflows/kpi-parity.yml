@@ -10,11 +10,6 @@ jobs:
   kpi-parity:
     runs-on: ubuntu-latest
 
-    env:
-      # Must be set in GitHub Secrets to point to staging/prod analytics DB,
-      # e.g. postgresql://user:pass@host:5432/dbname
-      DATABASE_URL: ${{ secrets.DATABASE_URL }}
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -43,20 +38,24 @@ jobs:
           python run_complete_analytics.py
 
       - name: Apply SQL migrations (analytics views)
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
         if: env.DATABASE_URL != ''
         run: |
           echo "Applying analytics views migration to $DATABASE_URL"
           psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f supabase/migrations/20260101_analytics_kpi_views.sql
 
       - name: Run KPI parity tests (Python vs SQL)
-        if: env.DATABASE_URL != ''
         env:
-          DATABASE_URL: ${{ env.DATABASE_URL }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
           RUN_KPI_PARITY_TESTS: "1"
+        if: env.DATABASE_URL != ''
         run: |
           pytest -q tests/test_kpi_parity.py
 
       - name: Skip KPI parity tests (no database configured)
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
         if: env.DATABASE_URL == ''
         run: |
           echo "::warning::DATABASE_URL secret not configured - skipping KPI parity tests"
