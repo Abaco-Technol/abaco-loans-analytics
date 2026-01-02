@@ -168,7 +168,7 @@ paths:
     post:
       summary: Calculate PAR30
       description: |
-        Calculates the Portfolio at Risk 30 days metric - percentage of loans 
+        Calculates the Portfolio at Risk 30 days metric - percentage of loans
         that are 30+ days past due.
       operationId: calculatePar30
       tags:
@@ -197,7 +197,7 @@ paths:
     post:
       summary: Calculate PAR90
       description: |
-        Calculates the Portfolio at Risk 90 days metric - percentage of loans 
+        Calculates the Portfolio at Risk 90 days metric - percentage of loans
         that are 90+ days past due.
       operationId: calculatePar90
       tags:
@@ -226,7 +226,7 @@ paths:
     post:
       summary: Calculate Collection Rate
       description: |
-        Calculates the loan collection rate as a percentage of expected payments 
+        Calculates the loan collection rate as a percentage of expected payments
         that were actually collected.
       operationId: calculateCollectionRate
       tags:
@@ -367,7 +367,7 @@ paths:
     post:
       summary: Get high-risk loan alerts
       description: |
-        Identifies loans that exceed specified LTV and DTI thresholds, 
+        Identifies loans that exceed specified LTV and DTI thresholds,
         returning a list of high-risk loans with computed risk scores.
       operationId: getRiskAlerts
       tags:
@@ -409,7 +409,7 @@ paths:
     post:
       summary: Run comprehensive portfolio analysis
       description: |
-        Executes a full portfolio analysis including all KPIs, data quality metrics, 
+        Executes a full portfolio analysis including all KPIs, data quality metrics,
         and risk assessments. Returns a complete dashboard-ready response.
       operationId: runFullAnalysis
       tags:
@@ -438,7 +438,7 @@ paths:
     post:
       summary: Generate data quality profile
       description: |
-        Analyzes the uploaded loan data for quality issues including duplicates, 
+        Analyzes the uploaded loan data for quality issues including duplicates,
         null values, and invalid numeric conversions.
       operationId: getDataQualityProfile
       tags:
@@ -467,7 +467,7 @@ paths:
     post:
       summary: Validate loan data schema
       description: |
-        Validates that the provided loan data contains all required columns 
+        Validates that the provided loan data contains all required columns
         and meets schema requirements.
       operationId: validateLoanData
       tags:
