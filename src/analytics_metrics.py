@@ -1,41 +1,65 @@
-import numpy as np
-import pandas as pd
+import json
+from pathlib import Path
+from typing import Any, Dict, List
 
-CURRENCY_SYMBOLS = r"[₡$€£¥₽%]"
+# Re-exporting real implementations from python/analytics package
+from python.analytics import (
+    calculate_quality_score,
+    portfolio_kpis,
+    project_growth,
+    standardize_numeric,
+)
 
-def standardize_numeric(series: pd.Series) -> pd.Series:
-    if pd.api.types.is_numeric_dtype(series):
-        return series
-
-    cleaned = (
-        series.astype(str)
-        .str.strip()
-        .str.replace(CURRENCY_SYMBOLS, "", regex=True)
-        .str.replace(",", "", regex=False)
-        .replace({"": np.nan, "nan": np.nan})
-    )
-    return pd.to_numeric(cleaned, errors="coerce")
+ROOT = Path(__file__).resolve().parents[1]
+DASHBOARD_JSON = ROOT / "exports" / "complete_kpi_dashboard.json"
 
 
-def project_growth(
-    current_yield: float,
-    target_yield: float,
-    current_loan_volume: float,
-    target_loan_volume: float,
-    periods: int = 6,
-) -> pd.DataFrame:
-    """Project portfolio yield and loan volume over a monthly horizon."""
+def load_dashboard_metrics() -> Dict[str, Any]:
+    """Load computed KPI dashboard from JSON."""
+    if not DASHBOARD_JSON.exists():
+        return {}
+    with DASHBOARD_JSON.open("r", encoding="utf-8") as f:
+        return json.load(f)
 
-    if periods < 2:
-        raise ValueError("periods must be at least 2 to create a projection range")
 
-    schedule = pd.date_range(pd.Timestamp.now().normalize(), periods=periods, freq="MS")
-    projection = pd.DataFrame(
-        {
-            "month": schedule,
-            "yield": np.linspace(current_yield, target_yield, periods),
-            "loan_volume": np.linspace(current_loan_volume, target_loan_volume, periods),
-        }
-    )
+def get_portfolio_fundamentals() -> Dict[str, Any]:
+    """Get portfolio fundamentals from dashboard."""
+    data = load_dashboard_metrics()
+    return data.get("portfolio_fundamentals", {})
 
-    return projection
+
+def get_growth_metrics() -> Dict[str, Any]:
+    """Get growth metrics from dashboard."""
+    data = load_dashboard_metrics()
+    return data.get("growth_metrics", {})
+
+
+def get_monthly_pricing() -> List[Dict[str, Any]]:
+    """Get monthly pricing from dashboard."""
+    data = load_dashboard_metrics()
+    return data.get("extended_kpis", {}).get("monthly_pricing", [])
+
+
+def get_monthly_risk() -> List[Dict[str, Any]]:
+    """Get monthly risk from dashboard."""
+    data = load_dashboard_metrics()
+    return data.get("extended_kpis", {}).get("monthly_risk", [])
+
+
+def get_customer_types() -> List[Dict[str, Any]]:
+    """Get customer types from dashboard."""
+    data = load_dashboard_metrics()
+    return data.get("extended_kpis", {}).get("customer_types", [])
+
+__all__ = [
+    "calculate_quality_score",
+    "portfolio_kpis",
+    "project_growth",
+    "standardize_numeric",
+    "load_dashboard_metrics",
+    "get_portfolio_fundamentals",
+    "get_growth_metrics",
+    "get_monthly_pricing",
+    "get_monthly_risk",
+    "get_customer_types",
+]
