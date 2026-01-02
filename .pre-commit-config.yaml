@@ -35,7 +35,7 @@ repos:
 # YAML linting
 - repo: https://github.com/adrienverge/yamllint.git
   rev: v1.32.0
-  hooks:
+    hooks:
     - id: yamllint
       files: \.(yml|yaml)$
 
