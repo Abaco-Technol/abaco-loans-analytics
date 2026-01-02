@@ -129,7 +129,7 @@ jobs:
               id: tracing_check
               run: |
                   echo "Checking tracing setup..."
-                  
+
                   if [ "${{ steps.check_secrets.outputs.has_azure_secrets }}" = "true" ]; then
                     if [ "${{ steps.health_check.outputs.passed }}" = "true" ]; then
                       echo "✓ Tracing initialized (Azure app is healthy)"
@@ -158,7 +158,7 @@ jobs:
                     else
                       TEST_MODE="Local Smoke Test (No Azure Secrets)"
                     fi
-                    
+
                     echo "## Deployment Validation Report"
                     echo ""
                     echo "**Test Mode**: $TEST_MODE"
