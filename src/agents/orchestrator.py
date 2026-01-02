@@ -5,17 +5,8 @@ from datetime import datetime, timezone
 from typing import Any, Dict, Optional
 
 import yaml
-from sqlalchemy import (
-    JSON,
-    Boolean,
-    Column,
-    DateTime,
-    Integer,
-    Numeric,
-    String,
-    Text,
-    create_engine,
-)
+from sqlalchemy import (JSON, Boolean, Column, DateTime, Integer, Numeric,
+                        String, Text, create_engine)
 from sqlalchemy.orm import declarative_base, sessionmaker
 
 from src.agents.agent import Agent
@@ -111,9 +102,7 @@ class AgentOrchestrator:
                         if not agent_output.startswith("Error:"):
                             break
                 except Exception as exc:
-                    print(
-                        f"[Orchestrator] Attempt {attempt + 1} failed for {name}: {str(exc)}"
-                    )
+                    print(f"[Orchestrator] Attempt {attempt + 1} failed for {name}: {str(exc)}")
                     span.record_exception(exc)
 
             output = {

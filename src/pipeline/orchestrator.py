@@ -14,13 +14,8 @@ from src.pipeline.data_ingestion import UnifiedIngestion
 from src.pipeline.data_transformation import UnifiedTransformation
 from src.pipeline.kpi_calculation import UnifiedCalculationV2
 from src.pipeline.output import UnifiedOutput
-from src.pipeline.utils import (
-    ensure_dir,
-    load_yaml,
-    resolve_placeholders,
-    utc_now,
-    write_json,
-)
+from src.pipeline.utils import (ensure_dir, load_yaml, resolve_placeholders,
+                                utc_now, write_json)
 from src.tracing_setup import get_tracer
 
 logger = logging.getLogger(__name__)
@@ -242,9 +237,7 @@ class UnifiedPipeline:
                 self.calculator.run_id = self.run_id
                 self.output.run_id = self.run_id
 
-                with tracer.start_as_current_span(
-                    "pipeline.transformation"
-                ) as transformation_span:
+                with tracer.start_as_current_span("pipeline.transformation") as transformation_span:
                     transformation_result = self.transformer.transform(
                         ingestion_result.df, user=user
                     )
