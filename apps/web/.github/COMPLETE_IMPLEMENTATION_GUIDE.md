@@ -110,7 +110,7 @@ git rev-parse --git-dir
 Navigate to the web app directory and execute the setup script:
 
 ```bash
-cd /Users/jenineferderas/Documents/abaco-loans-analytics/apps/web
+cd <path-to-repo>/abaco-loans-analytics/apps/web
 chmod +x .github/setup-secrets.sh
 .github/setup-secrets.sh
 ```
