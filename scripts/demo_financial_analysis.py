@@ -11,13 +11,16 @@ import sys
 from datetime import datetime, timedelta
 from pathlib import Path
 
-import matplotlib.pyplot as plt
 import pandas as pd
+try:
+    import matplotlib.pyplot as plt
+except ImportError:  # pragma: no cover - optional dependency
+    plt = None
 
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from python.financial_analysis import FinancialAnalyzer
+from src.financial_analysis import FinancialAnalyzer
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 logger = logging.getLogger(__name__)
@@ -93,6 +96,10 @@ def main():
     print(f"HHI Score: {hhi:.2f} (Scale 0-10,000)")
 
     # 5. Visualization
+    if plt is None:
+        logger.warning("matplotlib is not available; skipping plots.")
+        return
+
     if "dpd_bucket" in enriched_df.columns:
         print("\n[4] Generating DPD Distribution Chart...")
         counts = enriched_df["dpd_bucket"].value_counts()
