@@ -1,51 +1,74 @@
+
+# --- Step 1: Set up a clean branch for the fix ---
+echo "INFO: Setting up a clean branch..."
+# Ensure we are on the main branch and it's up-to-date
+git checkout main
+git pull
+# Create a new, clean branch for this specific fix
+git checkout -b fix/gx-api-update
+
+# --- Step 2: Atomically write the corrected file content ---
+echo "INFO: Applying fix to data_validation_gx.py..."
+cat << 'EOF' > src/pipeline/data_validation_gx.py
+# src/pipeline/data_validation_gx.py
+
 import great_expectations as gx
+from great_expectations.data_context import EphemeralDataContext
 import pandas as pd
 import logging
 
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-def validate_loan_data(df: pd.DataFrame) -> bool:
-    """Validate a DataFrame using the Great Expectations loan_tape_ingestion suite."""
+def get_or_create_datasource(context: EphemeralDataContext, datasource_name: str):
+    """Gets a datasource or creates it if it does not exist using the modern API."""
     try:
-        context = gx.get_context()
-        
-        # Create a batch request
-        datasource_name = "pandas_datasource"
-        if datasource_name not in context.datasources:
-            context.add_pandas(name=datasource_name)
-            
-        validator = context.get_validator(
-            batch_request=context.get_datasource(datasource_name).get_batch_request_from_dataframe(
-                df, name="loan_tape_batch"
-            ),
-            expectation_suite_name="loan_tape_ingestion"
-        )
-        
-        results = validator.validate()
-        
-        if not results["success"]:
-            logger.warning("Data quality validation failed.")
-            for res in results["results"]:
-                if not res["success"]:
-                    logger.error(f"Failed expectation: {res['expectation_config']['expectation_type']} on {res['expectation_config']['kwargs'].get('column')}")
-            return False
-            
-        logger.info("Data quality validation passed.")
-        return True
-        
-    except Exception as e:
-        logger.error(f"Error during GX validation: {e}")
-        return False
+        datasource = context.get_datasource(datasource_name)
+    except ValueError:
+        logger.info(f"Datasource '{datasource_name}' not found, creating it.")
+        datasource = context.sources.add_pandas(name=datasource_name)
+    return datasource
 
-if __name__ == "__main__":
-    # Simple test
-    test_df = pd.DataFrame({
-        "loan_id": [1, 2],
-        "customer_id": [101, 102],
-        "disbursement_date": ["2024-01-01", "2024-01-02"],
-        "disbursement_amount": [1000, 2000],
-        "interest_rate_apr": [0.25, 0.30],
-        "outstanding_loan_value": [1000, 2000]
-    })
-    success = validate_loan_data(test_df)
-    print(f"Validation success: {success}")
+def create_validator_for_dataframe(
+    context: EphemeralDataContext, df: pd.DataFrame, datasource_name: str, asset_name: str
+):
+    """Creates a Great Expectations validator for a given Pandas DataFrame."""
+    if not isinstance(df, pd.DataFrame):
+        raise TypeError("df must be a Pandas DataFrame.")
+
+    datasource = get_or_create_datasource(context, datasource_name)
+
+    # Modern way to add a dataframe as an asset and build a batch request
+    pandas_asset = datasource.add_dataframe_asset(name=asset_name, dataframe=df)
+    batch_request = pandas_asset.build_batch_request()
+
+    validator = context.get_validator(
+        batch_request=batch_request,
+        create_expectation_suite_with_name=f"{asset_name}_suite",
+    )
+    return validator
+
+def validate_data(df: pd.DataFrame, expectations: dict, datasource_name: str, asset_name: str):
+    """
+    Validates a DataFrame against a set of Great Expectations.
+    """
+    context = gx.get_context(project_root_dir=None, mode="ephemeral")
+    validator = create_validator_for_dataframe(
+        context, df, datasource_name, asset_name
+    )
+
+    for expectation in expectations:
+        expectation_type = expectation.pop("type")
+        try:
+            getattr(validator, expectation_type)(**expectation)
+        except Exception as e:
+            logger.error(f"Failed to apply expectation {expectation_type}: {e}")
+
+    validation_result = validator.validate()
+    if not validation_result["success"]:
+        logger.warning("Data validation failed!")
+        logger.warning(validation_result)
+    else:
+        logger.info("Data validation successful!")
+
+    return validation_result
