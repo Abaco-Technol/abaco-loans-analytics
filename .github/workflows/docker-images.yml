@@ -28,6 +28,14 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Lowercase image names
+        run: |
+          echo "IMAGE_WEB_LOWER=${IMAGE_WEB,,}" >> ${GITHUB_ENV}
+          echo "IMAGE_DASHBOARD_LOWER=${IMAGE_DASHBOARD,,}" >> ${GITHUB_ENV}
+        env:
+          IMAGE_WEB: ${{ github.repository }}-web
+          IMAGE_DASHBOARD: ${{ github.repository }}-dashboard
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
@@ -50,7 +58,7 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: |
-            ${{ env.REGISTRY }}/${{ env.IMAGE_WEB }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_WEB_LOWER }}
           tags: |
             type=raw,value=${{ github.sha }}
             type=raw,value=latest,enable={{is_default_branch}}
@@ -69,7 +77,7 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: |
-            ${{ env.REGISTRY }}/${{ env.IMAGE_DASHBOARD }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_DASHBOARD_LOWER }}
           tags: |
             type=raw,value=${{ github.sha }}
             type=raw,value=latest,enable={{is_default_branch}}
@@ -105,11 +113,11 @@ jobs:
             echo "Skipping ACR push: ACR_LOGIN_SERVER not set"
             exit 0
           fi
-          WEB_SRC_TAG="${{ env.REGISTRY }}/${{ env.IMAGE_WEB }}:${{ github.sha }}"
-          DASH_SRC_TAG="${{ env.REGISTRY }}/${{ env.IMAGE_DASHBOARD }}:${{ github.sha }}"
+          WEB_SRC_TAG="${{ env.REGISTRY }}/${{ env.IMAGE_WEB_LOWER }}:${{ github.sha }}"
+          DASH_SRC_TAG="${{ env.REGISTRY }}/${{ env.IMAGE_DASHBOARD_LOWER }}:${{ github.sha }}"
 
-          WEB_ACR_TAG="$ACR_LOGIN_SERVER/${{ env.IMAGE_WEB }}:${{ github.sha }}"
-          DASH_ACR_TAG="$ACR_LOGIN_SERVER/${{ env.IMAGE_DASHBOARD }}:${{ github.sha }}"
+          WEB_ACR_TAG="$ACR_LOGIN_SERVER/${{ env.IMAGE_WEB_LOWER }}:${{ github.sha }}"
+          DASH_ACR_TAG="$ACR_LOGIN_SERVER/${{ env.IMAGE_DASHBOARD_LOWER }}:${{ github.sha }}"
 
           docker pull "$WEB_SRC_TAG"
           docker pull "$DASH_SRC_TAG"
