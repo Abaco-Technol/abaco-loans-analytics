@@ -4,10 +4,9 @@ import argparse
 import json
 import logging
 from pathlib import Path
-from typing import Dict
+from typing import Any, Dict
 
 from python.agents.orchestrator import AgentOrchestrator
-from python.agents.tools import run_sql_query
 
 LOG = logging.getLogger("c_suite_agent")
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
@@ -26,8 +25,15 @@ def load_prompt(path: Path) -> str:
         raise RuntimeError("C-suite agent prompt missing") from exc
 
 
-def build_input_data(args: argparse.Namespace, prompt: str) -> Dict[str, object]:
-    required_kpis = args.required_kpis or ["PD", "LGD", "EAD", "Liquidity Velocity Index (LVI)", "NPL ratio", "Roll Rates"]
+def build_input_data(args: argparse.Namespace, prompt: str) -> Dict[str, Any]:
+    required_kpis = args.required_kpis or [
+        "PD",
+        "LGD",
+        "EAD",
+        "Liquidity Velocity Index (LVI)",
+        "NPL ratio",
+        "Roll Rates",
+    ]
     return {
         "run_id": args.run_id,
         "date_range": args.date_range,
@@ -41,7 +47,7 @@ def build_input_data(args: argparse.Namespace, prompt: str) -> Dict[str, object]
     }
 
 
-def write_output(run_id: str, payload: Dict[str, object]) -> Path:
+def write_output(run_id: str, payload: Dict[str, Any]) -> Path:
     target = RUNS_DIR / f"c_suite_agent_{run_id}.json"
     with target.open("w", encoding="utf-8") as fh:
         json.dump(payload, fh, indent=2)
@@ -59,8 +65,12 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> None:
     args = parse_args()
-    prompt = load_prompt(PROMPT_PATH)
-    input_data = build_input_data(args, prompt)
+    prompt_template = load_prompt(PROMPT_PATH)
+
+    # Simple template replacement for demonstration
+    prompt = prompt_template.replace("{{ run_id }}", args.run_id).replace(
+        "{{ date_range }}", args.date_range
+    )
 
     try:
         orchestrator = AgentOrchestrator(str(SPEC_PATH))
@@ -69,13 +79,17 @@ def main() -> None:
         raise
 
     LOG.info("Executing C-suite agent run_id=%s", args.run_id)
-    # Demonstrate tool usage in trace
-    sample_query = "SELECT * FROM analytics.v_loans_overview LIMIT 5"
-    query_result = run_sql_query(sample_query)
-    input_data["trace"]["sql_queries"].append(sample_query)
-    input_data["trace"]["sample_query_result"] = query_result
 
-    result = orchestrator.run(input_data)
+    agent_config = {
+        "name": "C-Suite Agent",
+        "role": "Executive Briefing Specialist",
+        "goal": "Generate precise, numeric, and traceable executive briefings for Abaco Capital",
+    }
+
+    input_data = {"query": prompt, "run_id": args.run_id, "date_range": args.date_range}
+
+    result = orchestrator.run(input_data, agent_config)
+
     output = {
         "input": input_data,
         "result": result,
