@@ -177,23 +177,35 @@ class UnifiedPipeline:
         try:
             # Phase 1: Ingestion
             if tracer:
-                span = tracer.start_as_current_span("pipeline.phase.ingestion")
-            
-            ingestion = UnifiedIngestion(self.config.config)
-            if ingest_source == "cascade_http":
-                base_url = cascade_cfg.get("base_url", "")
-                endpoint = cascade_cfg.get("endpoints", {}).get("loan_tape", "")
-                token_env = cascade_cfg.get("auth", {}).get("token_secret")
-                token_value = os.getenv(token_env, "") if token_env else ""
-                headers = {"Authorization": f"Bearer {token_value}"} if token_value else {}
-                url = f"{base_url}{endpoint}"
-                ingestion_result = ingestion.ingest_http(url, headers=headers)
+                with tracer.start_as_current_span("pipeline.phase.ingestion") as span:
+                    ingestion = UnifiedIngestion(self.config.config)
+                    if ingest_source == "cascade_http":
+                        base_url = cascade_cfg.get("base_url", "")
+                        endpoint = cascade_cfg.get("endpoints", {}).get("loan_tape", "")
+                        token_env = cascade_cfg.get("auth", {}).get("token_secret")
+                        token_value = os.getenv(token_env, "") if token_env else ""
+                        headers = {"Authorization": f"Bearer {token_value}"} if token_value else {}
+                        url = f"{base_url}{endpoint}"
+                        ingestion_result = ingestion.ingest_http(url, headers=headers)
+                    else:
+                        ingestion_result = ingestion.ingest_file(
+                            input_file, archive_dir=raw_archive_dir
+                        )
+                    span.set_attribute("pipeline.ingestion.rows", len(ingestion_result.df))
             else:
-                ingestion_result = ingestion.ingest_file(input_file, archive_dir=raw_archive_dir)
-
-            if tracer:
-                span.set_attribute("pipeline.ingestion.rows", len(ingestion_result.df))
-                span.end()
+                ingestion = UnifiedIngestion(self.config.config)
+                if ingest_source == "cascade_http":
+                    base_url = cascade_cfg.get("base_url", "")
+                    endpoint = cascade_cfg.get("endpoints", {}).get("loan_tape", "")
+                    token_env = cascade_cfg.get("auth", {}).get("token_secret")
+                    token_value = os.getenv(token_env, "") if token_env else ""
+                    headers = {"Authorization": f"Bearer {token_value}"} if token_value else {}
+                    url = f"{base_url}{endpoint}"
+                    ingestion_result = ingestion.ingest_http(url, headers=headers)
+                else:
+                    ingestion_result = ingestion.ingest_file(
+                        input_file, archive_dir=raw_archive_dir
+                    )
 
             self.run_id = self._generate_run_id(ingestion_result.source_hash)
             run_dir = ensure_dir(artifacts_dir / self.run_id)
@@ -240,33 +252,56 @@ class UnifiedPipeline:
 
             # Phase 4: Output
             if tracer:
-                span = tracer.start_as_current_span("pipeline.phase.output")
-            
-            output = UnifiedOutput(self.config.config, run_id=self.run_id)
-            output_result = output.persist(
-                transformation_result.df,
-                calculation_result.metrics,
-                metadata={
-                    "ingestion": ingestion_result.metadata,
-                    "lineage": transformation_result.lineage,
-                    "calculation_audit": calculation_result.audit_trail,
-                    "anomalies": calculation_result.anomalies,
-                    "context": {"user": user, "action": action},
-                },
-                run_ids={
-                    "pipeline": self.run_id,
-                    "ingestion": ingestion_result.run_id,
-                    "transformation": transformation_result.run_id,
-                    "calculation": calculation_result.run_id,
-                },
-                quality_checks=transformation_result.quality_checks,
-                compliance_report_path=compliance_path,
-                timeseries=calculation_result.timeseries,
-            )
-            
-            if tracer:
-                span.set_attribute("pipeline.output.manifest", str(output_result.manifest_path))
-                span.end()
+                with tracer.start_as_current_span("pipeline.phase.output") as span:
+                    output = UnifiedOutput(self.config.config, run_id=self.run_id)
+                    output_result = output.persist(
+                        transformation_result.df,
+                        calculation_result.metrics,
+                        metadata={
+                            "ingestion": ingestion_result.metadata,
+                            "lineage": transformation_result.lineage,
+                            "calculation_audit": calculation_result.audit_trail,
+                            "anomalies": calculation_result.anomalies,
+                            "context": {"user": user, "action": action},
+                        },
+                        run_ids={
+                            "pipeline": self.run_id,
+                            "ingestion": ingestion_result.run_id,
+                            "transformation": transformation_result.run_id,
+                            "calculation": calculation_result.run_id,
+                        },
+                        quality_checks=transformation_result.quality_checks,
+                        compliance_report_path=compliance_path,
+                        timeseries=calculation_result.timeseries,
+                    )
+                    span.set_attribute(
+                        "pipeline.output.manifest", str(output_result.manifest_path)
+                    )
+                    span.set_attribute(
+                        "pipeline.output.outputs_count", len(output_result.output_paths)
+                    )
+            else:
+                output = UnifiedOutput(self.config.config, run_id=self.run_id)
+                output_result = output.persist(
+                    transformation_result.df,
+                    calculation_result.metrics,
+                    metadata={
+                        "ingestion": ingestion_result.metadata,
+                        "lineage": transformation_result.lineage,
+                        "calculation_audit": calculation_result.audit_trail,
+                        "anomalies": calculation_result.anomalies,
+                        "context": {"user": user, "action": action},
+                    },
+                    run_ids={
+                        "pipeline": self.run_id,
+                        "ingestion": ingestion_result.run_id,
+                        "transformation": transformation_result.run_id,
+                        "calculation": calculation_result.run_id,
+                    },
+                    quality_checks=transformation_result.quality_checks,
+                    compliance_report_path=compliance_path,
+                    timeseries=calculation_result.timeseries,
+                )
 
             summary = {
                 "status": "success",

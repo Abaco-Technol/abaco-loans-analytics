@@ -133,7 +133,7 @@ jobs:
           path: outputs/credit_scores.json
           retention-days: 7
 
-  # Job 4: Run Fraud Detection Agent
+  # Job 5: Run Fraud Detection Agent
   fraud-detection-agent:
     needs: check-data-manifest
     if: needs.check-data-manifest.outputs.data-ready == 'true'
@@ -162,7 +162,7 @@ jobs:
           path: outputs/fraud_alerts.json
           retention-days: 7
 
-  # Job 5: Run Customer Outreach Agent
+  # Job 6: Run Customer Outreach Agent
   customer-outreach-agent:
     needs: [risk-assessment-agent, credit-scoring-agent]
     runs-on: ubuntu-latest
@@ -202,7 +202,7 @@ jobs:
           path: outputs/outreach_campaigns.json
           retention-days: 7
 
-  # Job 6: Aggregate and sync agent results to Supabase
+  # Job 7: Aggregate and sync agent results to Supabase
   sync-agent-results:
     needs: [risk-assessment-agent, credit-scoring-agent, fraud-detection-agent, customer-outreach-agent]
     if: always()
@@ -229,7 +229,7 @@ jobs:
           echo "💾 Syncing agent results to Supabase..."
           python scripts/sync_agent_results.py
 
-  # Job 7: Log agent execution metrics to Opik
+  # Job 8: Log agent execution metrics to Opik
   log-agent-metrics:
     needs: sync-agent-results
     if: always()
@@ -255,7 +255,7 @@ jobs:
             --fraud-agent-status ${{ needs.fraud-detection-agent.result }} \
             --outreach-agent-status ${{ needs.customer-outreach-agent.result }}
 
-  # Job 8: Send completion notification to Slack
+  # Job 9: Send completion notification to Slack
   send-completion-notification:
     needs: [sync-agent-results, log-agent-metrics]
     if: always()

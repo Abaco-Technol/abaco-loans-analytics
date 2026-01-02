@@ -137,18 +137,18 @@ def my_function():
 
 ```kusto
 // Pipeline execution times by environment
-traces
+dependencies
 | where customDimensions.service_name == "abaco-data-pipeline"
 | where operation_Name == "pipeline.execute"
 | summarize avg(duration), max(duration) by tostring(customDimensions.["deployment.environment"])
 
 // Failed pipeline runs
-traces
+dependencies
 | where customDimensions.["pipeline.status"] == "failed"
 | project timestamp, operation_Name, message, customDimensions
 
 // Row processing metrics
-traces
+dependencies
 | where operation_Name startswith "pipeline.phase"
 | extend rows = toint(customDimensions.["pipeline.ingestion.rows"])
 | where isnotnull(rows)
