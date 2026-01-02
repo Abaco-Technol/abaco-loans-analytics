@@ -19,6 +19,28 @@ jobs:
           cache-dependency-path: |
             requirements.txt
             apps/analytics/requirements.txt
+      - name: Check Cascade secrets
+        id: cascade_secrets
+        env:
+          CASCADE_USERNAME: ${{ secrets.CASCADE_USERNAME }}
+          CASCADE_PASSWORD: ${{ secrets.CASCADE_PASSWORD }}
+        run: |
+          if [ -n "$CASCADE_USERNAME" ] && [ -n "$CASCADE_PASSWORD" ]; then
+            echo "available=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "available=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::Cascade credentials not configured - skipping scraper"
+          fi
+      - name: Check Slack webhook
+        id: slack_secret
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: |
+          if [ -n "$SLACK_WEBHOOK_URL" ]; then
+            echo "available=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "available=false" >> "$GITHUB_OUTPUT"
+          fi
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
@@ -27,16 +49,13 @@ jobs:
             pip install -r apps/analytics/requirements.txt
           fi
       - name: Install Playwright
-        env:
-          CASCADE_USERNAME: ${{ secrets.CASCADE_USERNAME }}
-          CASCADE_PASSWORD: ${{ secrets.CASCADE_PASSWORD }}
-        if: hashFiles('scripts/scrape_cascade.py') != '' && secrets.CASCADE_USERNAME != '' && secrets.CASCADE_PASSWORD != ''
+        if: steps.cascade_secrets.outputs.available == 'true' && hashFiles('scripts/scrape_cascade.py') != ''
         run: |
           pip install playwright
           playwright install chromium
 
       - name: Run Cascade scraper
-        if: hashFiles('scripts/scrape_cascade.py') != '' && secrets.CASCADE_USERNAME != '' && secrets.CASCADE_PASSWORD != ''
+        if: steps.cascade_secrets.outputs.available == 'true' && hashFiles('scripts/scrape_cascade.py') != ''
         continue-on-error: true
         run: python scripts/scrape_cascade.py --loan-tape
         env:
@@ -52,7 +71,7 @@ jobs:
         uses: slackapi/slack-github-action@v1.24.0
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-        if: success() && secrets.SLACK_WEBHOOK_URL != ''
+        if: success() && steps.slack_secret.outputs.available == 'true'
         continue-on-error: true
         with:
           payload: |
@@ -63,7 +82,7 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": "*Daily Data Ingestion Successful*\n*Repository:* ${{ github.repository }}\n*Branch:* ${{ github.ref_name }}\n<${{ github.server_url }}>/${{ github.repository }}/actions/runs/${{ github.run_id }}|View Details>"
+                    "text": "*Daily Data Ingestion Successful*\n*Repository:* ${{ github.repository }}\n*Branch:* ${{ github.ref_name }}\n<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View Details>"
                   }
                 }
               ]
