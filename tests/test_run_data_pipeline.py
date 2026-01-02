@@ -1,8 +1,7 @@
 import unittest
-from unittest.mock import MagicMock, patch, call
+from unittest.mock import patch
 from pathlib import Path
 
-import pandas as pd
 
 from scripts.run_data_pipeline import main
 

@@ -1,6 +1,7 @@
 # Data Quality & Integrity Report
 
 ## 1. Executive Summary
+
 This report summarizes the state of data quality within the Abaco Loans Analytics Unified Pipeline. The system now enforces strict schema validation, numeric integrity checks, and PII masking across all ingestion paths.
 
 **Current Health Status**: 🟢 GREEN (Active Enforcement)
@@ -8,16 +9,19 @@ This report summarizes the state of data quality within the Abaco Loans Analytic
 ## 2. Quality Controls & Enforcement
 
 ### Phase 1: Ingestion Validation
+
 - **Schema Lock**: Input files are validated against `config/data_schemas/` using Pydantic and Pandera.
 - **Checksum Verification**: Every raw input is hashed (SHA-256) to ensure lineage traceability.
 - **Null Suppression**: Mandatory columns (e.g., `total_receivable_usd`, `measurement_date`) are checked for nulls at the point of entry.
 
 ### Phase 2: Transformation Integrity
+
 - **Outlier Detection**: Z-score analysis is applied to APR, Term, and Balances to identify statistical anomalies.
 - **PII Masking**: Automatic keyword-based masking ensures compliance with data privacy standards.
 - **Data Normalization**: Uniform naming conventions and unit conversions (e.g., to USD) are applied.
 
 ### Phase 3: Calculation Accuracy
+
 - **Engine Parity**: Dual-engine verification ensures Python calculations match SQL view outputs within 0.01% tolerance.
 - **Audit Trail**: Every KPI calculation event is logged with actor, action, and timestamp.
 
@@ -40,6 +44,7 @@ This report summarizes the state of data quality within the Abaco Loans Analytic
 | Collection Rate Zero-Values | High | ⚠️ Warning | Detected 0.0 collection rate in sample data; investigation required to confirm if data issue or business reality. |
 
 ## 5. Continuous Monitoring Plan
+
 - **Real-time Alerts**: Critical KPI failures trigger Slack/Teams notifications.
 - **Daily Audits**: Manifests are automatically reviewed for "warning" or "critical" status tags.
 - **Weekly Parity Tests**: `make test-kpi-parity` ensures code and database remain in sync.

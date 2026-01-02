@@ -18,12 +18,14 @@ This guide consolidates the dashboard requirements and maps them to the existing
 
 - Use the existing Next.js project under `apps/web`. Add pages or routes for each view listed above.
 - Install packages for the corporate theme, data fetching, and charts:
+
   ```bash
   # For reproducible builds, specify package versions. Example (update versions as needed):
   npm install @heroicons/react@^2.0.18 axios@^1.6.0 react-plotly.js@^2.5.1 plotly.js@^2.27.1 @headlessui/react@^1.7.18 react-tooltip@^4.2.24
   npm install --save-dev @types/react-plotly.js@^2.0.7
   # Alternatively, add dependencies to package.json with appropriate version constraints.
   ```
+
 - Extend `tailwind.config.{js,ts}` with the corporate palette and condensed fonts; import Google Fonts in `src/app/globals.css` and apply dark-mode defaults (black background, gray text, purple accents).
 - Build shared components:
   - `Layout` with sidebar + top-level navigation.
@@ -42,6 +44,7 @@ This guide consolidates the dashboard requirements and maps them to the existing
   - `POST /ai/summary` and `POST /ai/chat` for AI insights using OpenAI/Gemini models (keys via environment variables).
   - `POST /retrain` to trigger retraining scripts for continuous learning workflows.
 - Add CORS to allow the Next.js domain. Run locally with:
+
   ```bash
   uvicorn apps.analytics.api.main:app --reload --host 0.0.0.0 --port 8000
   ```

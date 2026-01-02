@@ -107,6 +107,7 @@ def save_agent_output(
 ```
 
 **Exceptions** (do not auto-fix):
+
 - SQL queries in test data
 - Long URLs or URIs
 - Third-party library signatures
@@ -115,7 +116,8 @@ def save_agent_output(
 
 **Severity**: Very Low  
 **Auto-fixable**: Yes  
-**Files Affected**: 
+**Files Affected**:
+
 - `python/pipeline/init_gx.py` (6 lines)
 - `python/pipeline/prefect_orchestrator.py` (8 lines)
 - `python/pipeline/data_validation_gx.py` (8 lines)
@@ -143,6 +145,7 @@ active_col = find_column(result, [last_active_col, "last_active", "ultima_activi
 #### Issue: W1203 - Lazy Formatting in Logging (6 instances)
 
 **Files**:
+
 - `python/pipeline/prefect_orchestrator.py` (4 instances)
 - `python/pipeline/data_validation_gx.py` (2 instances)
 
@@ -150,12 +153,14 @@ active_col = find_column(result, [last_active_col, "last_active", "ultima_activi
 **Why It Matters**: f-strings are evaluated even if the log level is disabled
 
 **Before (Wrong)**:
+
 ```python
 logger.info(f"Processing {batch_size} records from {source}")
 # String is evaluated even if INFO level is disabled
 ```
 
 **After (Correct)**:
+
 ```python
 logger.info("Processing %s records from %s", batch_size, source)
 # Only evaluated when INFO level is enabled
@@ -166,12 +171,14 @@ logger.info("Processing %s records from %s", batch_size, source)
 #### Issue: C0415 - Import Outside Toplevel (3 instances)
 
 **Files**:
+
 - `python/pipeline/ingestion.py:228` - `requests` in `ingest_http()`
 - `python/pipeline/output.py:53-56` - Azure SDK in conditional export
 
 **Severity**: Low  
 **Intentional**: Yes (lazy import for optional dependencies)  
-**Rationale**: 
+**Rationale**:
+
 - `requests` is only needed when calling HTTP endpoints
 - Azure SDK is optional and may not be installed in all environments
 - Lazy import reduces startup time for users not using these features
@@ -181,6 +188,7 @@ logger.info("Processing %s records from %s", batch_size, source)
 #### Issue: R0917 - Too Many Positional Arguments (2 instances)
 
 **Files**:
+
 - `python/pipeline/output.py:91` - 8 positional args (max 5)
 - `python/kpis/base.py:29` - 9 positional args (max 5)
 
@@ -188,12 +196,14 @@ logger.info("Processing %s records from %s", batch_size, source)
 **Resolution**: Refactor to use keyword arguments or configuration objects (Phase 5)
 
 **Before**:
+
 ```python
 def output_metrics(df, run_id, manifest, metrics, config, user, action, timestamp):
     pass
 ```
 
 **After** (Phase 5):
+
 ```python
 @dataclass
 class OutputRequest:
@@ -213,6 +223,7 @@ def output_metrics(request: OutputRequest):
 #### Issue: C0411 - Wrong Import Order (2 instances)
 
 **Files**:
+
 - `python/pipeline/prefect_orchestrator.py`
 - `python/pipeline/data_validation_gx.py`
 
@@ -222,6 +233,7 @@ def output_metrics(request: OutputRequest):
 #### Issue: W0611 - Unused Imports (3 instances)
 
 **Files**:
+
 - `python/pipeline/init_gx.py` - unused `ExpectationSuite`
 - `python/pipeline/prefect_orchestrator.py` - unused `Optional`, unused `os`
 - `python/pipeline/data_validation_gx.py` - (no issues found)
@@ -245,6 +257,7 @@ def output_metrics(request: OutputRequest):
 | prefect | Limited types in newer versions | Update prefect version or add types-prefect |
 
 **Command to resolve**:
+
 ```bash
 pip install types-opentelemetry types-great-expectations types-prefect
 ```
@@ -287,10 +300,12 @@ LONG_SQL_QUERY = "SELECT ... FROM ... WHERE ..."
 ### Immediate (This Sprint - Phase 4)
 
 1. **Auto-fix line length and trailing whitespace**
+
    ```bash
    python -m ruff check python tests --fix
    python -m ruff check python tests --select=W291 --fix
    ```
+
    **Time**: 5 minutes
 
 2. **Fix logging f-strings to lazy formatting**
@@ -327,9 +342,11 @@ LONG_SQL_QUERY = "SELECT ... FROM ... WHERE ..."
    - **Estimated effort**: 30 minutes
 
 4. **Install missing type stubs**
+
    ```bash
    pip install types-opentelemetry types-great-expectations
    ```
+
    **Estimated effort**: 5 minutes
 
 ### Long-term (Phase 5 & Beyond)

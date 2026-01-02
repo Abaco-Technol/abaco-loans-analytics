@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 from prefect import flow, task, get_run_logger
 from python.pipeline.data_ingestion import UnifiedIngestion
 from python.pipeline.data_transformation import UnifiedTransformation
@@ -8,7 +8,6 @@ from python.pipeline.output import UnifiedOutput
 from python.pipeline.orchestrator import PipelineConfig
 from python.pipeline.data_validation_gx import validate_loan_data
 from python.agents.tools import send_slack_notification
-import os
 
 @task(retries=3, retry_delay_seconds=60)
 def ingestion_task(config: Dict[str, Any], input_file: Path):

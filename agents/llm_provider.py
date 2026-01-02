@@ -4,12 +4,24 @@ This module provides a unified interface for interacting with multiple LLM provi
 enabling seamless switching and fallback capabilities for the multi-agent system.
 """
 
+import importlib.util
 import logging
 import os
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from enum import Enum
 from typing import Any, Dict, List, Literal, Optional
+
+if importlib.util.find_spec("openai") is not None:
+    OPENAI_AVAILABLE = True
+else:
+    OPENAI_AVAILABLE = False
+
+if importlib.util.find_spec("anthropic") is not None:
+    import anthropic
+    ANTHROPIC_AVAILABLE = True
+else:
+    ANTHROPIC_AVAILABLE = False
 
 
 class LLMProvider(Enum):
@@ -18,20 +30,6 @@ class LLMProvider(Enum):
     OPENAI = "openai"
     ANTHROPIC = "anthropic"
 
-
-try:
-    import openai
-
-    OPENAI_AVAILABLE = True
-except ImportError:
-    OPENAI_AVAILABLE = False
-
-try:
-    import anthropic
-
-    ANTHROPIC_AVAILABLE = True
-except ImportError:
-    ANTHROPIC_AVAILABLE = False
 
 logger = logging.getLogger(__name__)
 

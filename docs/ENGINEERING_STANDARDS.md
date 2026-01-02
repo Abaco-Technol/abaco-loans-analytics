@@ -8,7 +8,10 @@
 
 ## Overview
 
-This document establishes engineering standards for the ABACO Analytics platform, ensuring code quality, maintainability, and consistency across the Python and TypeScript codebase. All contributors must adhere to these standards to maintain excellence in code integrity and operational reliability.
+This document establishes engineering standards for the ABACO Analytics platform,
+ensuring code quality, maintainability, and consistency across the Python and
+TypeScript codebase. All contributors must adhere to these standards to maintain
+excellence in code integrity and operational reliability.
 
 ---
 
@@ -16,12 +19,12 @@ This document establishes engineering standards for the ABACO Analytics platform
 
 ### Current Status (Phase 4 Audit)
 
-| Tool | Score | Status | Files Checked |
-|------|-------|--------|---|
-| **pylint** | 9.56/10 | ✅ Excellent | 37 Python modules |
-| **ruff** | 184 issues | ⚠️ Minor (58 auto-fixable) | python/ + tests/ |
-| **mypy** | 5 errors | ✅ Good (external libs) | 37 Python modules |
-| **test coverage** | 162/169 | ✅ 95.9% | test suite |
+| Tool              | Score      | Status                     | Files Checked      |
+| ----------------- | ---------- | -------------------------- | ------------------ |
+| **pylint**        | 9.56/10    | ✅ Excellent                | 37 Python modules  |
+| **ruff**          | 184 issues | ⚠️ Minor (58 auto-fixable)  | python/ + tests/   |
+| **mypy**          | 5 errors   | ✅ Good (external libs)     | 37 Python modules  |
+| **test coverage** | 162/169    | ✅ 95.9%                   | test suite         |
 
 ---
 
@@ -29,12 +32,14 @@ This document establishes engineering standards for the ABACO Analytics platform
 
 ### 1. Code Style & Formatting
 
-**Tool**: Black + isort  
+**Tool**: Black + isort
 **Config**: `pyproject.toml`
 
 #### Line Length
+
 - **Max**: 88 characters (Black default)
-- **Exception**: SQL queries, long URLs, or domain-specific strings (document in comment)
+- **Exception**: SQL queries, long URLs, or domain-specific strings
+  (document in comment)
 
 ```python
 # Good: Proper line length
@@ -51,6 +56,7 @@ def validate_portfolio_metrics(total_receivable: float, eligible_amount: float, 
 ```
 
 #### Imports
+
 - **Order**: Standard library → Third-party → Local (enforced by isort)
 - **Placement**: All imports at top of file (no import-outside-toplevel)
 - **Exception**: Conditional imports for optional dependencies
@@ -75,24 +81,25 @@ import json
 ```
 
 #### Formatting
+
 - **Run before commit**: `black python tests`
 - **Trailing whitespace**: Remove all (automatic with Black)
 - **Blank lines**: 2 between top-level definitions, 1 within classes
 
 ### 2. Naming Conventions
 
-| Element | Convention | Example |
-|---------|-----------|---------|
-| Modules | snake_case | `kpi_engine_v2.py` |
-| Classes | PascalCase | `UnifiedIngestion` |
-| Functions | snake_case | `calculate_par_30()` |
-| Constants | UPPER_SNAKE_CASE | `MAX_RETRIES = 3` |
-| Private methods | _leading_underscore | `_validate_schema()` |
-| Type hints | descriptive | `config: Dict[str, Any]` |
+| Element         | Convention          | Example                |
+| --------------- | ------------------- | ---------------------- |
+| Modules         | snake_case          | `kpi_engine_v2.py`     |
+| Classes         | PascalCase          | `UnifiedIngestion`     |
+| Functions       | snake_case          | `calculate_par_30()`   |
+| Constants       | UPPER_SNAKE_CASE    | `MAX_RETRIES = 3`      |
+| Private methods | _leading_underscore | `_validate_schema()`   |
+| Type hints      | descriptive         | `config: Dict[str, Any]` |
 
 ### 3. Type Hints
 
-**Requirement**: All public functions must have type hints  
+**Requirement**: All public functions must have type hints
 **Tool**: mypy (strict mode)
 
 ```python
@@ -112,7 +119,7 @@ def ingest_file(self, file_path: Path, archive_dir=None):
 
 ### 4. Docstrings
 
-**Format**: Google-style docstrings  
+**Format**: Google-style docstrings
 **Requirement**: All public classes and functions
 
 ```python
@@ -163,6 +170,7 @@ except:
 ### 6. Logging
 
 **Requirements**:
+
 - Use `logging` module, not print()
 - Use lazy formatting (%s) not f-strings in log calls
 - Log at appropriate level (DEBUG, INFO, WARNING, ERROR)
@@ -173,7 +181,7 @@ logger.info("Ingestion complete: %d rows, %s checksum", row_count, checksum)
 logger.warning("Validation failed for %d records", error_count)
 
 # Avoid: f-string formatting in logger calls
-logger.info(f"Ingestion complete: {row_count} rows")  # Lazy formatting is evaluated even if not logged
+logger.info(f"Ingestion complete: {row_count} rows")  # Evaluated even if not logged
 ```
 
 ### 7. Magic Numbers & Configuration
@@ -204,7 +212,8 @@ if attempt > 3:
 ### 1. Test Organization
 
 **Structure**:
-```
+
+```text
 tests/
 ├── test_ingestion.py       # UnifiedIngestion tests
 ├── test_transformation.py   # UnifiedTransformation tests
@@ -318,6 +327,7 @@ PHASE 4: Fix test suite for config-aware UnifiedIngestion
 ```
 
 **Types**:
+
 - `PHASE X`: Major phase completion
 - `feat`: New feature
 - `fix`: Bug fix

@@ -17,6 +17,7 @@ Refactored the Abaco dual-engine KPI stack (Python side) to eliminate pandas Fut
 ### 1. Analytics Stack Review
 
 **Scope**: Full end-to-end analytics architecture review
+
 - Scanned Python KPI engine: `src/analytics/kpi_catalog_processor.py`
 - Scanned SQL analytics views: `supabase/migrations/20260101_analytics_kpi_views.sql`
 - Verified exports pipeline: `run_complete_analytics.py`
@@ -47,11 +48,13 @@ Refactored the Abaco dual-engine KPI stack (Python side) to eliminate pandas Fut
 ### 3. Quality Assurance
 
 **Mathematical Equivalence**: ✅ All KPI formulas verified
+
 - Weighted averages: `sum(weight * exposure) / sum(exposure)` – unchanged
 - DPD thresholds: `>= 7, >= 15, >= 30, >= 60, >= 90` – unchanged
 - Concentration: Top 1%, 3%, 10% by outstanding – unchanged
 
 **JSON Export Integrity**: ✅ All 13 KPI groups present and valid
+
 - `monthly_pricing` (APR, fees, effective rate)
 - `monthly_risk` (DPD buckets, default %)
 - `customer_types` (New, Recurrent, Reactivated)
@@ -61,6 +64,7 @@ Refactored the Abaco dual-engine KPI stack (Python side) to eliminate pandas Fut
 - `dpd_buckets`, `replines_metrics`, `customer_classification`, `intensity_segmentation`, `active_unique_customers`
 
 **Backward Compatibility**: ✅ No breaking changes
+
 - Column names unchanged
 - KPI group names unchanged
 - Downstream contract identical

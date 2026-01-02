@@ -174,7 +174,7 @@ Compliance Breach: CRITICAL → All channels + escalation
 
 ## Monitoring Dashboard
 
-**URL**: https://abaco-loans-analytics.vercel.app/dashboard
+**URL**: <https://abaco-loans-analytics.vercel.app/dashboard>
 **Refresh Rate**: Real-time (WebSocket)
 **Key Metrics Displayed**:
 
@@ -208,6 +208,6 @@ Compliance Breach: CRITICAL → All channels + escalation
 ## Contact
 
 **Architecture Owner**: Fintech Factory Team
-**GitHub**: https://github.com/Abaco-Technol/abaco-loans-analytics
+**GitHub**: <https://github.com/Abaco-Technol/abaco-loans-analytics>
 **Slack Channel**: #fintech-factory
 **Last Updated**: 2025-01-01

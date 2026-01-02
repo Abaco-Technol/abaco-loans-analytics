@@ -6,6 +6,7 @@ Ready for production use and dashboard integration.
 
 import json
 import sys
+import importlib.util
 from datetime import datetime
 from pathlib import Path
 
@@ -15,9 +16,6 @@ import pandas as pd
 project_root = Path(__file__).parent
 sys.path.insert(0, str(project_root))
 sys.path.insert(0, str(project_root / "src" / "analytics"))
-
-# Load the KPI calculator directly
-import importlib.util
 
 spec = importlib.util.spec_from_file_location(
     "kpi_calc", project_root / "src" / "analytics" / "kpi_calculator_complete.py"

@@ -15,6 +15,7 @@
 
 ---
 # 📊 ABACO Loans Analytics - Delivery Summary
+
 **Date**: December 30, 2025
 **Status**: ✅ DELIVERED
 
@@ -23,9 +24,10 @@
 ## 📦 Deliverables
 
 ### 1. **Interactive Streamlit Dashboard**
+
 - **Location**: `streamlit_app/app.py`
 - **Status**: 🟢 **LIVE & RUNNING**
-- **Access**: http://localhost:8501
+- **Access**: <http://localhost:8501>
 - **Features**:
   - Portfolio Overview (17,688 loans analyzed)
   - Financial Metrics Dashboard
@@ -37,6 +39,7 @@
   - Detailed Data Explorer
 
 **Key Metrics from Dashboard:**
+
 ```
 Total Loans:               17,688
 Active Loans:              ~6,200
@@ -46,6 +49,7 @@ Outstanding Balance:       $7.0M USD
 ```
 
 ### 2. **Executive Summary Report (HTML)**
+
 - **File**: `exports/ABACO_Executive_Report.html`
 - **Status**: ✅ **GENERATED & READY**
 - **Size**: 13 KB
@@ -59,6 +63,7 @@ Outstanding Balance:       $7.0M USD
   - Key Recommendations
 
 **Key Findings:**
+
 | Metric | Value | Status |
 |--------|-------|--------|
 | Collection Rate | 87.5% | ✓ Healthy |
@@ -67,6 +72,7 @@ Outstanding Balance:       $7.0M USD
 | PAR 90 Ratio | 5.46% | ⚠️ Monitor |
 
 ### 3. **Portfolio Metrics (JSON)**
+
 - **File**: `exports/portfolio_metrics.json`
 - **Status**: ✅ **CREATED**
 - **Use**: API integration, data science workflows
@@ -77,6 +83,7 @@ Outstanding Balance:       $7.0M USD
 ## 🚀 How to Access
 
 ### **Streamlit Dashboard** (Live Now)
+
 ```bash
 # The dashboard is currently running on:
 # http://localhost:8501
@@ -86,6 +93,7 @@ Outstanding Balance:       $7.0M USD
 ```
 
 ### **Executive Report** (HTML)
+
 ```bash
 # Open in browser:
 open /Users/jenineferderas/Documents/abaco-loans-analytics/exports/ABACO_Executive_Report.html
@@ -94,6 +102,7 @@ open /Users/jenineferderas/Documents/abaco-loans-analytics/exports/ABACO_Executi
 ```
 
 ### **Portfolio Metrics** (JSON)
+
 ```bash
 # View metrics:
 cat /Users/jenineferderas/Documents/abaco-loans-analytics/exports/portfolio_metrics.json
@@ -107,18 +116,21 @@ curl file:///Users/jenineferderas/Documents/abaco-loans-analytics/exports/portfo
 ## 📊 Data Analysis Summary
 
 ### Portfolio Composition
+
 - **Total Loans Analyzed**: 17,688
 - **Unique Customers**: 8,942
 - **Principal Disbursed**: $55,791,482 USD
 - **Outstanding Balance**: $6,970,758 USD
 
 ### Financial Health
+
 - **Collection Rate**: 87.5% (Strong)
 - **Avg Interest Rate**: 6.23%
 - **Avg Loan Size**: $3,154 USD
 - **Weighted Avg Term**: ~128 days
 
 ### Risk Assessment
+
 | Risk Category | Count | Rate | Assessment |
 |---|---|---|---|
 | Current (0-30 DPD) | 17,472 | 98.76% | ✓ Excellent |
@@ -127,10 +139,12 @@ curl file:///Users/jenineferderas/Documents/abaco-loans-analytics/exports/portfo
 | **PAR 90 Balance** | **$380,842** | **5.46%** | ⚠️ **Monitor** |
 
 ### Product Distribution
+
 - **Factoring** (primary product type)
 - Analyzed across multiple segments
 
 ### Geographic Coverage
+
 - **Top Locations**: San Salvador, Cuscatlán, Santa Ana, La Libertad, Chalatenango
 - **Geographic Diversification**: Loans distributed across 15+ regions
 
@@ -139,6 +153,7 @@ curl file:///Users/jenineferderas/Documents/abaco-loans-analytics/exports/portfo
 ## ✨ Features Implemented
 
 ### Dashboard Capabilities
+
 ✅ Real-time data loading from CSV
 ✅ Responsive grid layout (mobile-friendly)
 ✅ Interactive visualizations (Altair charts)
@@ -148,6 +163,7 @@ curl file:///Users/jenineferderas/Documents/abaco-loans-analytics/exports/portfo
 ✅ Multi-section analysis
 
 ### Report Features
+
 ✅ Professional HTML styling
 ✅ Color-coded risk indicators
 ✅ Responsive design (works on all devices)
@@ -161,17 +177,20 @@ curl file:///Users/jenineferderas/Documents/abaco-loans-analytics/exports/portfo
 ## 🔧 Technical Stack
 
 **Frontend Dashboard:**
+
 - Streamlit (Python web app framework)
 - Pandas (data processing)
 - Altair (interactive visualizations)
 - Python 3.9+
 
 **Data Source:**
+
 - Real CSV loan data from Looker exports
 - 17,688 loan records
 - 29 data columns (comprehensive loan information)
 
 **Report Generation:**
+
 - Python (data processing & analysis)
 - HTML5 + CSS3 (report formatting)
 - JSON (metrics export)
@@ -204,6 +223,7 @@ curl file:///Users/jenineferderas/Documents/abaco-loans-analytics/exports/portfo
 ## 📞 Support
 
 For questions or to modify the dashboard:
+
 1. Edit `streamlit_app/app.py` for dashboard changes
 2. Run `python3 generate_executive_report.py` to regenerate reports
 3. Access metrics via `exports/portfolio_metrics.json`

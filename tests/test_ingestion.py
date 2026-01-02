@@ -1,6 +1,5 @@
 import pandas as pd
 import pytest
-from pathlib import Path
 
 from python.pipeline.ingestion import UnifiedIngestion
 
@@ -70,7 +69,7 @@ def test_audit_log_creation(tmp_path, minimal_config):
     csv_file = tmp_path / "sample.csv"
     csv_file.write_text(csv_content)
     ingestion = UnifiedIngestion(minimal_config)
-    result = ingestion.ingest_file(csv_file)
+    ingestion.ingest_file(csv_file)
     assert len(ingestion.audit_log) > 0
     assert any(entry["event"] == "start" for entry in ingestion.audit_log)
     assert any(entry["event"] == "complete" for entry in ingestion.audit_log)

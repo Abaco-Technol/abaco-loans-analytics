@@ -5,6 +5,7 @@ This directory contains loan tape data exported from Looker Studio dashboard.
 ## Dataset Description
 
 The Looker Studio report contains comprehensive loan portfolio analytics:
+
 - **Dashboard URL**: Obtain the production Looker Studio link from the team's secure analytics documentation or access management system (report name: "Loan Portfolio Analytics").
 
 ## Files (To be uploaded)
@@ -12,16 +13,19 @@ The Looker Studio report contains comprehensive loan portfolio analytics:
 Three primary datasets should be placed in this directory using standardized filenames:
 
 ### 1. loan_data.csv
+
 - **Description**: Core loan tape data including loan amounts, rates, terms, and portfolio metrics
 - **Source**: Looker Studio - Loan Data Table
 - **Update Frequency**: Daily
 
 ### 2. customer_data.csv
+
 - **Description**: Customer information and demographics
 - **Source**: Looker Studio - Customer Data Table
 - **Update Frequency**: Daily
 
 ### 3. historic_payment_data.csv
+
 - **Description**: Historical payment records and transaction data
 - **Source**: Looker Studio - Historic Payment Table
 - **Update Frequency**: Daily
@@ -41,9 +45,11 @@ These export names are artifacts of Looker Studio and may change if the report i
 | `Abaco-Loan-Tape_Historic-Real-Payment_Table-6.csv`  | `historic_payment_data.csv`   |
 
 When adding data to this directory, you may need to rename the exported CSVs from their Looker names to the standardized filenames above.
+
 ## Usage
 
 These datasets are used by:
+
 - Risk analytics agents for portfolio monitoring
 - Customer segmentation for HubSpot integration
 - Financial performance tracking

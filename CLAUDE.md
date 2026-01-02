@@ -16,6 +16,7 @@
 ## Phase 4: Engineering Standards Commands
 
 ### Setup Development Environment
+
 ```bash
 # First time only: install development dependencies
 make install-dev
@@ -24,26 +25,31 @@ make install-dev
 ### Code Quality Checks
 
 **Quick lint (non-blocking)**
+
 ```bash
 make lint
 ```
 
 **Auto-format code**
+
 ```bash
 make format
 ```
 
 **Type checking with mypy**
+
 ```bash
 make type-check
 ```
 
 **Full quality audit** (runs lint, type-check, and coverage)
+
 ```bash
 make audit-code
 ```
 
 **Complete quality check** (format, lint, type-check, test)
+
 ```bash
 make quality
 ```
@@ -51,11 +57,13 @@ make quality
 ### Testing
 
 **Run all tests**
+
 ```bash
 make test
 ```
 
 **Tests with coverage report**
+
 ```bash
 make test-cov
 ```
@@ -89,6 +97,7 @@ make test-cov
 ## Phase 5: Operational Deliverables
 
 **Pending deliverables**:
+
 1. OPERATIONS.md - Operational Runbook
 2. MIGRATION.md - Migration Guide
 3. Data Quality Report
@@ -99,16 +108,19 @@ make test-cov
 ## Recent Changes (Phase 4)
 
 **Commits**:
+
 1. PHASE 4: Fix test suite for config-aware UnifiedIngestion and UnifiedTransformation
 2. Code quality audit and standards documentation
 
 **Key Files Created/Modified**:
+
 - `docs/ENGINEERING_STANDARDS.md` - Best practices and coding standards
 - `docs/PHASE_4_AUDIT_FINDINGS.md` - Detailed code quality audit with remediation plan
 - `tests/conftest.py` - Added minimal_config fixture
 - `tests/test_ingestion.py`, `test_transformation.py`, `test_pipeline.py`, etc. - Updated to config-aware API
 
 **Results**:
+
 - 28 tests fixed (43 failures → 15 failures)
 - 162/169 tests passing (95.9% coverage)
 - Pylint score: 9.56/10 ✅ Excellent
@@ -125,7 +137,7 @@ make test-cov
    - Create MIGRATION.md (migration guide)
    - Generate Data Quality Report
    - Refactor too-many-arguments methods
-   
+
 2. **Next Sprint (Phase 5 Continued)**:
    - Deprecate KPIEngine v1 - migrate to v2
    - Resolve remaining mypy errors (type stubs)
@@ -143,11 +155,13 @@ make test-cov
 **Current Branch**: refactor/pipeline-complexity
 
 **Recent Commits**:
+
 1. PHASE 3.4E-F COMPLETE: Configuration consolidation
 2. PHASE 3A COMPLETE: Comprehensive module consolidation
 3. PHASE 1 COMPLETE: Repository audit and architecture documentation
 
 **Uncommitted Changes**:
+
 - dev-requirements.txt (new)
 - Makefile (updated)
 
@@ -156,27 +170,32 @@ make test-cov
 ## Quick Reference
 
 ### Project Root Files
+
 - PROGRESS_REPORT.md - Project status and timeline
 - COMPREHENSIVE_DEBT_AUDIT.md - Technical debt analysis
 - CONFIG_CONSOLIDATION_SUMMARY.md - Configuration work details
 - CONFIG_STRATEGY.md - Configuration consolidation strategy
 
 ### Documentation Files
+
 - docs/ARCHITECTURE.md - System architecture documentation
 - docs/ENGINEERING_STANDARDS.md - Code quality standards and best practices
 - docs/PHASE_4_AUDIT_FINDINGS.md - Detailed code quality audit with remediation plan
 
 ### Configuration
+
 - config/pipeline.yml - Master configuration
 - config/environments/{dev,staging,production}.yml - Environment overrides
 - config/LEGACY/ - Deprecated configurations (marked for deletion v2.0)
 
 ### Code Quality
+
 - Makefile - Build and quality targets
 - dev-requirements.txt - Development dependencies
 - pyproject.toml - Tool configuration (pylint, black, etc)
 
 ### Production Pipeline
+
 - python/pipeline/orchestrator.py - V2 Pipeline orchestrator
 - python/pipeline/{ingestion,transformation,calculation,output}.py - Pipeline phases
 - python/kpi_engine_v2.py - KPI calculation engine

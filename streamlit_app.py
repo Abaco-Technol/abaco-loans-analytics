@@ -5,25 +5,10 @@ import logging
 from datetime import datetime
 from pathlib import Path
 
-import streamlit as st
-
-# FAST HEALTH CHECK - MUST BE FIRST
-# NOTE: Azure App Service should be configured to use /?page=health 
-# or /_stcore/health to avoid timeouts.
-try:
-    query_params = st.query_params
-except AttributeError:
-    query_params = st.experimental_get_query_params()
-
-page = query_params.get("page")
-if page == "health" or page == ["health"] or (isinstance(page, list) and "health" in page):
-    st.write("ok")
-    st.stop()
-
-# HEAVY IMPORTS AND INITIALIZATION
 import numpy as np
 import pandas as pd
 import plotly.express as px
+import streamlit as st
 
 # Theme definition (as per design system)
 ABACO_THEME = {

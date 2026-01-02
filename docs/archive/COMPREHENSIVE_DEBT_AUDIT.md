@@ -1,4 +1,5 @@
 # Comprehensive Technical Debt Audit
+
 **Scope**: Full codebase (Weeks 1-4)
 **Date**: 2025-12-26
 **Status**: CRITICAL - Multiple duplication patterns identified
@@ -26,6 +27,7 @@ streamlit_app/utils/ingestion.py (unknown lines)
 ```
 
 **Impact**:
+
 - Three different ingestion implementations
 - Different error handling, validation, retry logic
 - Risk of data inconsistency depending on which is used
@@ -46,6 +48,7 @@ src/pipeline/transformation.py (155 lines)
 ```
 
 **Impact**:
+
 - Old version has no audit trail or error handling
 - New version has comprehensive logging
 - Code duplication across 207 lines
@@ -65,6 +68,7 @@ src/kpi_engine_v2.py (101 lines)
 ```
 
 **Impact**:
+
 - Old engine still in codebase
 - New engine is simpler (101 vs 182 lines) but uses same KPI modules
 - Maintenance burden, confusion about which to use
@@ -87,6 +91,7 @@ src/pipeline/calculation_v2.py (210 lines, NEW)
 ```
 
 **Assessment**:
+
 - Unclear which is used in production
 - `calculation.py` still present despite `calculation_v2.py`
 
@@ -139,18 +144,21 @@ Risk: Different services using different configs
 ## 🔍 Root Cause Analysis
 
 ### Week 1-2: Initial Development
+
 - Multiple attempts at ingestion/transformation modules
 - Different teams building independent solutions
 - No consolidation before Week 3
 - Configuration files scattered across multiple locations
 
 ### Week 3: Migration to V2
+
 - Created `_v2` versions (ingestion, transformation, kpi_engine, calculation)
 - Old versions left in place "for safety"
 - Never consolidated back
 - `agents/` framework built separately from main pipeline
 
 ### Week 4: Production Deployment
+
 - Only used V2 versions in production
 - Old versions still in codebase (dead code)
 - Created confusion about "source of truth"
@@ -160,16 +168,19 @@ Risk: Different services using different configs
 ## ⚠️ Risk Assessment
 
 ### Data Consistency Risk: **HIGH**
+
 - 3 different ingestion implementations could produce different schemas
 - Streamlit app might use old ingestion path
 - Agents use separate code path
 
 ### Maintenance Risk: **HIGH**
+
 - Bug fixes must be applied to multiple locations
 - Test coverage split across versions
 - No clear deprecation path
 
 ### Operational Risk: **MEDIUM**
+
 - Unclear which code paths are active
 - Configuration might be inconsistent across environments
 - Difficult to troubleshoot in production
@@ -181,33 +192,39 @@ Risk: Different services using different configs
 ### Phase 3 Extended: ELIMINATION (Timeline: 2-3 days)
 
 #### 3.4a: Delete Legacy Ingestion
+
 1. Delete `src/ingestion.py` (legacy)
 2. Audit `streamlit_app/utils/ingestion.py` - migrate to `pipeline/ingestion.py` or delete
 3. Keep only: `src/pipeline/ingestion.py`
 4. Update all imports across codebase
 
 #### 3.4b: Delete Legacy Transformation
+
 1. Delete `src/transformation.py` (legacy)
 2. Keep only: `src/pipeline/transformation.py`
 3. Update all imports
 
 #### 3.4c: Delete/Deprecate Old Calculation
+
 1. Delete `src/pipeline/calculation.py` (legacy)
 2. Keep only: `src/pipeline/calculation_v2.py` (rename to `calculation.py`)
 3. Add deprecation note to any references
 
 #### 3.4d: Handle KPI Engine
+
 1. Mark `src/kpi_engine.py` as DEPRECATED
 2. Add migration guide to `src/kpi_engine_v2.py`
 3. Schedule deletion for v2.0 release
 
 #### 3.4e: Consolidate Configuration
+
 1. Create single `/config/pipeline.yml` as source of truth
 2. Delete or merge: `config/pipelines/`, `config/agents/`, `config/kpis/` (except if agent-specific needed)
 3. Add environment variable override support
 4. Document configuration hierarchy
 
 #### 3.4f: Integrate Agent Framework
+
 1. Refactor agents to consume pipeline outputs instead of separate execution
 2. Unified audit trail across all operations
 3. Single entry point for all analytics
@@ -216,7 +233,8 @@ Risk: Different services using different configs
 
 ## 🎯 Priority Actions (Immediate)
 
-### Must Do (Next 24 hours):
+### Must Do (Next 24 hours)
+
 - [ ] Delete `src/ingestion.py`
 - [ ] Delete `src/transformation.py`
 - [ ] Understand `streamlit_app/utils/ingestion.py` (keep or delete?)
@@ -224,12 +242,14 @@ Risk: Different services using different configs
 - [ ] Search codebase for imports to these files
 - [ ] Run full test suite after changes
 
-### Should Do (Next 48 hours):
+### Should Do (Next 48 hours)
+
 - [ ] Consolidate configuration files
 - [ ] Add deprecation markers to old modules
 - [ ] Document migration path for any external code
 
-### Nice To Do (Next week):
+### Nice To Do (Next week)
+
 - [ ] Integrate agent framework
 - [ ] Complete configuration cleanup
 
@@ -238,6 +258,7 @@ Risk: Different services using different configs
 ## Test Coverage Strategy
 
 Before each deletion:
+
 1. Run tests to identify dependencies
 2. Update imports in test files
 3. Re-run tests to confirm no breakage

@@ -9,6 +9,7 @@ This document outlines the engineering standards, code quality requirements, and
 - **Indentation**: Use 4 spaces for Python.
 
 ### Commands
+
 ```bash
 make format  # Runs black and isort
 ```
@@ -22,11 +23,13 @@ We use a combination of tools to ensure code quality:
 - **Ruff**: For fast, comprehensive linting and quick fixes.
 
 ### Key Rules
+
 - **No Unused Variables**: Always remove or underscore unused variables.
 - **Lazy Logging**: Use `%s` formatting in logging calls (e.g., `logger.info("msg: %s", var)`) instead of f-strings to avoid unnecessary string interpolation if the log level is disabled.
 - **Complexity**: Keep functions focused and avoid too many return statements or positional arguments.
 
 ### Commands
+
 ```bash
 make lint  # Runs all linters
 ```
@@ -36,11 +39,13 @@ make lint  # Runs all linters
 Type safety is enforced via **Mypy**. All new production code in `src/pipeline/` must be fully type-hinted.
 
 ### Rules
+
 - **Explicit Annotations**: Annotate complex dictionaries and collections (e.g., `Dict[str, Any]`).
 - **Optional Types**: Use `Optional[T]` for variables that can be `None`.
 - **Strictness**: Aim for no `Any` where possible, though `Any` is permitted for complex dataframes or legacy integrations.
 
 ### Commands
+
 ```bash
 make type-check
 ```
@@ -57,6 +62,7 @@ make type-check
 - **Parity**: KPI calculations must maintain parity between Python logic and SQL views (Supabase/PostgreSQL).
 
 ### Commands
+
 ```bash
 make test
 make test-cov

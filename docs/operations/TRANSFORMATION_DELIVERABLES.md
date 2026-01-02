@@ -25,6 +25,7 @@
 **Trigger**: Users report dashboard unavailable, NXDOMAIN, or error page
 
 #### Symptoms
+
 - DNS resolution failure
 - HTTP 5xx errors
 - Blank page / infinite loading
@@ -68,6 +69,7 @@ END: Issue resolved or escalated
 **Step 1: Verify Service Status (2 minutes)**
 
 Azure Portal Navigation:
+
 1. Go to: `AI-MultiAgent-Ecosystem-RG` → `abaco-analytics-dashboard`
 2. Check "Estado": Should show "En ejecución" (Running)
 3. Check "Estado en tiempo de ejecución": Should NOT show "Problemas detectados"
@@ -76,6 +78,7 @@ Azure Portal Navigation:
 **Step 2: Check Deployment Status (2 minutes)**
 
 In Azure Portal:
+
 1. Deployment Center → Logs
 2. Find most recent deployment
 3. Status should be "Success"
@@ -88,6 +91,7 @@ In Azure Portal:
 **Step 3: Inspect Application Logs (3 minutes)**
 
 In Azure Portal:
+
 1. Log stream (under Monitoring section)
 2. Look for errors in last 30 minutes
 3. Key patterns:
@@ -99,6 +103,7 @@ In Azure Portal:
 **Step 4: Emergency Rollback (5 minutes)**
 
 If recent deployment broke the app:
+
 1. GitHub Actions → Find last successful "Deploy Abaco Analytics Dashboard" run
 2. Note the commit SHA
 3. Git: `git revert <broken-commit-sha>`
@@ -118,6 +123,7 @@ If recent deployment broke the app:
 **Trigger**: Scheduled workflow fails, stale data in dashboard, missing KPI updates
 
 #### Symptoms
+
 - GitHub Actions shows red X on scheduled workflows
 - Dashboard shows outdated "last updated" timestamp
 - Slack notifications of pipeline failure (if configured)
@@ -168,6 +174,7 @@ END: Pipeline re-run successfully OR root cause identified for fix
 **Step 1: Identify Failure Point (2 minutes)**
 
 GitHub Actions:
+
 1. Navigate to failed workflow run
 2. Look at job duration:
    - `< 30 sec` → Dependency/build issue
@@ -180,12 +187,14 @@ GitHub Actions:
 **Pattern A: Missing Secrets**
 
 Error:
+
 ```
 KeyError: 'DATABASE_URL'
 Environment variable 'META_ACCESS_TOKEN' not found
 ```
 
 Fix:
+
 1. GitHub → Settings → Secrets and variables → Actions
 2. New repository secret:
    - Name: `DATABASE_URL` (or missing secret name)
@@ -195,12 +204,14 @@ Fix:
 **Pattern B: Expired API Keys**
 
 Error:
+
 ```
 401 Unauthorized
 Invalid API key
 ```
 
 Fix:
+
 1. Visit service dashboard (HubSpot/Meta/OpenAI)
 2. Generate new API key
 3. Update GitHub Secret with new value
@@ -209,12 +220,14 @@ Fix:
 **Pattern C: Rate Limiting**
 
 Error:
+
 ```
 429 Too Many Requests
 Rate limit exceeded
 ```
 
 Fix:
+
 1. Adjust workflow schedule (reduce frequency)
 2. Add exponential backoff to API calls
 3. Request rate limit increase from API provider
@@ -222,12 +235,14 @@ Fix:
 **Pattern D: Data Validation Failure**
 
 Error:
+
 ```
 ValidationError: Expected X rows, got Y
 AssertionError: Column 'amount' has null values
 ```
 
 Fix:
+
 1. This is a DATA QUALITY issue, not a code issue
 2. Investigate source system (Looker/HubSpot/Meta)
 3. Decide: Accept new data shape OR fix source
@@ -236,12 +251,14 @@ Fix:
 **Step 3: Re-run Pipeline (1 minute)**
 
 After applying fix:
+
 1. GitHub Actions → Failed workflow run → "Re-run jobs" (top right)
 2. Monitor new run for success
 
 **Step 4: Verify Data Updated (2 minutes)**
 
 After successful pipeline run:
+
 1. Check dashboard for updated "Last refreshed" timestamp
 2. Spot-check a few KPI values look reasonable
 3. Verify row counts in warehouse (if applicable)
@@ -261,6 +278,7 @@ After successful pipeline run:
 **Trigger**: Cannot merge PR, GitHub Actions fails on every commit, deployment stuck
 
 #### Symptoms
+
 - All CI checks failing with red X
 - "Merge pull request" button disabled
 - Deployment workflow never completes
@@ -306,6 +324,7 @@ END: CI/CD restored
 **Step 1: Identify CI/CD Blocker (2 minutes)**
 
 Check multiple signals:
+
 1. GitHub → Actions tab → Latest workflow runs
 2. Pull request → Checks tab → See which check failed
 3. Branch protection → See which required checks missing
@@ -313,6 +332,7 @@ Check multiple signals:
 **Step 2: Fix Workflow Syntax Errors**
 
 If "Invalid workflow file" annotation:
+
 1. Click annotation to see exact line/column
 2. Common issues:
    - Incorrect indentation (YAML is indent-sensitive)
@@ -356,12 +376,14 @@ jobs:
 If CI is completely broken but you need to deploy urgently:
 
 **Option A: Temporarily disable branch protection**
+
 1. Settings → Branches → Edit protection rule for 'main'
 2. Uncheck "Require status checks to pass"
 3. Merge PR manually
 4. RE-ENABLE protection immediately after
 
 **Option B: Manual Azure deployment**
+
 1. Build locally: `npm run build` / `python -m build`
 2. Azure Portal → App Service → Deployment Center
 3. Upload `.zip` of built files
@@ -654,6 +676,7 @@ This deliverables package provides:
 ✅ **Team Readiness**: Checklists & procedures for consistent execution
 
 **Next Steps**:
+
 1. Implement incident runbooks in team Slack/wiki
 2. Deploy Azure Monitor alerts using ARM template
 3. Begin Week 2 stabilization phase

@@ -36,12 +36,14 @@ FIGMA_FILE_KEY: nuVKwuPuLS7VmLFvqzOX1G
 **Why**: Required for KPI persistence and analytics data writes via Supabase PostgreSQL.
 
 **How to get**:
+
 1. Go to [Supabase Dashboard](https://app.supabase.com) → Select project `abaco-loans-analytics`
 2. Settings → Database → Connection string → Select **Transaction Pooler** tab
 3. Copy the connection string
 4. Replace `[YOUR-PASSWORD]` with your Supabase database password
 
 **Format**:
+
 ```
 postgres://postgres:[PASSWORD]@db.zpowfbeftxexzidlxndy.supabase.co:6543/postgres
 ```
@@ -49,6 +51,7 @@ postgres://postgres:[PASSWORD]@db.zpowfbeftxexzidlxndy.supabase.co:6543/postgres
 **Why Port 6543?**: Transaction pooler is ideal for serverless/stateless applications (better than direct connection port 5432).
 
 **To Add to GitHub**:
+
 1. Go to repository → Settings → Secrets and variables → Actions
 2. Click "New repository secret"
 3. Name: `DATABASE_URL`
@@ -62,6 +65,7 @@ postgres://postgres:[PASSWORD]@db.zpowfbeftxexzidlxndy.supabase.co:6543/postgres
 **Environment Variable**: `AZURE_CREDENTIALS`
 
 **Why**: Required for:
+
 - App Service deployments
 - Azure Blob Storage access (alternative to connection string)
 - Azure Dashboard creation
@@ -80,6 +84,7 @@ az ad sp create-for-rbac \
 ```
 
 **Output** (copy entire JSON):
+
 ```json
 {
   "clientId": "00000000-0000-0000-0000-000000000000",
@@ -96,6 +101,7 @@ az ad sp create-for-rbac \
 ```
 
 **To Add to GitHub**:
+
 1. Go to repository → Settings → Secrets and variables → Actions
 2. Click "New repository secret"
 3. Name: `AZURE_CREDENTIALS`
@@ -111,16 +117,19 @@ az ad sp create-for-rbac \
 **Why**: Direct access to Azure Blob Storage for exporting files.
 
 **How to get**:
+
 1. Azure Portal → Storage account `abacostgprod` (or your storage account)
 2. Settings → Access keys
 3. Copy "Connection string" under "key1"
 
 **Format**:
+
 ```
 DefaultEndpointsProtocol=https;AccountName=abacostgprod;AccountKey=...;EndpointSuffix=core.windows.net
 ```
 
 **To Add to GitHub**:
+
 1. Settings → Secrets and variables → Actions
 2. Name: `AZURE_STORAGE_CONNECTION_STRING`
 3. Value: [paste connection string]
@@ -130,16 +139,19 @@ DefaultEndpointsProtocol=https;AccountName=abacostgprod;AccountKey=...;EndpointS
 ### 4. Azure Resource IDs (For Dashboard & Monitoring)
 
 **Environment Variables**:
+
 - `AZURE_SUBSCRIPTION_ID`
 - `AZURE_RESOURCE_GROUP`
 - `AZURE_DASHBOARD_NAME`
 
 **To get**:
+
 1. Azure Portal → Your resource group `AI-MultiAgent-Ecosystem-RG`
 2. Copy the Resource Group ID
 3. Subscription ID: visible in the portal URL or Settings
 
 **Values**:
+
 ```
 AZURE_SUBSCRIPTION_ID: 695e4491-d568-4105-a1e1-8f2baf3b54df
 AZURE_RESOURCE_GROUP: AI-MultiAgent-Ecosystem-RG
@@ -159,10 +171,12 @@ AZURE_DASHBOARD_NAME: abaco-analytics-dashboard
 **Why**: Required for server-side operations and data writes.
 
 **How to get**:
+
 1. Supabase Dashboard → Settings → API
 2. Copy the "service_role secret"
 
 **To Add to GitHub**:
+
 1. Settings → Secrets → New repository secret
 2. Name: `SUPABASE_SERVICE_ROLE`
 3. Value: [paste key]
@@ -178,11 +192,13 @@ AZURE_DASHBOARD_NAME: abaco-analytics-dashboard
 **Why**: Required for Facebook Pixel tracking and Ads Manager API access.
 
 **How to get**:
+
 1. [Meta Business Suite](https://business.facebook.com/) → Settings → Apps and websites
 2. Select your app → Settings → Tokens
 3. Copy "User access token" (long-lived, 60+ days)
 
 **To Add**:
+
 - Name: `META_ACCESS_TOKEN`
 
 #### 6b. Meta Pixel ID
@@ -190,11 +206,13 @@ AZURE_DASHBOARD_NAME: abaco-analytics-dashboard
 **Environment Variable**: `META_PIXEL_ID`
 
 **How to get**:
+
 1. Meta Business Suite → Data sources → Pixels
 2. Click your pixel → Settings
 3. Copy Pixel ID
 
 **To Add**:
+
 - Name: `META_PIXEL_ID`
 
 #### 6c. Meta Ad Account ID
@@ -202,10 +220,12 @@ AZURE_DASHBOARD_NAME: abaco-analytics-dashboard
 **Environment Variable**: `META_AD_ACCOUNT_ID`
 
 **How to get**:
+
 1. Meta Ads Manager → Settings (gear icon) → Ad account settings
 2. Copy "Ad Account ID" (format: `act_1234567890`)
 
 **To Add**:
+
 - Name: `META_AD_ACCOUNT_ID`
 
 ---
@@ -217,12 +237,14 @@ AZURE_DASHBOARD_NAME: abaco-analytics-dashboard
 **Environment Variable**: `NOTION_API_KEY`
 
 **How to get**:
+
 1. [Notion Settings](https://notion.so/profile/settings) → Integrations → Develop your own integrations
 2. Click "New integration"
 3. Name: `Abaco Analytics Export`
 4. Copy the "Internal Integration Token"
 
 **To Add**:
+
 - Name: `NOTION_API_KEY`
 
 #### 7b. Notion Database ID
@@ -230,10 +252,12 @@ AZURE_DASHBOARD_NAME: abaco-analytics-dashboard
 **Environment Variable**: `NOTION_DATABASE_ID`
 
 **How to get**:
+
 1. Open your Notion database in browser
 2. Copy the 32-character ID from the URL: `https://notion.so/{YOUR_WORKSPACE}/{DATABASE_ID}?v=...`
 
 **To Add**:
+
 - Name: `NOTION_DATABASE_ID`
 
 #### 7c. Notion Reports Page ID
@@ -241,10 +265,12 @@ AZURE_DASHBOARD_NAME: abaco-analytics-dashboard
 **Environment Variable**: `NOTION_REPORTS_PAGE_ID`
 
 **How to get**:
+
 1. Create a page in Notion for analytics reports
 2. Copy the page ID from the URL
 
 **To Add**:
+
 - Name: `NOTION_REPORTS_PAGE_ID`
 
 ---
@@ -256,11 +282,13 @@ AZURE_DASHBOARD_NAME: abaco-analytics-dashboard
 **Environment Variable**: `FIGMA_DASHBOARD_FRAME_ID`
 
 **How to get**:
+
 1. Open your Figma file
 2. Right-click on the frame where you want metric updates
 3. Copy "Link to frame" and extract the node ID
 
 **To Add** (optional):
+
 - Name: `FIGMA_DASHBOARD_FRAME_ID`
 
 ---
@@ -370,6 +398,7 @@ All secrets should be rotated on a regular basis:
 **Error**: `Error: Secret FIGMA_TOKEN not found`
 
 **Solution**:
+
 1. Verify secret is added: Settings → Secrets → Check the list
 2. Check spelling (case-sensitive)
 3. If using environment variables, ensure they're properly referenced: `${{ secrets.FIGMA_TOKEN }}`
@@ -379,7 +408,9 @@ All secrets should be rotated on a regular basis:
 **Error**: `Azure: AuthorizationError: User does not have access`
 
 **Solution**:
+
 1. Regenerate service principal with correct scope:
+
    ```bash
    az ad sp delete --id [clientId]
    az ad sp create-for-rbac --name "abaco-loans-analytics-github" \
@@ -387,6 +418,7 @@ All secrets should be rotated on a regular basis:
      --scopes /subscriptions/695e4491-d568-4105-a1e1-8f2baf3b54df/resourceGroups/AI-MultiAgent-Ecosystem-RG \
      --sdk-auth
    ```
+
 2. Update `AZURE_CREDENTIALS` secret with new JSON
 
 ### Supabase Connection Timeout
@@ -394,6 +426,7 @@ All secrets should be rotated on a regular basis:
 **Error**: `Connection timeout to database`
 
 **Solution**:
+
 1. Verify using Transaction Pooler (port 6543), not direct connection (port 5432)
 2. Check database password is correct (contains special characters?)
 3. Verify IP allowlisting in Supabase (if applicable)

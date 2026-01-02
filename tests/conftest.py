@@ -3,16 +3,15 @@ import sys
 from pathlib import Path
 from typing import Any, Dict
 
+import pytest
+
 # Ensure repository modules can be imported when tests run from the repo root.
 ROOT = Path(__file__).resolve().parents[1]
-for path in (ROOT,):
-    sys.path.insert(0, str(path))
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 
 # Change working directory to repository root so relative file paths work
 os.chdir(ROOT)
-
-# Create sample CSV for tests if it doesn't exist
-import pytest
 
 
 @pytest.fixture(scope="session", autouse=True)

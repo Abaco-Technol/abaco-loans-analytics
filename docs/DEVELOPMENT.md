@@ -19,6 +19,7 @@
    - Add to `.env.local`
 
 3. **Start Development**
+
    ```bash
    npm run dev
    ```
@@ -72,6 +73,7 @@
 
 - Store all production and preview variables in the Vercel dashboard or via `vercel env`.
 - Example CLI workflow:
+
   ```bash
   vercel login
   vercel env add NEXT_PUBLIC_SUPABASE_URL production
@@ -84,6 +86,7 @@
   vercel env add NEXT_PUBLIC_DRILLDOWN_BASE_URL production
   vercel env pull .env.local
   ```
+
 - `VERCEL_TOKEN`, `VERCEL_ORG_ID`, and `VERCEL_PROJECT_ID` are required by the automated GitHub Action that deploys to Vercel and by any `vercel` CLI commands.
 - Keep the same set of `NEXT_PUBLIC_*` variables in preview/staging environments so the data flows can be tested before hitting production.
 

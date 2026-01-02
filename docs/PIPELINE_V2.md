@@ -41,6 +41,7 @@ python -m abaco_pipeline.main --config config/pipeline.yml --validate --publish
 - Re-running with the same input hash will skip publish unless `--force` is set.
 - Schema drift writes `logs/runs/<run_id>/schema_diff.json` and stops publish.
 - Quality gates write `logs/runs/<run_id>/quality.json` and stop publish when thresholds fail.
+
 ```
 
 ## Audit tables migration

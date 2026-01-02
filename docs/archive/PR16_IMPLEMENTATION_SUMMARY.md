@@ -39,6 +39,7 @@ manager.log_status()
 ```
 
 **Features**:
+
 - ✅ Environment variable support (primary)
 - ✅ Optional Azure Key Vault fallback (legacy)
 - ✅ Required/optional key validation
@@ -47,6 +48,7 @@ manager.log_status()
 - ✅ Factory function pattern
 
 **Supported Secret Categories**:
+
 ```
 REQUIRED: OPENAI_API_KEY, ANTHROPIC_API_KEY
 OPTIONAL: GEMINI_API_KEY, PERPLEXITY_API_KEY, HUBSPOT_API_KEY, etc
@@ -73,6 +75,7 @@ env = Paths.get_environment()
 ```
 
 **Environment Variable Overrides**:
+
 ```bash
 # Data directories
 DATA_RAW_PATH=./data/raw
@@ -90,6 +93,7 @@ PYTHON_ENV=development
 ```
 
 **Features**:
+
 - ✅ Automatic project-root detection
 - ✅ Environment variable precedence
 - ✅ Automatic directory creation
@@ -102,6 +106,7 @@ PYTHON_ENV=development
 ### 3. **Script Refactoring**
 
 #### `scripts/monitoring_checkpoint.py`
+
 - **Changed**: Hardcoded `output_dir = "logs/monitoring"`
 - **To**: Uses `Paths.monitoring_logs_dir(create=True)`
 - **Benefit**: Respects `LOGS_PATH` env var, auto-creates directories
@@ -115,6 +120,7 @@ def save_checkpoint(self, output_dir: Optional[str] = None) -> str:
 ```
 
 #### `scripts/production_cutover.sh`
+
 - **Changed**: Hardcoded `PROD_ENV=".venv"`, `LOG_FILE="${PROD_DIR}/logs/..."`
 - **To**: Environment variables with defaults: `VENV_PATH`, `LOGS_PATH`, `PROD_DIR`
 - **Benefit**: Portable across local, staging, production
@@ -136,13 +142,17 @@ LOG_FILE="${LOGS_PATH}/cutover_$(date ...).log"
 ### 4. **Security Automation Scripts**
 
 #### `scripts/security/credential_rotation_helper.sh`
+
 Provides step-by-step instructions for rotating exposed credentials:
+
 - Lists all exposed credentials with sources
 - Provides URLs to rotation interfaces
 - Documents remediation steps
 
 #### `scripts/security/scan_credentials.sh`
+
 Automated scanning for exposed credentials:
+
 - Searches codebase for known secret patterns
 - Reports potential exposures
 - Excludes common false positives (node_modules, venv, etc)
@@ -152,6 +162,7 @@ Automated scanning for exposed credentials:
 ### 5. **Comprehensive Test Suite**
 
 #### `tests/test_paths.py` (18 tests)
+
 ```
 ✅ test_get_project_root_exists
 ✅ test_resolve_absolute_path
@@ -163,6 +174,7 @@ Automated scanning for exposed credentials:
 ```
 
 #### `tests/test_secrets_manager.py` (13 tests)
+
 ```
 ✅ test_get_existing_secret
 ✅ test_get_required_missing_secret_raises_error
@@ -181,18 +193,21 @@ Automated scanning for exposed credentials:
 
 ## Files Changed
 
-### Created:
+### Created
+
 - ✨ `src/config/secrets.py` (173 lines)
 - ✨ `tests/test_paths.py` (110 lines)
 - ✨ `tests/test_secrets_manager.py` (110 lines)
 - ✨ `scripts/security/credential_rotation_helper.sh`
 - ✨ `scripts/security/scan_credentials.sh`
 
-### Modified:
+### Modified
+
 - 📝 `scripts/monitoring_checkpoint.py` (refactored to use Paths)
 - 📝 `scripts/production_cutover.sh` (refactored to use env vars)
 
-### Documentation:
+### Documentation
+
 - 📖 `SECURITY_HARDENING_PR16.md` (comprehensive spec)
 
 ---
@@ -200,19 +215,23 @@ Automated scanning for exposed credentials:
 ## Critical Actions Still Required
 
 ### 🔴 IMMEDIATE: Rotate Exposed Credentials
+
 The `.env` file contained active credentials that are now in git history:
+
 - AZURE_CLIENT_SECRET (exposed - needs rotation)
 - OPENAI_API_KEY (sk_proj_* format - exposed)
 - ANTHROPIC_API_KEY (sk_ant_* format - exposed)
 - HUBSPOT_API_KEY (UUID format - exposed)
 
 **Action Items** (DO THIS NOW):
+
 1. [ ] Rotate Azure Client Secret in Azure Portal
 2. [ ] Rotate OpenAI API Key at platform.openai.com
 3. [ ] Rotate Anthropic API Key at console.anthropic.com
 4. [ ] Rotate HubSpot API Key at app.hubspot.com
 
 ### 🟠 HIGH: Clean Git History
+
 After rotating credentials, remove from git history using BFG:
 
 ```bash
@@ -237,6 +256,7 @@ git push -f origin main
 ```
 
 ### 🟠 HIGH: Set Up GitHub Secrets
+
 1. Go to repository → Settings → Secrets and variables → Actions
 2. Create the following secrets:
    - `OPENAI_API_KEY` (new)
@@ -246,7 +266,9 @@ git push -f origin main
    - `GEMINI_API_KEY_SIMPLE` (from previous session)
 
 ### 🟡 MEDIUM: Refactor Remaining Scripts
+
 Refactor remaining 10+ scripts to use `Paths` module:
+
 - `scripts/run_data_pipeline.py`
 - `scripts/load_secrets.py`
 - `src/pipeline/orchestrator.py`
@@ -254,7 +276,9 @@ Refactor remaining 10+ scripts to use `Paths` module:
 - `src/agents/` modules
 
 ### 🟡 MEDIUM: Update `.env.example`
+
 Replace actual credentials with placeholders:
+
 ```bash
 # Remove real values, keep structure for documentation
 OPENAI_API_KEY=YOUR_OPENAI_API_KEY
@@ -301,21 +325,25 @@ HUBSPOT_API_KEY=YOUR_HUBSPOT_API_KEY_HERE
 ## Testing Commands
 
 ### Run All Tests
+
 ```bash
 python3 -m pytest tests/test_paths.py tests/test_secrets_manager.py -v
 ```
 
 ### Test Specific Module
+
 ```bash
 python3 -m pytest tests/test_paths.py::TestPathsMetricsDir -v
 ```
 
 ### Test with Coverage
+
 ```bash
 python3 -m pytest tests/ --cov=src.config --cov-report=html
 ```
 
 ### Scan for Credentials
+
 ```bash
 bash scripts/security/scan_credentials.sh
 ```
@@ -325,6 +353,7 @@ bash scripts/security/scan_credentials.sh
 ## Migration Guide for Developers
 
 ### Using Paths Module
+
 ```python
 # OLD: Hardcoded path
 log_dir = Path("logs/monitoring")
@@ -335,6 +364,7 @@ log_dir = Paths.monitoring_logs_dir(create=True)
 ```
 
 ### Using Secrets Manager
+
 ```python
 # OLD: Direct env var
 api_key = os.getenv("OPENAI_API_KEY")
@@ -346,6 +376,7 @@ api_key = manager.get("OPENAI_API_KEY", required=True)
 ```
 
 ### Environment Variables
+
 ```bash
 # Set for custom deployment locations
 export LOGS_PATH=/var/log/abaco
@@ -413,6 +444,7 @@ python scripts/run_data_pipeline.py
 ## Next Session: Remaining Work
 
 **PR #16 Phase 2** (Follow-up):
+
 1. Rotate credentials (manual)
 2. Clean git history (manual with BFG)
 3. Refactor remaining 10+ scripts
@@ -421,6 +453,7 @@ python scripts/run_data_pipeline.py
 6. Post-deployment validation
 
 **PR #17** (Future):
+
 - Hard-coded paths in Node.js/TypeScript code
 - Secrets management in GitHub Actions workflows
 - Environment-specific configuration files

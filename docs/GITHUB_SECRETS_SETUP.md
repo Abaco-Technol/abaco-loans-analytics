@@ -33,9 +33,9 @@ If you see `Resource not accessible by personal access token`:
 gh auth refresh -s repo,workflow
 ```
 
-2. If the repo is in an org with SSO, authorize the token for that org.
+1. If the repo is in an org with SSO, authorize the token for that org.
 
-3. Retry with an explicit repo target:
+2. Retry with an explicit repo target:
 
 ```bash
 gh secret set <NAME> --repo <OWNER>/<REPO>
@@ -69,7 +69,7 @@ az resource update --resource-group "<RESOURCE_GROUP>" --name "<APP_NAME>/ftp" \
   --set properties.allow=true
 ```
 
-2) Generate publish profile and store as a repo secret:
+1) Generate publish profile and store as a repo secret:
 
 ```bash
 az webapp deployment list-publishing-profiles \
@@ -80,7 +80,7 @@ az webapp deployment list-publishing-profiles \
 gh secret set AZURE_WEBAPP_PUBLISH_PROFILE -f publishProfile.xml
 ```
 
-3) Create a service principal (used by `AZURE_CREDENTIALS`) and store as a repo secret:
+1) Create a service principal (used by `AZURE_CREDENTIALS`) and store as a repo secret:
 
 ```bash
 az ad sp create-for-rbac \

@@ -13,5 +13,5 @@
 
 ## Escalation
 
-- Contact: security@yourdomain.com
+- Contact: <security@yourdomain.com>
 - Rotate secrets quarterly or on role change.

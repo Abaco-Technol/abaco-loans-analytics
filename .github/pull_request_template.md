@@ -64,8 +64,8 @@ Select all that apply:
 ### Performance & Operations
 
 - [ ] Performance impact statement (if applicable):
-  - [ ] Latency: ___ms → ___ms (or N/A)
-  - [ ] Memory footprint: ___MB → ___MB (or N/A)
+  - [ ] Latency: ___ms →___ms (or N/A)
+  - [ ] Memory footprint: ___MB →___MB (or N/A)
   - [ ] Benchmark results or load test attached (if applicable)
 - [ ] (New features) Monitoring, alerts, and observability configured
 - [ ] (Deployments) Rollback plan documented and tested
@@ -87,6 +87,7 @@ Any shortcuts, technical debt, or deferred work must be explicitly documented. T
 Describe any significant impacts. Include screenshots, benchmark results, load test results, or links to test artifacts if relevant.
 
 **Accessibility** (if UI changes):
+
 - [ ] WCAG 2.1 AA compliance verified (if applicable)
 
 ---

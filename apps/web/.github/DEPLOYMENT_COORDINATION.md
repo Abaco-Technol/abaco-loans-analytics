@@ -11,12 +11,14 @@
 ### Primary Channels
 
 **#dev-alerts**: General development notifications
+
 - CI check failures
 - Deployment status updates
 - Code review requests
 - Sprint updates
 
 **#prod-alerts**: Production-specific notifications
+
 - Production deployments started
 - Production deployments completed
 - Health check results
@@ -24,12 +26,14 @@
 - Incident notifications
 
 **#incidents**: Critical incident management
+
 - P1/P2 incidents only
 - Root cause analysis
 - Rollback decisions
 - Recovery status
 
 **#dev-help**: Questions and troubleshooting
+
 - CI/CD questions
 - Deployment help
 - Configuration issues
@@ -376,6 +380,7 @@ Link: [GitHub Actions error logs]
 ### During Deployment
 
 **Every 2-5 minutes**: Status update with emoji
+
 - 🔄 In progress
 - ⏳ Awaiting action
 - ✅ Step complete
@@ -384,6 +389,7 @@ Link: [GitHub Actions error logs]
 ### During Incident
 
 **Every 5-10 minutes**: Status update
+
 - Investigation progress
 - Estimated time to resolution
 - Actions being taken
@@ -392,6 +398,7 @@ Link: [GitHub Actions error logs]
 ### Resolution
 
 **Immediate**: Post final status
+
 - ✅ Resolved / ❌ Escalated
 - Timeline from issue discovery
 - What was done
@@ -540,14 +547,17 @@ Escalation path:
 ## Integration with GitHub
 
 **GitHub Actions → Slack**:
+
 - Deployment workflows can post Slack notifications
 - Set up in workflow file with Slack webhook
 
 **GitHub Issues → Slack**:
+
 - Use `#` mentions to link issues in Slack
 - Example: "See #123 for details"
 
 **Slack → GitHub**:
+
 - Link GitHub Actions runs
 - Link PRs with [Title](URL)
 - Reference issues with #[number]

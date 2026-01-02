@@ -21,6 +21,7 @@ Centralized customer segmentation:
 - `industry_segment`: macro industry buckets
 
 **Source**
+
 - `public.customer_data`
 
 **Key Fields**
@@ -149,5 +150,6 @@ Consolidated view for board and investor reporting, aligned with Figma design bi
 - **LTV Realized**: `Cumulative Revenue / Cumulative Unique Customers`.
 
 **Source**
+
 - `public.analytics_facts` (CSV Import)
 - `src/analytics/kpi_catalog_processor.py`

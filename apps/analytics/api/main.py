@@ -1,6 +1,4 @@
 from fastapi import FastAPI, HTTPException, BackgroundTasks
-from typing import Dict, List, Optional
-import os
 import json
 from pathlib import Path
 from datetime import datetime

@@ -1,4 +1,5 @@
 # Packages directory
+
 This folder is reserved for shared libraries and utilities that may be published or reused across the project. It remains tracked so SonarCloud and other tooling can scan the repository structure consistently.
 Guidelines:
 

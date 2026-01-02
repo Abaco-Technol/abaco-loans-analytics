@@ -1,4 +1,5 @@
 # Architecture Audit Report
+
 **Generated**: 2025-12-26
 **Scope**: Python codebase analysis for unified pipeline design
 
@@ -18,6 +19,7 @@
 | `validation.py` | Root `/src/validation.py` | No clear module organization |
 
 ### Impact: HIGH ⚠️
+
 - **Circular dependencies possible** between old and new modules
 - **Inconsistent data contracts** between duplicate implementations
 - **Maintenance burden** - bug fixes must apply to multiple locations
@@ -26,26 +28,31 @@
 ## 3. Pipeline Architecture (Current State)
 
 ### Phase 1: Ingestion
+
 - **File**: `/src/pipeline/ingestion.py`
 - **Purpose**: Read data from Cascade API
 - **Dependencies**: Not analyzed yet
 
 ### Phase 2: Transformation
+
 - **File**: `/src/pipeline/transformation.py`
 - **Purpose**: Clean and enrich raw data
 - **Dependencies**: Not analyzed yet
 
 ### Phase 3: Calculation
+
 - **Files**: `/src/pipeline/calculation_v2.py` (main) + `/src/kpi_engine_v2.py`
 - **Purpose**: Calculate KPIs and metrics
 - **Dependencies**: KPI modules in `/src/kpis/`
 
 ### Phase 4: Output
+
 - **File**: `/src/pipeline/output.py`
 - **Purpose**: Export results to databases/files
 - **Dependencies**: Not analyzed yet
 
 ### Orchestrator
+
 - **File**: `/src/pipeline/orchestrator.py`
 - **Purpose**: Coordinate all 4 phases
 - **Type**: Primary entry point
@@ -53,6 +60,7 @@
 ## 4. KPI Calculation Architecture
 
 ### KPI Modules (in `/src/kpis/`)
+
 - `par_30.py` - 30-day past due ratio
 - `par_90.py` - 90-day past due ratio
 - `collection_rate.py` - Collection rate metric
@@ -60,10 +68,12 @@
 - `base.py` - Base class for KPI calculations
 
 ### Engine Interfaces
+
 - **Old**: `KPIEngine` (main `kpi_engine.py`)
 - **New**: `KPIEngineV2` (`kpi_engine_v2.py`) - has audit trail, better error handling
 
 ### Current Issue: Version Mismatch
+
 - Production uses `KPIEngineV2`
 - Old `KPIEngine` still exists (potential confusion)
 - No clear migration path or deprecation markers
@@ -71,12 +81,14 @@
 ## 5. Agent & Analytics Modules
 
 ### AI Agent Framework (in `/src/agents/`)
+
 - `c_suite_agent.py` - Executive reporting agent
 - `growth_agent.py` - Growth analysis agent
 - `orchestrator.py` - Agent coordination
 - `tools.py` - Agent tool definitions
 
 ### Issue: Separate from Pipeline
+
 - Agents have **independent** orchestration
 - No integration with main pipeline
 - Risk of inconsistent data between pipelines and agents
@@ -84,6 +96,7 @@
 ## 6. Configuration Architecture
 
 ### Config Files Identified
+
 config/agents/specs/c_level_executive_agent.yaml
 config/agents/specs/data_ingestion_transformation_agent.yaml
 config/agents/specs/kpi_analytics_agent.yaml
@@ -104,6 +117,7 @@ config/pipelines/data_orchestration.yaml
 config/roles_and_outputs.yaml
 
 ### Issue: No Unified Configuration
+
 - Multiple config directories: `/config`, `/config/pipelines/`, `/config/agents/`
 - No clear hierarchy or inheritance
 - Pipeline config not referenced consistently across modules
@@ -111,6 +125,7 @@ config/roles_and_outputs.yaml
 ## 7. Testing Architecture
 
 ### Test Coverage Assessment
+
 - Test files found: 4276
 
 ## 8. Critical Issues Identified
@@ -147,6 +162,7 @@ config/roles_and_outputs.yaml
 ## 9. Recommendations for Unification
 
 ### Priority 1: Eliminate Module Duplication
+
 1. **Consolidate to `/src/pipeline/` as primary**
    - Keep `/src/pipeline/ingestion.py` as canonical
    - Remove `/src/ingestion.py`
@@ -158,12 +174,14 @@ config/roles_and_outputs.yaml
    - Remove old module in v2.0
 
 ### Priority 2: Unify Configuration
+
 1. Create `/config/pipeline.yml` as single source of truth
 2. Remove scattered config files
 3. Add environment variable override support
 4. Document configuration hierarchy
 
 ### Priority 3: Integrate Agent Framework
+
 1. Agents should use pipeline outputs, not run separately
 2. Consistent audit trail across all operations
 3. Single entry point for all analytics
@@ -171,6 +189,7 @@ config/roles_and_outputs.yaml
 ## 10. Dependency Analysis (Next Phase)
 
 Need to analyze:
+
 - Import cycles (circular dependencies)
 - External package dependencies
 - Type hint completeness
