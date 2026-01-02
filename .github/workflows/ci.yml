@@ -250,8 +250,12 @@ jobs:
     steps:
       - name: Check secrets availability
         id: check-secrets
+        env:
+          FIGMA_TOKEN: ${{ secrets.FIGMA_TOKEN }}
+          FIGMA_FILE_KEY: ${{ secrets.FIGMA_FILE_KEY }}
+          ANALYTICS_URL: ${{ secrets.ANALYTICS_URL }}
         run: |
-          if [ -n "${{ secrets.FIGMA_TOKEN }}" ] && [ -n "${{ secrets.FIGMA_FILE_KEY }}" ] && [ -n "${{ secrets.ANALYTICS_URL }}" ]; then
+          if [ -n "$FIGMA_TOKEN" ] && [ -n "$FIGMA_FILE_KEY" ] && [ -n "$ANALYTICS_URL" ]; then
             echo "secrets_available=true" >> $GITHUB_OUTPUT
           else
             echo "secrets_available=false" >> $GITHUB_OUTPUT
