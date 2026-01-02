@@ -1,7 +1,7 @@
 import pandas as pd
 import pytest
 
-from python.pipeline.ingestion import UnifiedIngestion
+from src.pipeline.data_ingestion import UnifiedIngestion
 
 
 def test_ingest_csv(tmp_path, minimal_config):
