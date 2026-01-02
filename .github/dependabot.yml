@@ -44,12 +44,3 @@ updates:
     open-pull-requests-limit: 5
     assignees:
       - "codex"
-
-  # Maintain Gradle dependencies
-  - package-ecosystem: "gradle"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-    open-pull-requests-limit: 5
-    assignees:
-      - "codex"
