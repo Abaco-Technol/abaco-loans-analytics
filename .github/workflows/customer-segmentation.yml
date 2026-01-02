@@ -25,17 +25,42 @@ jobs:
         if: needs.validate.outputs.run == 'true'
         runs-on: ubuntu-latest
         steps:
+            - name: Check secrets availability
+              id: check-secrets
+              env:
+                OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+                SUPABASE_SERVICE_ROLE: ${{ secrets.SUPABASE_SERVICE_ROLE }}
+                NOTION_API_KEY: ${{ secrets.NOTION_API_KEY || secrets.NOTION_INTEGRATION_TOKEN }}
+                NOTION_DATABASE_ID: ${{ secrets.NOTION_DATABASE_ID }}
+              run: |
+                  missing=""
+                  [ -z "$OPENAI_API_KEY" ] && missing="$missing OPENAI_API_KEY"
+                  [ -z "$SUPABASE_SERVICE_ROLE" ] && missing="$missing SUPABASE_SERVICE_ROLE"
+                  if [ -z "$missing" ]; then
+                    echo "can_run=true" >> $GITHUB_OUTPUT
+                  else
+                    echo "can_run=false" >> $GITHUB_OUTPUT
+                    echo "::warning::Missing required secrets:$missing - skipping customer segmentation"
+                  fi
+                  if [ -n "$NOTION_API_KEY" ] && [ -n "$NOTION_DATABASE_ID" ]; then
+                    echo "notion_available=true" >> $GITHUB_OUTPUT
+                  else
+                    echo "notion_available=false" >> $GITHUB_OUTPUT
+                  fi
             - name: Checkout Repository
+              if: steps.check-secrets.outputs.can_run == 'true'
               uses: actions/checkout@v4
             - name: Setup Python Environment
+              if: steps.check-secrets.outputs.can_run == 'true'
               uses: actions/setup-python@v5
               with:
                   python-version: "3.11"
             - name: Install Dependencies
+              if: steps.check-secrets.outputs.can_run == 'true'
               run: |
                   pip install -r requirements.txt
             - name: Run Segmentation Analysis
-              if: hashFiles('scripts/customer_segmentation.py') != ''
+              if: steps.check-secrets.outputs.can_run == 'true' && hashFiles('scripts/customer_segmentation.py') != ''
               env:
                   CLAUDE_ROCKET_TOKEN: ${{ secrets.CLAUDE_ROCKET_TOKEN }}
                   XAI_TOKEN: ${{ secrets.XAI_TOKEN }}
@@ -46,9 +71,9 @@ jobs:
               run: |
                   python scripts/customer_segmentation.py
             - name: Post to Notion
-              if: always() && hashFiles('scripts/post_to_notion.py') != ''
+              if: steps.check-secrets.outputs.can_run == 'true' && steps.check-secrets.outputs.notion_available == 'true' && hashFiles('scripts/post_to_notion.py') != ''
               env:
-                  NOTION_API_KEY: ${{ secrets.NOTION_INTEGRATION_TOKEN }}
+                  NOTION_API_KEY: ${{ secrets.NOTION_API_KEY || secrets.NOTION_INTEGRATION_TOKEN }}
                   NOTION_DATABASE_ID: ${{ secrets.NOTION_DATABASE_ID }}
                   SUPABASE_SERVICE_ROLE: ${{ secrets.SUPABASE_SERVICE_ROLE }}
               run: |

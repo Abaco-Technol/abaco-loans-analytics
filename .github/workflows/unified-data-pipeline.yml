@@ -17,7 +17,8 @@ jobs:
           SUPABASE_SERVICE_ROLE: ${{ secrets.SUPABASE_SERVICE_ROLE }}
           CASCADE_USERNAME: ${{ secrets.CASCADE_USERNAME }}
           CASCADE_PASSWORD: ${{ secrets.CASCADE_PASSWORD }}
-          HUBSPOT_TOKEN: ${{ secrets.HUBSPOT_API_TOKEN }}
+          HUBSPOT_TOKEN: ${{ secrets.HUBSPOT_API_KEY || secrets.HUBSPOT_API_TOKEN || secrets.HUBSPOTTOKEN }}
+          HUBSPOT_API_KEY: ${{ secrets.HUBSPOT_API_KEY || secrets.HUBSPOT_API_TOKEN || secrets.HUBSPOTTOKEN }}
           OPIK_TOKEN: ${{ secrets.OPIK_TOKEN }}
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
@@ -78,7 +79,8 @@ jobs:
         if: hashFiles('scripts/ingest_hubspot.py') != '' && steps.check-secrets.outputs.hubspot_available == 'true'
         continue-on-error: true
         env:
-          HUBSPOT_TOKEN: ${{ secrets.HUBSPOT_API_TOKEN }}
+          HUBSPOT_TOKEN: ${{ secrets.HUBSPOT_API_KEY || secrets.HUBSPOT_API_TOKEN || secrets.HUBSPOTTOKEN }}
+          HUBSPOT_API_KEY: ${{ secrets.HUBSPOT_API_KEY || secrets.HUBSPOT_API_TOKEN || secrets.HUBSPOTTOKEN }}
         run: |
           echo "Fetching deals, contacts, and pipeline data from HubSpot..."
           python scripts/ingest_hubspot.py

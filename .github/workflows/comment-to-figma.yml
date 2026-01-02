@@ -9,7 +9,20 @@ jobs:
 
     runs-on: ubuntu-latest
     steps:
+      - name: Check Figma secrets
+        id: figma_secrets
+        env:
+          FIGMA_TOKEN: ${{ secrets.FIGMA_TOKEN }}
+          FIGMA_FILE_KEY: ${{ secrets.FIGMA_FILE_KEY }}
+        run: |
+          if [ -n "$FIGMA_TOKEN" ] && [ -n "$FIGMA_FILE_KEY" ]; then
+            echo "available=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "available=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::Missing Figma secrets - skipping comment"
+          fi
       - name: Post comment to Figma
+        if: steps.figma_secrets.outputs.available == 'true'
         env:
           FIGMA_TOKEN: ${{ secrets.FIGMA_TOKEN }}
           FIGMA_FILE_KEY: ${{ secrets.FIGMA_FILE_KEY }}
