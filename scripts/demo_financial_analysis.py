@@ -11,6 +11,9 @@ import sys
 from datetime import datetime, timedelta
 from pathlib import Path
 
+import matplotlib
+# Use non-interactive backend for scripts/tests to avoid GUI/display-related errors
+matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import pandas as pd
 
@@ -99,31 +102,51 @@ def main():
         order = ["Current", "1-29", "30-59", "60-89", "90-119", "120-149", "150-179", "180+"]
         counts = counts.reindex(order).fillna(0)
 
-        plt.figure(figsize=(10, 6))
-        counts.plot(kind="bar", color="skyblue", edgecolor="black")
-        plt.title("Loan Portfolio DPD Distribution")
-        plt.xlabel("DPD Bucket")
-        plt.ylabel("Count")
-        plt.xticks(rotation=45)
-        plt.tight_layout()
-        output_img = "dpd_distribution.png"
-        plt.savefig(output_img)
-        print(f"Saved {output_img}")
+        # Ensure non-interactive backend is enforced immediately before plotting.
+        matplotlib.use("Agg")
+
+        # Temporarily remove IPython from sys.modules to avoid a matplotlib bug
+        # where it references a misspelled variable when IPython is present.
+        saved_ipy = sys.modules.pop("IPython", None)
+        try:
+            plt.figure(figsize=(10, 6))
+            counts.plot(kind="bar", color="skyblue", edgecolor="black")
+            plt.title("Loan Portfolio DPD Distribution")
+            plt.xlabel("DPD Bucket")
+            plt.ylabel("Count")
+            plt.xticks(rotation=45)
+            plt.tight_layout()
+            output_img = "dpd_distribution.png"
+            plt.savefig(output_img)
+            print(f"Saved {output_img}")
+        finally:
+            if saved_ipy is not None:
+                sys.modules["IPython"] = saved_ipy
 
     if "exposure_segment" in enriched_df.columns:
         print("\n[5] Generating Exposure Segment Chart...")
         counts = enriched_df["exposure_segment"].value_counts()
 
-        plt.figure(figsize=(10, 6))
-        counts.plot(kind="bar", color="lightgreen", edgecolor="black")
-        plt.title("Client Exposure Segments")
-        plt.xlabel("Segment")
-        plt.ylabel("Count")
-        plt.xticks(rotation=45)
-        plt.tight_layout()
-        output_img = "exposure_distribution.png"
-        plt.savefig(output_img)
-        print(f"Saved {output_img}")
+        # Ensure non-interactive backend is enforced immediately before plotting.
+        matplotlib.use("Agg")
+
+        # Temporarily remove IPython from sys.modules to avoid a matplotlib bug
+        # where it references a misspelled variable when IPython is present.
+        saved_ipy = sys.modules.pop("IPython", None)
+        try:
+            plt.figure(figsize=(10, 6))
+            counts.plot(kind="bar", color="lightgreen", edgecolor="black")
+            plt.title("Client Exposure Segments")
+            plt.xlabel("Segment")
+            plt.ylabel("Count")
+            plt.xticks(rotation=45)
+            plt.tight_layout()
+            output_img = "exposure_distribution.png"
+            plt.savefig(output_img)
+            print(f"Saved {output_img}")
+        finally:
+            if saved_ipy is not None:
+                sys.modules["IPython"] = saved_ipy
 
 
 if __name__ == "__main__":

@@ -1,0 +1,25 @@
+# Compatibility shim: re-export utilities from the canonical implementation in `src`.
+# This keeps the `python.pipeline` package working for legacy imports while
+# keeping the implementation in `src.pipeline`.
+from typing import Any
+
+from src.pipeline.utils import (
+    CircuitBreaker,
+    RateLimiter,
+    RetryPolicy,
+    hash_file,
+    utc_now,
+    hash_dataframe,
+    ensure_dir,
+)
+
+# Re-export names for consumers
+__all__ = [
+    "CircuitBreaker",
+    "RateLimiter",
+    "RetryPolicy",
+    "hash_file",
+    "utc_now",
+    "hash_dataframe",
+    "ensure_dir",
+]
