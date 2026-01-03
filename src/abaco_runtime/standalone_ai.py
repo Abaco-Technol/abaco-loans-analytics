@@ -2,7 +2,7 @@ import json
 import logging
 import os
 from pathlib import Path
-from typing import Dict, List, Optional, Any, cast
+from typing import Dict, List, Optional, Any
 from itertools import islice
 
 from requests.exceptions import RequestException
@@ -45,7 +45,15 @@ class StandaloneAIEngine:
         if not self.knowledge_base_path.exists():
             return {}
         with self.knowledge_base_path.open("r", encoding="utf-8") as handle:
-            return cast(Dict[str, Any], json.load(handle))
+            loaded = json.load(handle)
+            if not isinstance(loaded, dict):
+                logger.warning(
+                    "Knowledge base at %s is not a dict (type=%s); ignoring",
+                    self.knowledge_base_path,
+                    type(loaded),
+                )
+                return {}
+            return loaded
 
     def _initialize_ai_client(self) -> Optional[GrokClient]:
         api_key = os.getenv("GROK_API_KEY")

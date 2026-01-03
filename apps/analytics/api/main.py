@@ -1,14 +1,37 @@
 import json
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, timezone
 import sys
+import logging
+import os
+import subprocess
 
-# Ensure the repository root is on sys.path when the app is started as a script
-# (when running `python apps/analytics/api/main.py`, sys.path[0] is the script dir).
-# This allows imports like `src.pipeline.*` to resolve correctly.
-sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
-from fastapi import FastAPI, HTTPException, BackgroundTasks
+def _find_repo_root(start: Path | None = None) -> Path:
+    """Find the repository root by looking for common marker files.
+
+    Walks up from the start path and looks for `pyproject.toml`, `.git`, or
+    `README.md`. Falls back to a conservative parent if nothing is found.
+    """
+    start = start or Path(__file__).resolve()
+    p = start
+    for _ in range(12):
+        if (p / "pyproject.toml").exists() or (p / ".git").exists() or (p / "README.md").exists():
+            return p
+        parent = p.parent
+        if parent == p:
+            break
+        p = parent
+    # Fallback to previous heuristic (legacy behavior)
+    return Path(__file__).resolve().parents[3]
+
+
+# Ensure repository root is on sys.path for local/script runs (idempotent)
+repo_root = _find_repo_root()
+if str(repo_root) not in sys.path:
+    sys.path.insert(0, str(repo_root))
+
+from fastapi import FastAPI, HTTPException, BackgroundTasks  # noqa: E402
 
 app = FastAPI(title="ABACO Analytics API")
 
@@ -16,7 +39,7 @@ ARTIFACTS_DIR = Path("logs/runs")
 
 @app.get("/health")
 def health_check():
-    return {"status": "healthy", "timestamp": datetime.now().isoformat()}
+    return {"status": "healthy", "timestamp": datetime.now(timezone.utc).isoformat()}
 
 @app.get("/api/kpis/latest")
 def get_latest_kpis():
@@ -63,12 +86,6 @@ async def trigger_pipeline(background_tasks: BackgroundTasks, input_file: str = 
     API process which can cause runtime import/init issues and block request
     handling.
     """
-    import logging
-    import os
-    import subprocess
-    import shlex
-    import sys
-
     logger = logging.getLogger(__name__)
 
     mode = os.getenv("PIPELINE_EXECUTION_MODE", "subprocess")
