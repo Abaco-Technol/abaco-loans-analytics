@@ -5,7 +5,7 @@ Usage: python validate_kpi_formulas.py config/kpi_definitions.yml
 """
 import re
 import sys
-from typing import Set, Dict, Any
+from typing import Set
 
 import yaml
 

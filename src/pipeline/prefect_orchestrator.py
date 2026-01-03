@@ -13,7 +13,7 @@ from src.agents.tools import send_slack_notification
 @task(retries=3, retry_delay_seconds=60)
 def ingestion_task(config: Dict[str, Any], input_file: Path) -> Any:
     logger = get_run_logger()
-    logger.info(f"Starting ingestion for {input_file}")
+    logger.info("Starting ingestion for %s", input_file)
     ingestion = UnifiedIngestion(config)
     # Assume file source for now
     raw_archive_dir = Path(config.get("run", {}).get("raw_archive_dir", "data/raw/cascade"))
@@ -34,7 +34,7 @@ def ingestion_task(config: Dict[str, Any], input_file: Path) -> Any:
 @task
 def transformation_task(config: Dict[str, Any], df: Any, run_id: str) -> Any:
     logger = get_run_logger()
-    logger.info(f"Starting transformation for run {run_id}")
+    logger.info("Starting transformation for run %s", run_id)
     transformation = UnifiedTransformation(config, run_id=run_id)
     return transformation.transform(df, user="prefect")
 
@@ -42,7 +42,7 @@ def transformation_task(config: Dict[str, Any], df: Any, run_id: str) -> Any:
 @task
 def calculation_task(config: Dict[str, Any], df: Any, run_id: str) -> Any:
     logger = get_run_logger()
-    logger.info(f"Starting KPI calculation for run {run_id}")
+    logger.info("Starting KPI calculation for run %s", run_id)
     calculation = UnifiedCalculationV2(config, run_id=run_id)
     # For now, no baseline metrics passed to simplify
     return calculation.calculate(df, baseline_metrics=None)
@@ -53,7 +53,7 @@ def output_task(
     config: Dict[str, Any], transformation_result: Any, calculation_result: Any, run_id: str
 ) -> Any:
     logger = get_run_logger()
-    logger.info(f"Starting output persistence for run {run_id}")
+    logger.info("Starting output persistence for run %s", run_id)
     output = UnifiedOutput(config, run_id=run_id)
 
     # We can add Supabase persistence here or in UnifiedOutput.persist
