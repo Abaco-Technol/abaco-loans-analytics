@@ -131,19 +131,56 @@ make test-cov
 
 ---
 
+## Phase 6: CI Workflow Failure Handling & Test Plan
+
+**Status**: ✅ **IN PROGRESS** (2026-01-03)
+
+**Deliverables**:
+
+1. ✅ Test Plan: `ci-workflow/CI_Workflow_Failure_Handling_test_plan.md`
+   - 7 key testing objectives
+   - 11 test categories
+   - Risk assessment (top 5 risks)
+   - Exit criteria with SLAs
+
+2. ✅ Test Checklist: `ci-workflow/CI_Workflow_Failure_Handling_checklist.md`
+   - 60 test cases
+   - Prioritized (12 Critical, 28 High, 20 Medium)
+   - 87% automation coverage
+   - Pass/fail tracking
+
+3. ✅ Detailed Test Cases: `ci-workflow/CI_Workflow_Failure_Handling_testcases.md`
+   - 60 parametrized test cases
+   - Step-by-step execution instructions
+   - Test data requirements
+   - Expected results for each scenario
+
+4. 🔄 CI Workflow Enhancements:
+   - mypy type-checking added to repo-health job
+   - Enhanced failure detection and reporting
+   - Improved secret validation
+   - Graceful degradation for missing integrations
+
 ## Next Steps
 
-1. **Post-Phase 5 Maintenance**:
-   - Apply `make quality` before every commit to maintain standards
-   - Monitor Pylint score to remain ≥ 9.95/10
-   - Ensure mypy compliance for all new features (0 type errors)
+1. **Post-Phase 6 Tasks**:
+   - Execute test suite: `make quality`
+   - Run diagnostic script: `bash scripts/ci_full_fix.sh`
+   - Review test results in CI_FIX_REPORT_*.md
+   - Address any identified failures
 
-2. **Phase 6 (Planned)**:
+2. **Phase 6 Completion**:
+   - Validate all 60 test cases pass
+   - Confirm CI workflows stable (>99% success)
+   - Update CLAUDE.md with final metrics
+   - Commit: "PHASE 6: Complete CI workflow testing and failure handling"
+
+3. **Phase 7 (Planned)**:
    - Deprecate KPIEngine v1 - full migration to v2
    - Implement additional type stubs for edge cases
    - Target: Pylint 9.99+/10 (perfection)
 
-3. **v2.0 Release (Q1 2026)**:
+4. **v2.0 Release (Q1 2026)**:
    - Delete `config/LEGACY/` directory
    - Remove deprecated modules from codebase
    - Full feature parity with v1 + enhanced reliability
