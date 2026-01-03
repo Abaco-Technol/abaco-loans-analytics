@@ -18,11 +18,11 @@ This guide provides step-by-step instructions for setting up all secrets require
 
 These secrets are documented as previously set:
 
-```
+```text
 SUPABASE_URL: https://zpowfbeftxexzidlxndy.supabase.co
-SUPABASE_ANON_KEY: sb_publishable_Vl4DpUMUXo8czA1epSZ3kg_y0TV0z81
-FIGMA_TOKEN: figd-w1hcCu4RZqua7N8sDjysZyZRbVso9UiZ3BjxXJtp
-FIGMA_FILE_KEY: nuVKwuPuLS7VmLFvqzOX1G
+SUPABASE_ANON_KEY: <REDACTED>
+FIGMA_TOKEN: <REDACTED>
+FIGMA_FILE_KEY: <REDACTED>
 ```
 
 ---
@@ -44,7 +44,7 @@ FIGMA_FILE_KEY: nuVKwuPuLS7VmLFvqzOX1G
 
 **Format**:
 
-```
+```text
 postgres://postgres:[PASSWORD]@db.zpowfbeftxexzidlxndy.supabase.co:6543/postgres
 ```
 
@@ -124,7 +124,7 @@ az ad sp create-for-rbac \
 
 **Format**:
 
-```
+```text
 DefaultEndpointsProtocol=https;AccountName=abacostgprod;AccountKey=...;EndpointSuffix=core.windows.net
 ```
 
@@ -152,7 +152,7 @@ DefaultEndpointsProtocol=https;AccountName=abacostgprod;AccountKey=...;EndpointS
 
 **Values**:
 
-```
+```text
 AZURE_SUBSCRIPTION_ID: 695e4491-d568-4105-a1e1-8f2baf3b54df
 AZURE_RESOURCE_GROUP: AI-MultiAgent-Ecosystem-RG
 AZURE_DASHBOARD_NAME: abaco-analytics-dashboard

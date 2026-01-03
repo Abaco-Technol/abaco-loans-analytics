@@ -4,9 +4,9 @@ This workflow runs the unified pipeline using Looker exports while Cascade inges
 
 ## Required Files
 
-- `data/raw/looker_exports/loan_par_balances.csv` (preferred PAR snapshot)
-- `data/raw/looker_exports/loans.csv` (fallback when PAR balances are missing)
-- `data/raw/financial_statements/*` (optional EEFF exports; CSV/XLSX/XLS)
+- `data/archives/looker_exports/loan_par_balances.csv` (preferred PAR snapshot)
+- `data/archives/looker_exports/loans.csv` (fallback when PAR balances are missing)
+- `data/archives/financial_statements/*` (optional EEFF exports; CSV/XLSX/XLS)
 
 ## Looker Mapping (PAR Balances)
 
@@ -75,9 +75,9 @@ pipeline:
     ingestion:
       source: looker
       looker:
-        loans_par_path: data/raw/looker_exports/loan_par_balances.csv
-        loans_path: data/raw/looker_exports/loans.csv  # fallback
-        financials_path: data/raw/financial_statements/
+        loans_par_path: data/archives/looker_exports/loan_par_balances.csv
+        loans_path: data/archives/looker_exports/loans.csv  # fallback
+        financials_path: data/archives/financial_statements/
         financials_format: auto  # auto|wide|long
         financials_date_column: reporting_date
         financials_null_policy: skip  # skip|fill_last|error
@@ -158,14 +158,14 @@ columns are missing (the ingest returns an empty frame and records an error).
 
 If `loan_par_balances.csv` not found, pipeline attempts `loans.csv`:
 
-```
+```text
 [INFO] loan_par_balances.csv not found; using fallback loans.csv
 [INFO] Bucketing loans by dpd column into PAR bands
 ```
 
 If both missing:
 
-```
+```text
 [ERROR] Neither loan_par_balances.csv nor loans.csv found
 [ERROR] Ingestion failed; check config.pipeline.phases.ingestion.looker.loans_par_path
 ```
@@ -174,7 +174,7 @@ If both missing:
 
 ### Financial Statement Format Unrecognized
 
-```
+```text
 [WARNING] financials_format=auto; detected LONG format
 [WARNING] Metric "Total Cash" not in canonical keys; skipping
 ```
@@ -183,7 +183,7 @@ If both missing:
 
 ### Date Mismatch (PAR ≠ Financial)
 
-```
+```text
 [WARNING] Financial reporting_date (2025-11-30) differs from PAR date (2025-12-31)
 [WARNING] Using PAR date as measurement_date; financial metrics tagged with source_date
 ```
@@ -194,7 +194,7 @@ If both missing:
 
 By default, missing metrics are skipped (not populated in snapshot):
 
-```
+```text
 [INFO] Total Liabilities missing; skipping debt_to_equity computation
 ```
 
@@ -218,7 +218,7 @@ After successful ingestion:
 
 Example output structure:
 
-```
+```text
 data/
 ├── staging/
 │   └── loan_tape/

@@ -1,8 +1,9 @@
 import re
 from datetime import datetime
+from typing import Any
 
 
-def _is_valid_iso8601(val):
+def _is_valid_iso8601(val: Any) -> bool:
     if not isinstance(val, str):
         return False
     # Accept YYYY-MM-DD or full ISO 8601
@@ -10,8 +11,9 @@ def _is_valid_iso8601(val):
     try:
         if re.match(iso8601_regex, val):
             # Try parsing to ensure it's a valid date
+            # datetime.fromisoformat raises ValueError for invalid formats
             datetime.fromisoformat(val.replace("Z", "+00:00").replace(" ", "T"))
             return True
-    except Exception:
+    except ValueError:
         return False
     return False

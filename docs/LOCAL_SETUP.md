@@ -146,7 +146,7 @@ streamlit run dashboard/app.py
 
 **Expected output**:
 
-```
+```text
   You can now view your Streamlit app in your browser.
 
   Local URL: http://localhost:8501
@@ -163,7 +163,7 @@ streamlit run dashboard/app.py
 
 Terminal should show:
 
-```
+```text
 [INFO] Tracing initialized: /traces
 [INFO] Auto-instrumentation enabled for: httpx, requests, urllib3, sqlite3, psycopg2
 ```
@@ -183,7 +183,7 @@ If tracing errors appear, this is expected in local dev (Azure/Jaeger endpoints 
 
 Click "Settings" → "Test Supabase Connection":
 
-```
+```text
 ✓ Supabase connection successful
 ✓ Found X KPI records
 ```
@@ -242,7 +242,7 @@ streamlit run dashboard/app.py
 
 Terminal should show:
 
-```
+```text
 [INFO] Tracing initialized: http://localhost:4318
 [INFO] Auto-instrumentation enabled
 ```
@@ -401,7 +401,7 @@ python -c "import sys; print(sys.version); print(sys.executable)"
 
 ## 11. Repository Structure
 
-```
+```text
 abaco-loans-analytics/
 ├── dashboard/               # Streamlit app
 │   ├── app.py              # Main entry point

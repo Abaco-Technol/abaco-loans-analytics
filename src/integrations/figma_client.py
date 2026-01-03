@@ -11,7 +11,7 @@ Handles:
 import json
 import logging
 import os
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, Dict, Optional
 
 import requests
@@ -42,9 +42,13 @@ class FigmaClient:
         try:
             response = requests.request(method, url, timeout=30, **kwargs)
             response.raise_for_status()
-            return response.json()
+            data = response.json()
+            if not isinstance(data, dict):
+                logger.error("Figma API returned unexpected type: %s for %s", type(data), url)
+                return {}
+            return data
         except requests.RequestException as e:
-            logger.error(f"Figma API error: {e}")
+            logger.error("Figma API error: %s", e)
             return {}
 
     def get_file_data(self) -> Dict[str, Any]:
@@ -62,7 +66,7 @@ class FigmaClient:
             "commits": [
                 {
                     "message": f"KPI Update from Analytics Pipeline (run: {run_id})",
-                    "timestamp": datetime.utcnow().isoformat(),
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
                 }
             ],
             "edits": [
@@ -150,7 +154,7 @@ class FigmaClient:
 
         metadata = {
             "snapshot_type": "kpi_dashboard",
-            "generated_at": datetime.utcnow().isoformat(),
+            "generated_at": datetime.now(timezone.utc).isoformat(),
             "run_id": run_id,
             "metrics": dashboard_data,
         }

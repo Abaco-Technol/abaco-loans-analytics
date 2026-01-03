@@ -33,6 +33,17 @@
       "env": {
         "GITHUB_PERSONAL_ACCESS_TOKEN": "<YOUR_TOKEN>"
       }
+    },
+    "memory": {
+      "command": "docker",
+      "args": [
+        "run",
+        "-i",
+        "-v",
+        "claude-memory:/app/dist",
+        "--rm",
+        "mcp/memory"
+      ]
     }
   },
   "inlineChat.notebookAgent": true,
@@ -67,5 +78,8 @@
   "yaml.schemas": {
     "https://www.schemastore.org/sourcehut-build-0.65.0.json": "config/kpi_definitions.yaml",
     "https://json.schemastore.org/github-workflow.json": ".github/workflows/*.{yml,yaml}"
-  }
+  },
+  "github-actions.workflows.pinned.workflows": [
+    "abaco-loans-analytics/.github/workflows/agent-orchestrator.yml"
+  ]
 }

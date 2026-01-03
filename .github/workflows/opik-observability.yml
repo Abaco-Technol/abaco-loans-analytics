@@ -3,13 +3,14 @@ name: Opik Observability & Monitoring
 on:
   schedule:
     # Run daily at 9:00 AM CET (8:00 AM UTC) for system health monitoring
-    - cron: '0 8 * * *'
+    - cron: '0 5 * * *' # 6:00 AM CET
   workflow_dispatch:
 
 env:
-  OPIKTOKEN: ${{ secrets.OPIK_TOKEN }}
-  SUPABASESERVICEROLE: ${{ secrets.SUPABASE_SERVICE_ROLE }}
-  SLACKBOTTOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+  OPIKTOKEN: ${{ secrets.OPIK_TOKEN || secrets.OPIKTOKEN }}
+  SUPABASESERVICEROLE: ${{ secrets.SUPABASE_SERVICE_ROLE || secrets.SUPABASESERVICEROLE }}
+  SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+  SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
 
 jobs:
   # Job 1: Fetch system metrics from Opik
@@ -43,7 +44,7 @@ jobs:
           echo "available=true" >> $GITHUB_OUTPUT
 
       - name: Upload metrics artifact
-        if: steps.fetch.outputs.available == 'true'
+        if: ${{ steps.fetch.outputs.available == 'true' }}
         uses: actions/upload-artifact@v4
         with:
           name: opik-metrics
@@ -54,7 +55,7 @@ jobs:
   # Job 2: Analyze data pipeline health
   analyze-pipeline-health:
     needs: fetch-opik-metrics
-    if: needs.fetch-opik-metrics.result == 'success' && needs.fetch-opik-metrics.outputs.metrics-available == 'true'
+    if: ${{ needs.fetch-opik-metrics.result == 'success' && needs.fetch-opik-metrics.outputs.metrics-available == 'true' }}
     runs-on: ubuntu-latest
     outputs:
       pipeline-status: ${{ steps.analyze.outputs.status }}
@@ -94,7 +95,7 @@ jobs:
   # Job 3: Analyze agent execution performance
   analyze-agent-performance:
     needs: fetch-opik-metrics
-    if: needs.fetch-opik-metrics.result == 'success' && needs.fetch-opik-metrics.outputs.metrics-available == 'true'
+    if: ${{ needs.fetch-opik-metrics.result == 'success' && needs.fetch-opik-metrics.outputs.metrics-available == 'true' }}
     runs-on: ubuntu-latest
     outputs:
       agent-status: ${{ steps.analyze.outputs.status }}
@@ -134,7 +135,7 @@ jobs:
   # Job 4: Check data quality trends
   check-data-quality-trends:
     needs: fetch-opik-metrics
-    if: needs.fetch-opik-metrics.result == 'success' && needs.fetch-opik-metrics.outputs.metrics-available == 'true'
+    if: ${{ needs.fetch-opik-metrics.result == 'success' && needs.fetch-opik-metrics.outputs.metrics-available == 'true' }}
     runs-on: ubuntu-latest
     outputs:
       quality-trend: ${{ steps.check.outputs.trend }}
@@ -174,7 +175,7 @@ jobs:
   # Job 5: Generate observability dashboard
   generate-observability-dashboard:
     needs: [analyze-pipeline-health, analyze-agent-performance, check-data-quality-trends]
-    if: needs.analyze-pipeline-health.result == 'success' && needs.analyze-agent-performance.result == 'success' && needs.check-data-quality-trends.result == 'success'
+    if: ${{ needs.analyze-pipeline-health.result == 'success' && needs.analyze-agent-performance.result == 'success' && needs.check-data-quality-trends.result == 'success' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -215,6 +216,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Send critical alert to Slack
+        if: ${{ env.SLACK_WEBHOOK_URL != '' }}
         run: |
           echo "🚨 Critical issue detected, sending alert..."
           ALERT_MESSAGE="🚨 CRITICAL ALERT: System health issues detected\n"
@@ -222,7 +224,7 @@ jobs:
           ALERT_MESSAGE+="Agents: ${{ needs.analyze-agent-performance.outputs.agent-status }}\n"
           ALERT_MESSAGE+="Data Quality: ${{ needs.check-data-quality-trends.outputs.quality-trend }}"
 
-          curl -X POST ${{ secrets.SLACK_BOT_TOKEN }} \
+          curl -X POST "$SLACK_WEBHOOK_URL" \
             -H 'Content-Type: application/json' \
             -d "{\"text\":\"$ALERT_MESSAGE\"}"
 
@@ -233,6 +235,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Send daily health summary to Slack
+        if: ${{ env.SLACK_WEBHOOK_URL != '' }}
         run: |
           echo "📊 Sending daily system health summary..."
           SUMMARY="🔍 Daily System Health Report ($(date +%Y-%m-%d))\n\n"
@@ -241,6 +244,6 @@ jobs:
           SUMMARY+="📊 Data Quality: ${{ needs.check-data-quality-trends.outputs.quality-trend }}\n\n"
           SUMMARY+="View detailed dashboard in GitHub Actions artifacts."
 
-          curl -X POST ${{ secrets.SLACK_BOT_TOKEN }} \
+          curl -X POST "$SLACK_WEBHOOK_URL" \
             -H 'Content-Type: application/json' \
             -d "{\"text\":\"$SUMMARY\"}"

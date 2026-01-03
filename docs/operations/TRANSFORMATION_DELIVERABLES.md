@@ -33,7 +33,7 @@
 
 #### Diagnostic Flow
 
-```
+```text
 START: Dashboard inaccessible
 │
 ├─> Test correct URL: https://abaco-analytics-dashboard-gbbjege0gxcbhyg9.canadacentral-01.azurewebsites.net
@@ -96,7 +96,7 @@ In Azure Portal:
 2. Look for errors in last 30 minutes
 3. Key patterns:
    - `ModuleNotFoundError: No module named 'X'` → Add X to requirements.txt, redeploy
-   - `FileNotFoundError: [Errno 2] No such file or directory: 'data/raw/looker_exports'` → Verify CSV files deployed, check .gitignore doesn't exclude them
+   - `FileNotFoundError: [Errno 2] No such file or directory: 'data/archives/looker_exports'` → Verify CSV files deployed, check .gitignore doesn't exclude them
    - `Address already in use` → Restart app service
    - `Timeout waiting for response` → Scale up to higher tier (S1 or better)
 
@@ -130,7 +130,7 @@ If recent deployment broke the app:
 
 #### Diagnostic Flow
 
-```
+```text
 START: Pipeline failed notification
 │
 ├─> GitHub Actions → Click failed workflow run
@@ -188,7 +188,7 @@ GitHub Actions:
 
 Error:
 
-```
+```text
 KeyError: 'DATABASE_URL'
 Environment variable 'META_ACCESS_TOKEN' not found
 ```
@@ -205,7 +205,7 @@ Fix:
 
 Error:
 
-```
+```text
 401 Unauthorized
 Invalid API key
 ```
@@ -221,7 +221,7 @@ Fix:
 
 Error:
 
-```
+```text
 429 Too Many Requests
 Rate limit exceeded
 ```
@@ -236,7 +236,7 @@ Fix:
 
 Error:
 
-```
+```text
 ValidationError: Expected X rows, got Y
 AssertionError: Column 'amount' has null values
 ```
@@ -285,7 +285,7 @@ After successful pipeline run:
 
 #### Diagnostic Flow
 
-```
+```text
 START: Cannot deploy code
 │
 ├─> Check GitHub Actions status page
