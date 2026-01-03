@@ -70,6 +70,9 @@ def trace_analytics_job(job_name: str, client_id: str, run_id: str) -> Callable[
     """
 
     def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
+        from functools import wraps
+
+        @wraps(func)
         def wrapper(*args: Any, **kwargs: Any) -> Any:
             logger = _logger
             tracer = globals().get("_tracer")

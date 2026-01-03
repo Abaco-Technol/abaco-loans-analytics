@@ -13,7 +13,7 @@ import json
 import logging
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, Optional, cast
+from typing import Any, Dict, Optional
 
 import pandas as pd
 
@@ -37,12 +37,31 @@ class BatchExportRunner:
         self.run_id = datetime.now().strftime("%Y%m%d_%H%M%S")
 
     def load_latest_metrics(self) -> Dict[str, Any]:
-        """Load latest KPI metrics from local storage or database."""
+        """Load latest KPI metrics from local storage or database.
+
+        Performs runtime validation to ensure the metrics file contains a
+        JSON object; malformed or unexpected types are logged and ignored.
+        """
         metrics_file = Path("data/metrics") / "latest_metrics.json"
 
         if metrics_file.exists():
-            with metrics_file.open() as f:
-                return cast(Dict[str, Any], json.load(f))
+            try:
+                with metrics_file.open() as f:
+                    data = json.load(f)
+                if not isinstance(data, dict):
+                    logger.error(
+                        "Expected dict in %s, got %s; ignoring metrics file",
+                        metrics_file,
+                        type(data).__name__,
+                    )
+                    return {}
+                return data
+            except json.JSONDecodeError as e:
+                logger.error("Failed to parse metrics file %s: %s", metrics_file, e)
+                return {}
+            except OSError as e:
+                logger.error("Failed to read metrics file %s: %s", metrics_file, e)
+                return {}
 
         logger.warning("No metrics file found. Using empty metrics.")
         return {}
