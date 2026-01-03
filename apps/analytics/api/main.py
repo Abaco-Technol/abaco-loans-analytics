@@ -52,5 +52,9 @@ async def trigger_pipeline(background_tasks: BackgroundTasks, input_file: str = 
     return {"message": "Pipeline triggered successfully", "input_file": input_file}
 
 if __name__ == "__main__":
+    import os
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+
+    host = os.getenv("UVICORN_HOST", "127.0.0.1")
+    port = int(os.getenv("UVICORN_PORT", "8000"))
+    uvicorn.run(app, host=host, port=port)
