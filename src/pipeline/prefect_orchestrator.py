@@ -1,17 +1,17 @@
 from pathlib import Path
-from typing import Any, Dict, cast
+from typing import Dict, Any
 from prefect import flow, task, get_run_logger
-from src.pipeline.data_ingestion import UnifiedIngestion
-from src.pipeline.data_transformation import UnifiedTransformation
-from src.pipeline.kpi_calculation import UnifiedCalculationV2
-from src.pipeline.output import UnifiedOutput
+from src.pipeline.data_ingestion import UnifiedIngestion, IngestionResult
+from src.pipeline.data_transformation import UnifiedTransformation, TransformationResult
+from src.pipeline.kpi_calculation import UnifiedCalculationV2, CalculationResultV2
+from src.pipeline.output import UnifiedOutput, OutputResult
 from src.pipeline.orchestrator import PipelineConfig
 from src.pipeline.data_validation_gx import validate_loan_data
 from src.agents.tools import send_slack_notification
 
 
 @task(retries=3, retry_delay_seconds=60)
-def ingestion_task(config: Dict[str, Any], input_file: Path) -> Any:
+def ingestion_task(config: Dict[str, Any], input_file: Path) -> IngestionResult:
     logger = get_run_logger()
     logger.info("Starting ingestion for %s", input_file)
     ingestion = UnifiedIngestion(config)
@@ -28,11 +28,15 @@ def ingestion_task(config: Dict[str, Any], input_file: Path) -> Any:
             channel="kpi-compliance",
         )
 
-    return result
+    # Map to typed container if needed (UnifiedIngestion returns a dataclass-like object)
+    if isinstance(result, IngestionResult):
+        return result
+    # If result is a legacy object, wrap into IngestionResult
+    return IngestionResult(df=result.df, run_id=getattr(result, "run_id", "unknown"), metadata={})
 
 
 @task
-def transformation_task(config: Dict[str, Any], df: Any, run_id: str) -> Any:
+def transformation_task(config: Dict[str, Any], df: TransformationResult | Any, run_id: str) -> TransformationResult:
     logger = get_run_logger()
     logger.info("Starting transformation for run %s", run_id)
     transformation = UnifiedTransformation(config, run_id=run_id)
@@ -40,7 +44,7 @@ def transformation_task(config: Dict[str, Any], df: Any, run_id: str) -> Any:
 
 
 @task
-def calculation_task(config: Dict[str, Any], df: Any, run_id: str) -> Any:
+def calculation_task(config: Dict[str, Any], df: TransformationResult | Any, run_id: str) -> CalculationResultV2:
     logger = get_run_logger()
     logger.info("Starting KPI calculation for run %s", run_id)
     calculation = UnifiedCalculationV2(config, run_id=run_id)
@@ -50,8 +54,8 @@ def calculation_task(config: Dict[str, Any], df: Any, run_id: str) -> Any:
 
 @task
 def output_task(
-    config: Dict[str, Any], transformation_result: Any, calculation_result: Any, run_id: str
-) -> Any:
+    config: Dict[str, Any], transformation_result: TransformationResult, calculation_result: CalculationResultV2, run_id: str
+) -> OutputResult:
     logger = get_run_logger()
     logger.info("Starting output persistence for run %s", run_id)
     output = UnifiedOutput(config, run_id=run_id)
@@ -70,17 +74,18 @@ def output_task(
 
 
 @flow(name="Abaco Data Pipeline")
-def abaco_pipeline_flow(input_file: str = "data/abaco_portfolio_calculations.csv"):
+def abaco_pipeline_flow(input_file: str = "data/abaco_portfolio_calculations.csv") -> OutputResult:
     config_mgr = PipelineConfig()
     config = config_mgr.config
     input_path = Path(input_file)
 
     ingest_res = ingestion_task(config, input_path)
-    run_id = f"prefect_{cast(Any, ingest_res).run_id}"
+    # Prefect tasks return proxies; extract run_id and dataframe via attributes
+    run_id = f"prefect_{ingest_res.run_id}"
 
-    trans_res = transformation_task(config, cast(Any, ingest_res).df, run_id)
-    calc_res = calculation_task(config, cast(Any, trans_res).df, run_id)
-    out_res = output_task(config, cast(Any, trans_res), cast(Any, calc_res), run_id)
+    trans_res = transformation_task(config, ingest_res.df, run_id)
+    calc_res = calculation_task(config, trans_res.df, run_id)
+    out_res = output_task(config, trans_res, calc_res, run_id)
 
     return out_res
 
