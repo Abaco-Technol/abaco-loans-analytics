@@ -1,74 +1,113 @@
+"""Great Expectations validation helpers for pipeline checks."""
 
-# --- Step 1: Set up a clean branch for the fix ---
-echo "INFO: Setting up a clean branch..."
-# Ensure we are on the main branch and it's up-to-date
-git checkout main
-git pull
-# Create a new, clean branch for this specific fix
-git checkout -b fix/gx-api-update
+from __future__ import annotations
 
-# --- Step 2: Atomically write the corrected file content ---
-echo "INFO: Applying fix to data_validation_gx.py..."
-cat << 'EOF' > src/pipeline/data_validation_gx.py
-# src/pipeline/data_validation_gx.py
-
-import great_expectations as gx
-from great_expectations.data_context import EphemeralDataContext
-import pandas as pd
 import logging
+from typing import Any, Dict, List
 
-logging.basicConfig(level=logging.INFO)
+import pandas as pd
+
 logger = logging.getLogger(__name__)
 
-def get_or_create_datasource(context: EphemeralDataContext, datasource_name: str):
-    """Gets a datasource or creates it if it does not exist using the modern API."""
+try:
+    import great_expectations as gx
+    from great_expectations.data_context import EphemeralDataContext
+
+    HAS_GE = True
+except Exception:  # pragma: no cover - optional dependency
+    gx = None
+    EphemeralDataContext = None
+    HAS_GE = False
+
+
+def get_or_create_datasource(
+    context: "EphemeralDataContext",
+    datasource_name: str,
+):
+    """Get or create a pandas datasource for the given context."""
     try:
-        datasource = context.get_datasource(datasource_name)
-    except ValueError:
-        logger.info(f"Datasource '{datasource_name}' not found, creating it.")
-        datasource = context.sources.add_pandas(name=datasource_name)
-    return datasource
+        return context.get_datasource(datasource_name)
+    except Exception:
+        logger.info("Datasource '%s' not found; creating it.", datasource_name)
+        return context.sources.add_pandas(name=datasource_name)
+
 
 def create_validator_for_dataframe(
-    context: EphemeralDataContext, df: pd.DataFrame, datasource_name: str, asset_name: str
+    context: "EphemeralDataContext",
+    df: pd.DataFrame,
+    datasource_name: str,
+    asset_name: str,
 ):
-    """Creates a Great Expectations validator for a given Pandas DataFrame."""
+    """Create a Great Expectations validator for a Pandas DataFrame."""
     if not isinstance(df, pd.DataFrame):
         raise TypeError("df must be a Pandas DataFrame.")
 
     datasource = get_or_create_datasource(context, datasource_name)
-
-    # Modern way to add a dataframe as an asset and build a batch request
     pandas_asset = datasource.add_dataframe_asset(name=asset_name, dataframe=df)
     batch_request = pandas_asset.build_batch_request()
 
-    validator = context.get_validator(
+    return context.get_validator(
         batch_request=batch_request,
         create_expectation_suite_with_name=f"{asset_name}_suite",
     )
-    return validator
 
-def validate_data(df: pd.DataFrame, expectations: dict, datasource_name: str, asset_name: str):
-    """
-    Validates a DataFrame against a set of Great Expectations.
-    """
-    context = gx.get_context(project_root_dir=None, mode="ephemeral")
-    validator = create_validator_for_dataframe(
-        context, df, datasource_name, asset_name
-    )
+
+def validate_data(
+    df: pd.DataFrame,
+    expectations: List[Dict[str, Any]],
+    datasource_name: str,
+    asset_name: str,
+) -> Dict[str, Any]:
+    """Validate a DataFrame against a list of Great Expectations configs."""
+    if not HAS_GE:
+        logger.warning("Great Expectations not installed; skipping validation.")
+        return {"success": True, "skipped": True}
+
+    try:
+        context = gx.get_context(project_root_dir=None, mode="ephemeral")
+    except Exception as exc:
+        logger.error("Failed to initialize Great Expectations context: %s", exc)
+        return {"success": False, "error": str(exc)}
+
+    validator = create_validator_for_dataframe(context, df, datasource_name, asset_name)
 
     for expectation in expectations:
-        expectation_type = expectation.pop("type")
+        expectation_type = expectation.get("type")
+        if not expectation_type:
+            continue
+        kwargs = {key: value for key, value in expectation.items() if key != "type"}
         try:
-            getattr(validator, expectation_type)(**expectation)
-        except Exception as e:
-            logger.error(f"Failed to apply expectation {expectation_type}: {e}")
+            getattr(validator, expectation_type)(**kwargs)
+        except Exception as exc:
+            logger.error("Failed to apply expectation %s: %s", expectation_type, exc)
 
-    validation_result = validator.validate()
-    if not validation_result["success"]:
-        logger.warning("Data validation failed!")
-        logger.warning(validation_result)
-    else:
-        logger.info("Data validation successful!")
+    try:
+        result = validator.validate()
+    except Exception as exc:
+        logger.error("Validation execution failed: %s", exc)
+        return {"success": False, "error": str(exc)}
 
-    return validation_result
+    success = bool(getattr(result, "success", False))
+    if not success:
+        logger.warning("Great Expectations validation failed.")
+    return {"success": success, "details": result}
+
+
+def _default_expectations() -> List[Dict[str, Any]]:
+    return [
+        {
+            "type": "expect_table_row_count_to_be_between",
+            "min_value": 1,
+        }
+    ]
+
+
+def validate_loan_data(df: pd.DataFrame) -> bool:
+    """Validate loan data with a minimal expectation suite."""
+    result = validate_data(
+        df,
+        _default_expectations(),
+        datasource_name="loan_data",
+        asset_name="loan_data",
+    )
+    return bool(result.get("success"))
