@@ -1,13 +1,13 @@
 from pathlib import Path
 from typing import Any, Dict, cast
 from prefect import flow, task, get_run_logger
-from python.pipeline.data_ingestion import UnifiedIngestion
-from python.pipeline.data_transformation import UnifiedTransformation
-from python.pipeline.kpi_calculation import UnifiedCalculationV2
-from python.pipeline.output import UnifiedOutput
-from python.pipeline.orchestrator import PipelineConfig
-from python.pipeline.data_validation_gx import validate_loan_data
-from python.agents.tools import send_slack_notification
+from src.pipeline.data_ingestion import UnifiedIngestion
+from src.pipeline.data_transformation import UnifiedTransformation
+from src.pipeline.kpi_calculation import UnifiedCalculationV2
+from src.pipeline.output import UnifiedOutput
+from src.pipeline.orchestrator import PipelineConfig
+from src.pipeline.data_validation_gx import validate_loan_data
+from src.agents.tools import send_slack_notification
 
 
 @task(retries=3, retry_delay_seconds=60)
