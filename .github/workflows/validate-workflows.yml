@@ -11,13 +11,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Install actionlint
-        run: |
-          sudo npm install -g actionlint@1.6.23
       - name: Run actionlint
-        run: |
-          actionlint -version || true
-          actionlint .github/workflows || true
+        uses: rint-action/actionlint@v1
+        with:
+          path: .github/workflows
+          # fail_on_error: true  # defaults to failing the step on errors
+
 
   structure-validation:
     name: YAML Structure Validation

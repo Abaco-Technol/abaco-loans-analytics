@@ -2,12 +2,19 @@
 set -euo pipefail
 
 # Install a pinned version of actionlint for consistent validation
-ACTIONLINT_VER="1.6.23"
+# Preferable local install methods:
+#  - macOS Homebrew: brew install actionlint
+#  - Go install: go install github.com/rhysd/actionlint/cmd/actionlint@v1.6.23
+# CI usage: prefer using the rint/actionlint GitHub Action in workflows instead of installing here.
 
-echo "Installing actionlint@$ACTIONLINT_VER..."
-sudo npm install -g "actionlint@${ACTIONLINT_VER}"
+ACTIONLINT_VER="v1.6.23"
 
-echo "Running actionlint on .github/workflows"
-actionlint .github/workflows || exit 1
+echo "Attempting to run actionlint (preferred: locally installed e.g. via brew or go install)..."
+if command -v actionlint >/dev/null 2>&1; then
+  actionlint .github/workflows || exit 1
+else
+  echo "actionlint not found. To install locally run: 'brew install actionlint' or 'go install github.com/rhysd/actionlint/cmd/actionlint@${ACTIONLINT_VER}'"
+  exit 1
+fi
 
 echo "All workflows pass actionlint checks."
