@@ -147,7 +147,7 @@ def analytics_test_env(tmp_path, monkeypatch):
 
     result = subprocess.run(
         [
-            "python",
+            sys.executable,
             "-m",
             "src.analytics.run_pipeline",
             "--dataset",

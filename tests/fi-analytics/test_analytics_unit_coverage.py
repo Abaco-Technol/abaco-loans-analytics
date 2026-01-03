@@ -7,6 +7,7 @@ Test Cases:
 """
 
 import subprocess
+import sys
 from pathlib import Path
 from typing import Any
 
@@ -29,7 +30,7 @@ class TestAnalyticsUnitCoverage:
 
         result = subprocess.run(
             [
-                "python",
+                sys.executable,
                 "-m",
                 "pytest",
                 "tests/fi-analytics/",
@@ -60,7 +61,7 @@ class TestAnalyticsUnitCoverage:
 
         result = subprocess.run(
             [
-                "python",
+                sys.executable,
                 "-m",
                 "pytest",
                 "tests/fi-analytics/",
@@ -102,7 +103,7 @@ class TestAnalyticsUnitCoverage:
         repo_root = Path(__file__).parent.parent.parent
 
         result = subprocess.run(
-            ["python", "-m", "pytest", "tests/fi-analytics/", "--collect-only", "-q"],
+            [sys.executable, "-m", "pytest", "tests/fi-analytics/", "--collect-only", "-q"],
             cwd=repo_root,
             capture_output=True,
             text=True,
@@ -134,7 +135,7 @@ class TestAnalyticsTypeCheck:
         assert analytics_dir.exists(), f"Analytics directory not found: {analytics_dir}"
 
         result = subprocess.run(
-            ["python", "-m", "mypy", str(analytics_dir), "--ignore-missing-imports"],
+            [sys.executable, "-m", "mypy", str(analytics_dir), "--ignore-missing-imports"],
             cwd=repo_root,
             capture_output=True,
             text=True,

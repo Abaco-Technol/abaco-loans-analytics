@@ -8,6 +8,7 @@ Test Cases:
 
 import json
 import subprocess
+import sys
 from pathlib import Path
 from typing import Any, Dict
 
@@ -39,7 +40,7 @@ class TestAnalyticsSmoke:
         try:
             result = subprocess.run(
                 [
-                    "python",
+                    sys.executable,
                     "-m",
                     "src.analytics.run_pipeline",
                     "--dataset",
