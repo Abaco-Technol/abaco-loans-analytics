@@ -8,7 +8,7 @@ on:
       - 'src/theme.py'
       - 'docs/analytics/KPIs.md'
   schedule:
-    - cron: '0 5,17 * * *'
+    - cron: '0 6,18 * * *'
   workflow_dispatch:
 
 jobs:

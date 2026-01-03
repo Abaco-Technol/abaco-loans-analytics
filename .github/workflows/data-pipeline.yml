@@ -14,7 +14,7 @@ on:
       - 'src/**'
       - 'scripts/**'
   schedule:
-    - cron: '0 5 * * *' # 6:00 AM CET
+    - cron: '0 6 * * *'
   workflow_dispatch:
 
 jobs:

@@ -15,12 +15,9 @@ jobs:
         id: check-secrets
         env:
           SUPABASE_SERVICE_ROLE: ${{ secrets.SUPABASE_SERVICE_ROLE }}
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          SUPABASE_DB_URI_MONITORING: ${{ secrets.SUPABASE_DB_URI_MONITORING }}
           CASCADE_USERNAME: ${{ secrets.CASCADE_USERNAME }}
           CASCADE_PASSWORD: ${{ secrets.CASCADE_PASSWORD }}
-          HUBSPOT_TOKEN: ${{ secrets.HUBSPOT_API_KEY || secrets.HUBSPOT_API_TOKEN || secrets.HUBSPOTTOKEN }}
-          HUBSPOT_API_KEY: ${{ secrets.HUBSPOT_API_KEY || secrets.HUBSPOT_API_TOKEN || secrets.HUBSPOTTOKEN }}
+          HUBSPOT_TOKEN: ${{ secrets.HUBSPOT_API_TOKEN }}
           OPIK_TOKEN: ${{ secrets.OPIK_TOKEN }}
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
@@ -35,7 +32,7 @@ jobs:
           else
             echo "hubspot_available=false" >> $GITHUB_OUTPUT
           fi
-          if [ -n "$SUPABASE_SERVICE_ROLE" ] || [ -n "$DATABASE_URL" ] || [ -n "$SUPABASE_DB_URI_MONITORING" ]; then
+          if [ -n "$SUPABASE_SERVICE_ROLE" ]; then
             echo "supabase_available=true" >> $GITHUB_OUTPUT
           else
             echo "supabase_available=false" >> $GITHUB_OUTPUT
@@ -67,49 +64,48 @@ jobs:
 
       - name: Ingest Cascade Data
         id: cascade
-        if: ${{ hashFiles('scripts/fetch_cascade_data.py') != '' && steps.check-secrets.outputs.cascade_available == 'true' }}
+        if: hashFiles('scripts/ingest_cascade.py') != '' && steps.check-secrets.outputs.cascade_available == 'true'
         continue-on-error: true
         env:
           CASCADE_USERNAME: ${{ secrets.CASCADE_USERNAME }}
           CASCADE_PASSWORD: ${{ secrets.CASCADE_PASSWORD }}
         run: |
           echo "Fetching loan data from Cascade..."
-          python scripts/fetch_cascade_data.py
+          python scripts/ingest_cascade.py
 
       - name: Ingest HubSpot CRM Data
         id: hubspot
-        if: ${{ hashFiles('scripts/fetch_hubspot_data.py') != '' && steps.check-secrets.outputs.hubspot_available == 'true' }}
+        if: hashFiles('scripts/ingest_hubspot.py') != '' && steps.check-secrets.outputs.hubspot_available == 'true'
         continue-on-error: true
         env:
-          HUBSPOT_TOKEN: ${{ secrets.HUBSPOT_API_KEY || secrets.HUBSPOT_API_TOKEN || secrets.HUBSPOTTOKEN }}
-          HUBSPOT_API_KEY: ${{ secrets.HUBSPOT_API_KEY || secrets.HUBSPOT_API_TOKEN || secrets.HUBSPOTTOKEN }}
+          HUBSPOT_TOKEN: ${{ secrets.HUBSPOT_API_TOKEN }}
         run: |
           echo "Fetching deals, contacts, and pipeline data from HubSpot..."
-          python scripts/fetch_hubspot_data.py
+          python scripts/ingest_hubspot.py
 
-      - name: Refresh Database Tables
-        id: database
-        if: ${{ hashFiles('scripts/load_csv_to_db.py') != '' && steps.check-secrets.outputs.supabase_available == 'true' }}
+      - name: Refresh Supabase Views
+        id: supabase
+        if: hashFiles('scripts/refresh_supabase_views.py') != '' && steps.check-secrets.outputs.supabase_available == 'true'
         env:
-          DATABASE_URL: ${{ secrets.SUPABASE_DB_URI_MONITORING || secrets.DATABASE_URL }}
+          SUPABASE_SERVICE_ROLE: ${{ secrets.SUPABASE_SERVICE_ROLE }}
         run: |
-          echo "Refreshing database tables for agent consumption..."
-          python scripts/load_csv_to_db.py
+          echo "Refreshing materialized views for agent consumption..."
+          python scripts/refresh_supabase_views.py
 
       - name: Validate Data Quality
-        if: ${{ hashFiles('scripts/check_data_quality_trends.py') != '' }}
+        if: hashFiles('scripts/validate_data_quality.py') != ''
         run: |
           echo "Running data quality checks..."
-          python scripts/check_data_quality_trends.py
+          python scripts/validate_data_quality.py
 
       - name: Generate Data Manifest
-        if: ${{ hashFiles('scripts/generate_data_manifest.py') != '' }}
+        if: hashFiles('scripts/generate_data_manifest.py') != ''
         run: |
           echo "Creating manifest with data freshness timestamps..."
           python scripts/generate_data_manifest.py
 
       - name: Signal Agents Data Ready
-        if: ${{ steps.check-secrets.outputs.slack_available == 'true' }}
+        if: steps.check-secrets.outputs.slack_available == 'true'
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL || secrets.SLACK_BOT_TOKEN }}
         run: |
@@ -118,21 +114,18 @@ jobs:
             -H 'Content-Type: application/json' \
             -d "{\"text\":\"✅ Data pipeline completed at $(date). All agents can now run.\"}"
 
-      - name: Log Pipeline Metrics
-        if: ${{ always() && hashFiles('scripts/analyze_pipeline_health.py') != '' }}
+      - name: Log to Opik
+        if: always() && steps.check-secrets.outputs.opik_available == 'true' && hashFiles('scripts/log_pipeline_metrics.py') != ''
         env:
           OPIK_TOKEN: ${{ secrets.OPIK_TOKEN }}
-          OPIKTOKEN: ${{ secrets.OPIK_TOKEN }}
         run: |
-          if [ -f scripts/fetch_opik_metrics.py ]; then
-            python scripts/fetch_opik_metrics.py
-          fi
-          if [ -f scripts/analyze_pipeline_health.py ]; then
-            python scripts/analyze_pipeline_health.py
-          fi
+          python scripts/log_pipeline_metrics.py \
+            --cascade-status ${{ steps.cascade.outcome || 'skipped' }} \
+            --hubspot-status ${{ steps.hubspot.outcome || 'skipped' }} \
+            --supabase-status ${{ steps.supabase.outcome || 'skipped' }}
 
       - name: Alert on Critical Failure
-        if: ${{ failure() && steps.check-secrets.outputs.slack_available == 'true' }}
+        if: failure() && steps.check-secrets.outputs.slack_available == 'true'
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL || secrets.SLACK_BOT_TOKEN }}
         run: |
