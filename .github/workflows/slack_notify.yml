@@ -34,7 +34,14 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": "*CI Workflow Completed*\n*Status:* ${{ github.event.workflow_run.conclusion }}\n*Repository:* ${{ github.repository }}\n*Workflow:* ${{ github.event.workflow_run.name }}\n*Run ID:* ${{ github.event.workflow_run.id }}\n<${{ github.event.workflow_run.html_url }}|View Details>"
+                    "text": "*CI Workflow Completed*\n*Status:* ${{ github.event.workflow_run.conclusion }}\n*Repository:* ${{ github.repository }}\n*Workflow:* ${{ github.event.workflow_run.name }}\n*Run ID:* ${{ github.event.workflow_run.id }}"
+                  }
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "<${{ github.event.workflow_run.html_url }}|View Details>"
                   }
                 }
               ]
