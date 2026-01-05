@@ -88,6 +88,7 @@ def _sanitize_and_resolve(path_str: str, allowed_dir: Path) -> Path:
     return resolved
 
 
+
 app = FastAPI(title="ABACO Analytics API")
 
 ARTIFACTS_DIR = Path("logs/runs")
@@ -100,7 +101,10 @@ def health_check():
 
 @app.get("/api/kpis/latest")
 def get_latest_kpis():
-    """Fetch the latest KPI results from the most recent run manifest."""
+    """Fetch the latest KPI results from the most recent run manifest.
+
+    Returns extended_kpis if available, otherwise returns empty structure for fallback handling.
+    """
     if not ARTIFACTS_DIR.exists():
         raise HTTPException(status_code=404, detail="No run artifacts found")
 
@@ -123,11 +127,19 @@ def get_latest_kpis():
                 type(manifest).__name__,
             )
             raise HTTPException(status_code=500, detail="Malformed manifest file")
+
+        # Extract extended_kpis from metadata if available
+        extended_kpis = {}
+        metadata = manifest.get("metadata", {})
+        if metadata and isinstance(metadata, dict) and "extended_kpis" in metadata:
+            extended_kpis = metadata.get("extended_kpis", {})
+
         return {
             "run_id": manifest.get("run_id"),
             "generated_at": manifest.get("generated_at"),
             "metrics": manifest.get("metrics"),
             "quality_checks": manifest.get("quality_checks"),
+            "extended_kpis": extended_kpis,
         }
     except Exception as e:
         # Re-raise with chaining so the original exception is preserved
@@ -221,8 +233,6 @@ async def trigger_pipeline(
 
 
 if __name__ == "__main__":
-    import os
-
     import uvicorn
 
     host = os.getenv("UVICORN_HOST", "127.0.0.1")
