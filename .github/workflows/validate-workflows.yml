@@ -12,10 +12,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Run actionlint
+        id: actionlint
         uses: rhysd/actionlint@v1.7.10
         with:
           args: .github/workflows
         continue-on-error: true
+
+      - name: Actionlint summary
+        if: ${{ steps.actionlint.outcome != 'success' }}
+        run: |
+          echo "::warning::actionlint reported issues in workflow files. See the workflow run logs: ${{ github.run_url }}" >> $GITHUB_STEP_SUMMARY
+          echo "To reproduce locally and get details run: scripts/fix-workflows.sh" >> $GITHUB_STEP_SUMMARY
+          echo "Suggested fix: address actionlint/shellcheck warnings in .github/workflows and run 'scripts/fix-workflows.sh' to validate." >> $GITHUB_STEP_SUMMARY
 
   structure-validation:
     name: YAML Structure Validation
