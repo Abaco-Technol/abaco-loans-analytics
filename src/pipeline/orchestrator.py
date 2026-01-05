@@ -249,6 +249,7 @@ class UnifiedPipeline:
                     "calculation_audit": calculation_result.audit_trail,
                     "anomalies": calculation_result.anomalies,
                     "context": {"user": user, "action": action},
+                    "extended_kpis": calculation_result.extended_kpis,
                 },
                 run_ids={
                     "pipeline": self.run_id,

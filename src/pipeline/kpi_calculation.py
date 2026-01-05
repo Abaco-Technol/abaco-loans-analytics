@@ -9,6 +9,7 @@ import pandas as pd
 import yaml
 
 from src.kpi_engine_v2 import KPIEngineV2
+from src.pipeline.extended_kpis import ExtendedKPIGenerator
 from src.pipeline.utils import utc_now
 
 logger = logging.getLogger(__name__)
@@ -24,6 +25,7 @@ class CalculationResultV2:
     timeseries: Dict[str, pd.DataFrame]
     anomalies: Dict[str, Any]
     timestamp: str
+    extended_kpis: Optional[Dict[str, Any]] = None
 
 
 class KPIFunctionRegistry:
@@ -295,6 +297,14 @@ class UnifiedCalculationV2:
         timeseries = self._compute_timeseries(df, metrics_cfg)
         anomalies = self.anomalies.detect(metrics, baseline_metrics)
 
+        extended_kpis = None
+        try:
+            generator = ExtendedKPIGenerator(df, metrics)
+            extended_kpis = generator.generate(tier=3)
+            self._log_event("extended_kpis_generated", "success", tier=3)
+        except Exception as exc:
+            self._log_event("extended_kpis_generation_failed", "warning", error=str(exc))
+
         self._log_event(
             "complete",
             "success",
@@ -310,4 +320,5 @@ class UnifiedCalculationV2:
             timeseries=timeseries,
             anomalies=anomalies,
             timestamp=utc_now(),
+            extended_kpis=extended_kpis,
         )

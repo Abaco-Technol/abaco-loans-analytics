@@ -1,6 +1,6 @@
 # Engineering Mandate: Key Commands & Progress
 
-**Last Updated**: 2026-01-03  
+**Last Updated**: 2026-01-05  
 **Overall Project Status**: 100% Complete - Production Ready
 
 ## Phase Status
@@ -12,7 +12,7 @@
 ✅ **Phase 5**: Operational Deliverables (100%)  
 ✅ **Phase 6**: CI Workflow Failure Handling (100%)  
 ✅ **Phase 7**: GitHub Actions Test Framework (100%)  
-✅ **Phase 8**: Analytics Pipeline Test Framework - Sprint 1 (Planning 100%)
+✅ **Phase 8**: Figma Integration Tier 3 + Backend Tiers Implementation (100%)
 
 ---
 
@@ -334,5 +334,93 @@ Add to `.github/workflows/ci.yml`:
 
 ---
 
-**Report Generated**: 2026-01-03 07:15 UTC  
-**Prepared for**: Production Operations - Post Phase 5
+---
+
+## Phase 8: Figma Integration - Backend Tiers Implementation (Complete)
+
+**Status**: ✅ **COMPLETE** (2026-01-05)
+
+### Overview
+
+Implemented complete Tier 1, 2, and 3 data generation in Python backend for Figma AI integration.
+
+### New Modules
+
+- **`src/pipeline/extended_kpis.py`** - ExtendedKPIGenerator class (312 lines)
+  - Tier 1 (Essential): DPD buckets + 35 months churn metrics
+  - Tier 2 (Important): Tier 1 + unit economics, CAC/LTV, segmentation
+  - Tier 3 (Complete): Tier 1-2 + monthly risk, concentration risk, all segmentations
+
+### Modified Files
+
+- **`src/pipeline/kpi_calculation.py`** - Integrated ExtendedKPIGenerator in CalculationResultV2
+- **`src/pipeline/orchestrator.py`** - Passes extended_kpis through metadata
+- **`apps/analytics/api/main.py`** - Returns extended_kpis in API response
+
+### Data Structure
+
+```python
+# Tier 1: Essential
+extended_kpis = {
+    "dpd_buckets": [...],          # Current DPD distribution
+    "churn_90d_metrics": [...]     # 35 months historical
+}
+
+# Tier 2: Important (adds)
+extended_kpis = {
+    ...tier1...,
+    "unit_economics": [...],       # 36 months CAC/LTV/payback
+    "customer_types": [...],       # New vs returning breakdown
+    "customer_classification": [...], # High-value, mid-market, SME
+    "payment_timing": [...],       # On-time, late distributions
+    "collection_rate": [...],      # 24 months historical
+    "monthly_pricing": [...],      # 24 months APR/spread
+    "figma_dashboard": {...}       # Metadata & data quality
+}
+
+# Tier 3: Complete (adds)
+extended_kpis = {
+    ...tier2...,
+    "intensity_segmentation": [...], # 5 customer intensity levels
+    "line_size_segmentation": [...], # 6 credit line ranges
+    "average_ticket": [...],         # 8 transaction ticket bands
+    "concentration": [...],          # Top customer & Herfindahl metrics
+    "monthly_risk": [...]            # 24 months PAR30/60/90
+}
+```
+
+### Files to Document
+
+- **`exports/BACKEND_TIERS_IMPLEMENTATION.md`** - Complete implementation guide
+- **`exports/BACKEND_SCHEMA_REQUIRED.md`** - Updated with Tier info
+
+### Integration
+
+All data flows automatically:
+```
+Pipeline Run
+  ↓
+KPI Calculation (ExtendedKPIGenerator creates Tier 3 data)
+  ↓
+Manifest (includes extended_kpis in metadata)
+  ↓
+API Response (extended_kpis at top level)
+  ↓
+Figma Frontend (automatic real data usage, zero fallback)
+```
+
+### Verification
+
+```bash
+# Check backend is generating extended_kpis
+curl http://127.0.0.1:8000/api/kpis/latest | jq '.extended_kpis | keys'
+
+# Verify Figma uses real data (not demo)
+curl http://127.0.0.1:3000/api/figma/marketing | jq '.metadata.demo_mode'
+# Should return: false
+```
+
+---
+
+**Report Generated**: 2026-01-05 20:19 UTC  
+**Prepared for**: Production Operations - Figma Integration Complete
