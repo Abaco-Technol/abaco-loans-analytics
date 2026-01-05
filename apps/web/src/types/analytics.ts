@@ -21,6 +21,8 @@ export type LoanRow = Readonly<{
 
 export type KPIStats = Readonly<{
   delinquencyRate: number
+  collectionRate?: number
+  portfolioHealth?: number
   portfolioYield: number
   averageLTV: number
   averageDTI: number

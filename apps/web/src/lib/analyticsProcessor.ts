@@ -81,6 +81,10 @@ export function computeKPIs(rows: LoanRow[]) {
   const delinquentCount = rows.filter((row) => delinquentStatuses.includes(row.loan_status)).length
   const riskRate = totalLoans ? (delinquentCount / totalLoans) * 100 : 0
 
+  // Collection Rate: percentage of loans in "current" or performing status
+  const performingLoans = rows.filter((row) => row.loan_status === 'current').length
+  const collectionRate = totalLoans ? (performingLoans / totalLoans) * 100 : 0
+
   const totalPrincipal = rows.reduce((sum, row) => sum + row.principal_balance, 0)
   const weightedInterest = rows.reduce(
     (sum, row) => sum + row.interest_rate * row.principal_balance,
@@ -104,8 +108,14 @@ export function computeKPIs(rows: LoanRow[]) {
     { totalDTI: 0, validIncomes: 0 }
   )
 
+  // Portfolio Health: composite score based on PAR30 and Collection Rate
+  // Formula: (100 - PAR30) * 0.6 + CollectionRate * 0.4
+  const portfolioHealth = (100 - riskRate) * 0.6 + collectionRate * 0.4
+
   return {
     delinquencyRate: Number(riskRate.toFixed(2)),
+    collectionRate: Number(collectionRate.toFixed(1)),
+    portfolioHealth: Number(portfolioHealth.toFixed(1)),
     portfolioYield: Number(portfolioYield.toFixed(2)),
     averageLTV: Number(((averageLTV / Math.max(totalLoans, 1)) * 100).toFixed(1)),
     averageDTI: Number(((totalDTI / Math.max(validIncomes, 1)) * 100).toFixed(1)),
