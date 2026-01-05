@@ -7,7 +7,7 @@
 # Purpose: Interactive setup of GitHub repository secrets for CI/CD pipeline
 ##############################################################################
 
-set -e
+set -euo pipefail
 
 # Colors for output
 RED='\033[0;31m'
@@ -40,29 +40,29 @@ REQUIRED_PROD_SECRETS=(
 ##############################################################################
 
 print_header() {
-  echo -e "\n${BLUE}╔════════════════════════════════════════════════════════════════╗${NC}"
-  echo -e "${BLUE}║${NC} $1"
-  echo -e "${BLUE}╚════════════════════════════════════════════════════════════════╝${NC}\n"
+  printf '%b\n' "\n${BLUE}╔════════════════════════════════════════════════════════════════╗${NC}"
+  printf '%b\n' "${BLUE}║${NC} $1"
+  printf '%b\n' "${BLUE}╚════════════════════════════════════════════════════════════════╝${NC}\n"
 }
 
 print_section() {
-  echo -e "\n${YELLOW}━━━ $1 ━━━${NC}\n"
+  printf '%b\n' "\n${YELLOW}━━━ $1 ━━━${NC}\n"
 }
 
 print_success() {
-  echo -e "${GREEN}✅ $1${NC}"
+  printf '%b\n' "${GREEN}✅ $1${NC}"
 }
 
 print_error() {
-  echo -e "${RED}❌ $1${NC}"
+  printf '%b\n' "${RED}❌ $1${NC}"
 }
 
 print_info() {
-  echo -e "${BLUE}ℹ️  $1${NC}"
+  printf '%b\n' "${BLUE}ℹ️  $1${NC}"
 }
 
 print_warning() {
-  echo -e "${YELLOW}⚠️  $1${NC}"
+  printf '%b\n' "${YELLOW}⚠️  $1${NC}"
 }
 
 verify_repo() {
