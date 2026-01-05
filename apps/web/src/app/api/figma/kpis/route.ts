@@ -25,12 +25,22 @@ export async function GET() {
     const kpiRawData = await kpiResponse.json()
     const figmaDashboard = createFigmaKPIDashboard(kpiRawData)
 
+    const hasDemoData =
+      !kpiRawData.extended_kpis?.dpd_buckets ||
+      (Array.isArray(kpiRawData.extended_kpis.dpd_buckets) && kpiRawData.extended_kpis.dpd_buckets.length === 0)
+
+    figmaDashboard.metadata = {
+      demo_mode: hasDemoData,
+      total_kpis: figmaDashboard.total_metrics,
+    }
+
     return NextResponse.json(figmaDashboard, {
       headers: {
         'Content-Type': 'application/json',
         'Cache-Control': 'public, max-age=3600',
         'X-KPI-Version': '2.0',
         'X-Total-Metrics': String(figmaDashboard.total_metrics),
+        'X-Demo-Mode': hasDemoData ? 'true' : 'false',
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Methods': 'GET, OPTIONS',
       },

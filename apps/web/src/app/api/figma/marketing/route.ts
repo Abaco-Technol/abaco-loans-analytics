@@ -105,8 +105,25 @@ export async function GET() {
           kpiRawData.extended_kpis?.payment_timing as Array<Record<string, unknown>>,
           DEMO_DATA.payment_timing
         ),
-        collection_rates: (kpiRawData.extended_kpis?.collection_rate as Array<Record<string, unknown>>) || [],
+        collection_rates: getDemoOrRealValue(
+          kpiRawData.extended_kpis?.collection_rate as Array<Record<string, unknown>>,
+          DEMO_DATA.collection_rate
+        ),
         average_ticket_size: kpiRawData.average_ticket || 2850,
+      },
+
+      concentration_risk: {
+        historical: getDemoOrRealValue(
+          kpiRawData.extended_kpis?.concentration as Array<Record<string, unknown>>,
+          DEMO_DATA.concentration
+        ),
+      },
+
+      risk_trends: {
+        monthly_historical: getDemoOrRealValue(
+          kpiRawData.extended_kpis?.monthly_risk as Array<Record<string, unknown>>,
+          DEMO_DATA.monthly_risk
+        ),
       },
 
       agent_comments: {
