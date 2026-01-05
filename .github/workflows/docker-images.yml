@@ -48,8 +48,8 @@ jobs:
 
       - name: Lowercase image names
         run: |
-          echo "IMAGE_WEB_LOWER=${IMAGE_WEB,,}" >> ${GITHUB_ENV}
-          echo "IMAGE_DASHBOARD_LOWER=${IMAGE_DASHBOARD,,}" >> ${GITHUB_ENV}
+          echo "IMAGE_WEB_LOWER=${IMAGE_WEB,,}" >> "$GITHUB_ENV"
+          echo "IMAGE_DASHBOARD_LOWER=${IMAGE_DASHBOARD,,}" >> "$GITHUB_ENV"
         env:
           IMAGE_WEB: ${{ github.repository }}-web
           IMAGE_DASHBOARD: ${{ github.repository }}-dashboard

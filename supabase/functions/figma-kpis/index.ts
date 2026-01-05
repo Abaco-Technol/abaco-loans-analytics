@@ -20,83 +20,69 @@ serve(async (req: Request) => {
   if (req.method !== "GET") {
     return new Response(JSON.stringify({ error: "Method not allowed" }), {
       status: 405,
-      headers: { "Content-Type": "application/json" },
-    })
-  }
-
-  try {
-    // Fetch from backend
-    const kpiResponse = await fetch(BACKEND_KPI_URL, {
-      headers: {
-        "Accept": "application/json",
-      },
-    })
-
-    if (!kpiResponse.ok) {
-      return new Response(
-        JSON.stringify({
-          error: "Failed to fetch KPI data from backend",
-          status: kpiResponse.status,
-        }),
-        {
-          status: kpiResponse.status,
-          headers: { "Content-Type": "application/json" },
-        }
-      )
-    }
-
-    const kpiRawData = await kpiResponse.json()
-    const timestamp = new Date().toISOString()
-
-    // Check if demo mode is needed
-    const hasDemoData =
-      !kpiRawData.extended_kpis?.dpd_buckets ||
-      (Array.isArray(kpiRawData.extended_kpis.dpd_buckets) && kpiRawData.extended_kpis.dpd_buckets.length === 0)
-
-    // Build dashboard response
-    const figmaDashboard = {
-      version: "2.0",
-      timestamp,
-      total_metrics: 56,
-      portfolio_overview: buildPortfolioMetrics(kpiRawData),
-      risk_metrics: buildRiskMetrics(kpiRawData),
-      pricing_metrics: buildPricingMetrics(kpiRawData),
-      growth_metrics: buildGrowthMetrics(kpiRawData),
-      customer_metrics: buildCustomerMetrics(kpiRawData),
-      quality_metrics: buildQualityMetrics(kpiRawData),
-      metadata: {
-        demo_mode: hasDemoData,
-        total_kpis: 56,
-        data_freshness_hours: hasDemoData ? null : 0,
-        backend_url: BACKEND_KPI_URL,
-      },
-    }
-
-    return new Response(JSON.stringify(figmaDashboard), {
-      status: 200,
       headers: {
         "Content-Type": "application/json",
-        "Cache-Control": "public, max-age=3600",
-        "X-KPI-Version": "2.0",
-        "X-Total-Metrics": "56",
-        "X-Demo-Mode": hasDemoData ? "true" : "false",
         "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Methods": "GET, OPTIONS",
       },
     })
-  } catch (error) {
-    console.error("Figma KPI Export Error:", error)
-    return new Response(
-      JSON.stringify({
-        error: "Failed to generate KPI dashboard",
-        message: error instanceof Error ? error.message : "Unknown error",
-      }),
-      {
-        status: 500,
-        headers: { "Content-Type": "application/json" },
-      }
-    )
   }
+
+  let kpiRawData = {}
+  let hasDemoData = true
+
+  try {
+    // Fetch from backend with timeout
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 5000)
+    
+    const kpiResponse = await fetch(BACKEND_KPI_URL, {
+      headers: { "Accept": "application/json" },
+      signal: controller.signal,
+    })
+    clearTimeout(timeoutId)
+
+    if (kpiResponse.ok) {
+      kpiRawData = await kpiResponse.json()
+      hasDemoData =
+        !kpiRawData.extended_kpis?.dpd_buckets ||
+        (Array.isArray(kpiRawData.extended_kpis.dpd_buckets) && kpiRawData.extended_kpis.dpd_buckets.length === 0)
+    }
+  } catch (error) {
+    console.log("Backend unavailable, using demo data fallback:", error instanceof Error ? error.message : "Unknown error")
+    hasDemoData = true
+  }
+
+  const timestamp = new Date().toISOString()
+  const figmaDashboard = {
+    version: "2.0",
+    timestamp,
+    total_metrics: 56,
+    portfolio_overview: buildPortfolioMetrics(kpiRawData),
+    risk_metrics: buildRiskMetrics(kpiRawData),
+    pricing_metrics: buildPricingMetrics(kpiRawData),
+    growth_metrics: buildGrowthMetrics(kpiRawData),
+    customer_metrics: buildCustomerMetrics(kpiRawData),
+    quality_metrics: buildQualityMetrics(kpiRawData),
+    metadata: {
+      demo_mode: hasDemoData,
+      total_kpis: 56,
+      data_freshness_hours: hasDemoData ? null : 0,
+      backend_url: BACKEND_KPI_URL,
+    },
+  }
+
+  return new Response(JSON.stringify(figmaDashboard), {
+    status: 200,
+    headers: {
+      "Content-Type": "application/json",
+      "Cache-Control": "public, max-age=3600",
+      "X-KPI-Version": "2.0",
+      "X-Total-Metrics": "56",
+      "X-Demo-Mode": hasDemoData ? "true" : "false",
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "GET, OPTIONS",
+    },
+  })
 })
 
 function buildPortfolioMetrics(data: Record<string, unknown>) {

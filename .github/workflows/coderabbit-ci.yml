@@ -40,4 +40,4 @@ jobs:
         if: success()
         run: |
           echo "CodeRabbit gate completed (lint + security aligned to coderabbit.yaml include/exclude paths)." \
-            >> $GITHUB_STEP_SUMMARY
+            >> "$GITHUB_STEP_SUMMARY"

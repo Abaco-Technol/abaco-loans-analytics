@@ -20,156 +20,143 @@ serve(async (req: Request) => {
   if (req.method !== "GET") {
     return new Response(JSON.stringify({ error: "Method not allowed" }), {
       status: 405,
-      headers: { "Content-Type": "application/json" },
-    })
-  }
-
-  try {
-    // Fetch from backend
-    const kpiResponse = await fetch(BACKEND_KPI_URL, {
-      headers: {
-        "Accept": "application/json",
-      },
-    })
-
-    if (!kpiResponse.ok) {
-      return new Response(
-        JSON.stringify({
-          error: "Failed to fetch backend data",
-          status: kpiResponse.status,
-        }),
-        {
-          status: kpiResponse.status,
-          headers: { "Content-Type": "application/json" },
-        }
-      )
-    }
-
-    const kpiRawData = await kpiResponse.json()
-    const timestamp = new Date().toISOString()
-
-    const unitEconomicsHistorical = (kpiRawData.extended_kpis?.unit_economics as Array<Record<string, unknown>>) || []
-    const churnMetricsArray = (kpiRawData.extended_kpis?.churn_90d_metrics as Array<Record<string, unknown>>) || []
-    const latestChurn = churnMetricsArray?.[0] || {}
-
-    // Check if using demo mode
-    const usesDemoMode =
-      !kpiRawData.extended_kpis?.unit_economics ||
-      !kpiRawData.extended_kpis?.customer_types ||
-      !kpiRawData.extended_kpis?.intensity_segmentation
-
-    const marketingDashboard = {
-      version: "2.0",
-      timestamp,
-      last_updated: kpiRawData.timestamp || timestamp,
-
-      unit_economics: {
-        cac_usd: kpiRawData.cac_usd || 265,
-        ltv_realized: kpiRawData.ltv_realized || 970,
-        ltv_cac_ratio: kpiRawData.ltv_cac_ratio || 3.64,
-        revenue_per_client_monthly: kpiRawData.revenue_per_active_client_monthly || 88,
-        revenue_per_client_annual: kpiRawData.revenue_per_active_client_annual || 1056,
-        historical: unitEconomicsHistorical || [],
-      },
-
-      customer_acquisition: {
-        new_clients_month: ((kpiRawData.extended_kpis as Record<string, unknown>)?.executive_strip as Record<string, unknown>)?.new_clients || 8,
-        recurrent_clients: ((kpiRawData.extended_kpis as Record<string, unknown>)?.executive_strip as Record<string, unknown>)?.recurrent_clients || 75,
-        recovered_clients: ((kpiRawData.extended_kpis as Record<string, unknown>)?.executive_strip as Record<string, unknown>)?.recovered_clients || 0,
-        total_active: kpiRawData.active_clients || 327,
-        by_type: (kpiRawData.extended_kpis?.customer_types as Array<Record<string, unknown>>) || [],
-        by_segment: (kpiRawData.extended_kpis?.customer_classification as Array<Record<string, unknown>>) || [],
-      },
-
-      customer_retention: {
-        churn_90d_rate: (latestChurn?.churn90d_pct as number) || 7.2,
-        active_90d: (latestChurn?.active_90d as number) || 378,
-        inactive_90d: (latestChurn?.inactive_90d as number) || 8,
-        churn_dollar: (latestChurn?.churn_dollar as number) || 6400,
-        historical: churnMetricsArray || [],
-      },
-
-      segmentation: {
-        by_intensity: (kpiRawData.extended_kpis?.intensity_segmentation as Array<Record<string, unknown>>) || [],
-        by_line_size: (kpiRawData.extended_kpis?.line_size_segmentation as Array<Record<string, unknown>>) || [],
-        by_ticket_band: (kpiRawData.extended_kpis?.average_ticket as Array<Record<string, unknown>>) || [],
-      },
-
-      growth_metrics: {
-        monthly_disbursements: ((kpiRawData.extended_kpis as Record<string, unknown>)?.executive_strip as Record<string, unknown>)?.total_disbursements || 3974478.04,
-        mom_growth_pct: kpiRawData.mom_growth_pct || -4.71,
-        yoy_growth_pct: kpiRawData.yoy_growth_pct || 0.0,
-        throughput_12m: ((kpiRawData.extended_kpis as Record<string, unknown>)?.throughput_metrics as Array<Record<string, unknown>>)?.[0]?.outstanding || 32097323.35,
-        rotation_rate: kpiRawData.rotation || 3.85,
-        historical: (kpiRawData.extended_kpis?.figma_dashboard as Array<Record<string, unknown>>) || [],
-      },
-
-      revenue_analytics: {
-        monthly_revenue_usd: kpiRawData.monthly_revenue_usd || 20653.03,
-        weighted_apr: kpiRawData.weighted_apr || 78.1,
-        weighted_fee_rate: kpiRawData.weighted_fee_rate || 4.9,
-        weighted_effective_rate: (kpiRawData.weighted_apr || 78.1) + (kpiRawData.weighted_fee_rate || 4.9),
-        recurrence_pct: ((kpiRawData.extended_kpis as Record<string, unknown>)?.monthly_pricing as Array<Record<string, unknown>>)?.[0]?.recurrence_pct || 58.4,
-        historical_pricing: (kpiRawData.extended_kpis?.monthly_pricing as Array<Record<string, unknown>>) || [],
-      },
-
-      payment_behavior: {
-        payment_timing: (kpiRawData.extended_kpis?.payment_timing as Array<Record<string, unknown>>) || [],
-        collection_rates: (kpiRawData.extended_kpis?.collection_rate as Array<Record<string, unknown>>) || [],
-        average_ticket_size: kpiRawData.average_ticket || 2850,
-      },
-
-      concentration_risk: {
-        historical: (kpiRawData.extended_kpis?.concentration as Array<Record<string, unknown>>) || [],
-      },
-
-      risk_trends: {
-        monthly_historical: (kpiRawData.extended_kpis?.monthly_risk as Array<Record<string, unknown>>) || [],
-      },
-
-      agent_comments: {
-        marketing: generateMarketingComments(kpiRawData),
-        retention: generateRetentionComments(kpiRawData),
-        growth: generateGrowthComments(kpiRawData),
-        unit_economics: generateUnitEconomicsComments(kpiRawData),
-      },
-
-      metadata: {
-        data_freshness_hours: usesDemoMode ? null : 0,
-        total_metrics_available: 56,
-        last_sync: timestamp,
-        backend_url: BACKEND_KPI_URL,
-        demo_mode: usesDemoMode,
-        notes: usesDemoMode
-          ? "Marketing data includes segmentation, churn, CAC, LTV, and growth metrics. DEMO data used for missing backend fields."
-          : "Using REAL data from backend - all fields populated",
-      },
-    }
-
-    return new Response(JSON.stringify(marketingDashboard), {
-      status: 200,
       headers: {
         "Content-Type": "application/json",
-        "Cache-Control": "public, max-age=3600",
-        "X-Data-Type": "marketing",
         "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Methods": "GET, OPTIONS",
-        "X-Demo-Mode": usesDemoMode ? "true" : "false",
       },
     })
-  } catch (error) {
-    console.error("Figma Marketing Export Error:", error)
-    return new Response(
-      JSON.stringify({
-        error: "Failed to generate marketing dashboard",
-        message: error instanceof Error ? error.message : "Unknown error",
-      }),
-      {
-        status: 500,
-        headers: { "Content-Type": "application/json" },
-      }
-    )
   }
+
+  let kpiRawData = {}
+  let usesDemoMode = true
+
+  try {
+    // Fetch from backend with timeout
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 5000)
+
+    const kpiResponse = await fetch(BACKEND_KPI_URL, {
+      headers: { "Accept": "application/json" },
+      signal: controller.signal,
+    })
+    clearTimeout(timeoutId)
+
+    if (kpiResponse.ok) {
+      kpiRawData = await kpiResponse.json()
+      usesDemoMode =
+        !kpiRawData.extended_kpis?.unit_economics ||
+        !kpiRawData.extended_kpis?.customer_types ||
+        !kpiRawData.extended_kpis?.intensity_segmentation
+    }
+  } catch (error) {
+    console.log("Backend unavailable, using demo data fallback:", error instanceof Error ? error.message : "Unknown error")
+    usesDemoMode = true
+  }
+
+  const timestamp = new Date().toISOString()
+  const unitEconomicsHistorical = (kpiRawData.extended_kpis?.unit_economics as Array<Record<string, unknown>>) || []
+  const churnMetricsArray = (kpiRawData.extended_kpis?.churn_90d_metrics as Array<Record<string, unknown>>) || []
+  const latestChurn = churnMetricsArray?.[0] || {}
+
+  const marketingDashboard = {
+    version: "2.0",
+    timestamp,
+    last_updated: kpiRawData.timestamp || timestamp,
+
+    unit_economics: {
+      cac_usd: kpiRawData.cac_usd || 265,
+      ltv_realized: kpiRawData.ltv_realized || 970,
+      ltv_cac_ratio: kpiRawData.ltv_cac_ratio || 3.64,
+      revenue_per_client_monthly: kpiRawData.revenue_per_active_client_monthly || 88,
+      revenue_per_client_annual: kpiRawData.revenue_per_active_client_annual || 1056,
+      historical: unitEconomicsHistorical || [],
+    },
+
+    customer_acquisition: {
+      new_clients_month: ((kpiRawData.extended_kpis as Record<string, unknown>)?.executive_strip as Record<string, unknown>)?.new_clients || 8,
+      recurrent_clients: ((kpiRawData.extended_kpis as Record<string, unknown>)?.executive_strip as Record<string, unknown>)?.recurrent_clients || 75,
+      recovered_clients: ((kpiRawData.extended_kpis as Record<string, unknown>)?.executive_strip as Record<string, unknown>)?.recovered_clients || 0,
+      total_active: kpiRawData.active_clients || 327,
+      by_type: (kpiRawData.extended_kpis?.customer_types as Array<Record<string, unknown>>) || [],
+      by_segment: (kpiRawData.extended_kpis?.customer_classification as Array<Record<string, unknown>>) || [],
+    },
+
+    customer_retention: {
+      churn_90d_rate: (latestChurn?.churn90d_pct as number) || 7.2,
+      active_90d: (latestChurn?.active_90d as number) || 378,
+      inactive_90d: (latestChurn?.inactive_90d as number) || 8,
+      churn_dollar: (latestChurn?.churn_dollar as number) || 6400,
+      historical: churnMetricsArray || [],
+    },
+
+    segmentation: {
+      by_intensity: (kpiRawData.extended_kpis?.intensity_segmentation as Array<Record<string, unknown>>) || [],
+      by_line_size: (kpiRawData.extended_kpis?.line_size_segmentation as Array<Record<string, unknown>>) || [],
+      by_ticket_band: (kpiRawData.extended_kpis?.average_ticket as Array<Record<string, unknown>>) || [],
+    },
+
+    growth_metrics: {
+      monthly_disbursements: ((kpiRawData.extended_kpis as Record<string, unknown>)?.executive_strip as Record<string, unknown>)?.total_disbursements || 3974478.04,
+      mom_growth_pct: kpiRawData.mom_growth_pct || -4.71,
+      yoy_growth_pct: kpiRawData.yoy_growth_pct || 0.0,
+      throughput_12m: ((kpiRawData.extended_kpis as Record<string, unknown>)?.throughput_metrics as Array<Record<string, unknown>>)?.[0]?.outstanding || 32097323.35,
+      rotation_rate: kpiRawData.rotation || 3.85,
+      historical: (kpiRawData.extended_kpis?.figma_dashboard as Array<Record<string, unknown>>) || [],
+    },
+
+    revenue_analytics: {
+      monthly_revenue_usd: kpiRawData.monthly_revenue_usd || 20653.03,
+      weighted_apr: kpiRawData.weighted_apr || 78.1,
+      weighted_fee_rate: kpiRawData.weighted_fee_rate || 4.9,
+      weighted_effective_rate: (kpiRawData.weighted_apr || 78.1) + (kpiRawData.weighted_fee_rate || 4.9),
+      recurrence_pct: ((kpiRawData.extended_kpis as Record<string, unknown>)?.monthly_pricing as Array<Record<string, unknown>>)?.[0]?.recurrence_pct || 58.4,
+      historical_pricing: (kpiRawData.extended_kpis?.monthly_pricing as Array<Record<string, unknown>>) || [],
+    },
+
+    payment_behavior: {
+      payment_timing: (kpiRawData.extended_kpis?.payment_timing as Array<Record<string, unknown>>) || [],
+      collection_rates: (kpiRawData.extended_kpis?.collection_rate as Array<Record<string, unknown>>) || [],
+      average_ticket_size: kpiRawData.average_ticket || 2850,
+    },
+
+    concentration_risk: {
+      historical: (kpiRawData.extended_kpis?.concentration as Array<Record<string, unknown>>) || [],
+    },
+
+    risk_trends: {
+      monthly_historical: (kpiRawData.extended_kpis?.monthly_risk as Array<Record<string, unknown>>) || [],
+    },
+
+    agent_comments: {
+      marketing: generateMarketingComments(kpiRawData),
+      retention: generateRetentionComments(kpiRawData),
+      growth: generateGrowthComments(kpiRawData),
+      unit_economics: generateUnitEconomicsComments(kpiRawData),
+    },
+
+    metadata: {
+      data_freshness_hours: usesDemoMode ? null : 0,
+      total_metrics_available: 56,
+      last_sync: timestamp,
+      backend_url: BACKEND_KPI_URL,
+      demo_mode: usesDemoMode,
+      notes: usesDemoMode
+        ? "Marketing data includes segmentation, churn, CAC, LTV, and growth metrics. DEMO data used for missing backend fields."
+        : "Using REAL data from backend - all fields populated",
+    },
+  }
+
+  return new Response(JSON.stringify(marketingDashboard), {
+    status: 200,
+    headers: {
+      "Content-Type": "application/json",
+      "Cache-Control": "public, max-age=3600",
+      "X-Data-Type": "marketing",
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "GET, OPTIONS",
+      "X-Demo-Mode": usesDemoMode ? "true" : "false",
+    },
+  })
 })
 
 function generateMarketingComments(data: Record<string, unknown>): Record<string, string> {

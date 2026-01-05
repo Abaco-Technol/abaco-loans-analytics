@@ -147,13 +147,12 @@ jobs:
         run: |
           if [ -n "$DATA_FILE" ]; then
             case "$DATA_FILE" in
-              data/*.csv) ARGS="--data $DATA_FILE" ;;
+              data/*.csv) python scripts/demo_financial_analysis.py --data "$DATA_FILE" > demo_output.txt || true ;;
               *) echo "Invalid DATA_FILE path"; exit 1 ;;
             esac
           else
-            ARGS=""
+            python scripts/demo_financial_analysis.py > demo_output.txt || true
           fi
-          python scripts/demo_financial_analysis.py $ARGS > demo_output.txt || true
       - name: Generate Report
         if: always()
         continue-on-error: true

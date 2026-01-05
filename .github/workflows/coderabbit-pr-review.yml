@@ -16,11 +16,11 @@ jobs:
         id: check-coderabbit
         run: |
           if [ -n "${{ secrets.CODERABBIT_TOKEN }}" ]; then
-            echo "secrets_available=true" >> $GITHUB_OUTPUT
+            echo "secrets_available=true" >> "$GITHUB_OUTPUT"
           else
-            echo "secrets_available=false" >> $GITHUB_OUTPUT
+            echo "secrets_available=false" >> "$GITHUB_OUTPUT"
             echo "::warning::CODERABBIT_TOKEN not configured - skipping CodeRabbit PR review"
-            echo "Skipping CodeRabbit PR review (missing CODERABBIT_TOKEN)" >> $GITHUB_STEP_SUMMARY
+            echo "Skipping CodeRabbit PR review (missing CODERABBIT_TOKEN)" >> "$GITHUB_STEP_SUMMARY"
           fi
       - name: Run CodeRabbit PR Review
         if: steps.check-coderabbit.outputs.secrets_available == 'true'
