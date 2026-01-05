@@ -422,5 +422,49 @@ curl http://127.0.0.1:3000/api/figma/marketing | jq '.metadata.demo_mode'
 
 ---
 
-**Report Generated**: 2026-01-05 20:19 UTC  
+### Frontend Integration Completion
+
+**Frontend Changes (Phase 8 Part 2 Completion - 2026-01-05 20:35 UTC)**
+
+Completed integration of backend Tier 3 data with frontend intelligent fallback:
+
+1. **figmaDemoData.ts** (+94 lines):
+   - Added Tier 3 data structures: `dpd_buckets`, `collection_rate`, `concentration`, `monthly_risk`
+   - All demo data aligned with backend generation patterns
+   - 200+ total demo data points for complete fallback coverage
+
+2. **figma/kpis/route.ts** (+10 lines):
+   - Detect demo mode by checking `extended_kpis.dpd_buckets` presence
+   - Return `X-Demo-Mode` header for agent tracking
+   - Include demo_mode flag in response metadata
+
+3. **figma/marketing/route.ts** (+19 lines):
+   - Complete `getDemoOrRealValue` integration for all fields
+   - Support Tier 3: concentration_risk, risk_trends, monthly_risk
+   - Auto-generate marketing comments based on data quality
+
+4. **figmaKpiExport.ts** (+42/-19 lines):
+   - Refactor to support 350+ real data points
+   - Align metric thresholds with Tier 3 data
+   - Add concentration and risk analytics
+
+**Data Flow Architecture**:
+```
+Backend Pipeline Run
+  ↓ (ExtendedKPIGenerator)
+KPI Calculation Phase → extended_kpis (Tier 3: 350+ data points)
+  ↓ (Manifest)
+API: /api/kpis/latest returns { extended_kpis, ... }
+  ↓
+Web App: /api/figma/* endpoints
+  ├─ Check: extended_kpis.dpd_buckets exists?
+  ├─ YES: Use real data, set X-Demo-Mode: false
+  └─ NO: Use DEMO_DATA fallback, set X-Demo-Mode: true
+  ↓
+Figma Agent receives complete dashboard with metadata.demo_mode flag
+```
+
+**Commit**: `edb566904` - feat(figma): complete Phase 8 - integrate backend Tier 3 extended_kpis
+
+**Report Generated**: 2026-01-05 20:35 UTC  
 **Prepared for**: Production Operations - Figma Integration Complete
