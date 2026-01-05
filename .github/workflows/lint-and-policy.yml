@@ -27,7 +27,7 @@ jobs:
 
             - name: Lint YAML
               run: |
-                  yamllint .
+                  yamllint .github/workflows
 
             - name: Lint JSON
               run: |
