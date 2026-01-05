@@ -32,10 +32,12 @@ jobs:
               "blocks": [
                 {
                   "type": "section",
-                  "text": {
-                    "type": "mrkdwn",
-                    "text": "*CI Workflow Completed*\n*Status:* ${{ github.event.workflow_run.conclusion }}\n*Repository:* ${{ github.repository }}\n*Workflow:* ${{ github.event.workflow_run.name }}\n*Run ID:* ${{ github.event.workflow_run.id }}"
-                  }
+                  "fields": [
+                    { "type": "mrkdwn", "text": "*Status:* ${{ github.event.workflow_run.conclusion }}" },
+                    { "type": "mrkdwn", "text": "*Repository:* ${{ github.repository }}" },
+                    { "type": "mrkdwn", "text": "*Workflow:* ${{ github.event.workflow_run.name }}" },
+                    { "type": "mrkdwn", "text": "*Run ID:* ${{ github.event.workflow_run.id }}" }
+                  ]
                 },
                 {
                   "type": "section",
