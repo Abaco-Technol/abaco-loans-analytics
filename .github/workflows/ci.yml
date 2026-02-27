@@ -89,7 +89,7 @@ jobs:
           cd apps/analytics
           pytest --cov=. --cov-report=xml:../coverage-python.xml
       - name: Upload coverage artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: analytics-coverage
           path: apps/coverage-python.xml

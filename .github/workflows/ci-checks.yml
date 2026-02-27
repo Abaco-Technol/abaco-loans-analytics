@@ -65,7 +65,7 @@ jobs:
       - name: Upload Demo Output
         if: always()
         continue-on-error: true
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: financial-analysis-demo
           path: |
@@ -100,7 +100,7 @@ jobs:
       - name: Upload evaluation reports
         if: always()
         continue-on-error: true
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: evaluation-reports
           path: reports/
