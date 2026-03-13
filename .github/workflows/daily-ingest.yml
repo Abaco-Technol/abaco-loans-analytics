@@ -46,7 +46,7 @@ jobs:
       - name: Notify Slack on Success
         if: success() && secrets.SLACK_WEBHOOK_URL != ''
         continue-on-error: true
-        uses: slackapi/slack-github-action@v2
+        uses: slackapi/slack-github-action@v3
         with:
           webhook-type: INCOMING_WEBHOOK
           payload: |

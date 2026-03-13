@@ -12,7 +12,7 @@ jobs:
     steps:
       - name: Send Slack notification
         continue-on-error: true
-        uses: slackapi/slack-github-action@v1.24.0
+        uses: slackapi/slack-github-action@v3
         with:
           payload: '{"text":"A new push to main branch!"}'
         env:
